@@ -5,6 +5,7 @@ import { Card, PageHeader, Field, Toggle, Badge } from '../../app/ui';
 import { fmtMeso, relTime, fmtDateLong } from '../../app/format';
 import { buildExportZip, readImportZip } from '../../lib/storage/exportImport';
 import { priceKey } from '../bossing/lib';
+import { AddCharacter } from './AddCharacter';
 
 export function Settings() {
   const s = useStore();
@@ -167,9 +168,11 @@ export function Settings() {
             <div>
               Characters configured: <span className="text-ink">{s.characters?.characters.map((c) => c.name).join(', ') || 'none'}</span> on {s.characters?.world ?? '—'}
             </div>
-            <div className="text-xs text-ink-3">Edit data/characters.json in the repo to add or remove characters; the daily Action picks it up.</div>
+            <div className="text-xs text-ink-3">Add characters with the lookup below; remove one by editing data/characters.json in the repo.</div>
           </div>
         </Card>
+
+        <AddCharacter />
 
         <Card title="AI generator key" className="lg:col-span-2">
           <p className="text-sm text-ink-2 mb-3">Optional. Your Anthropic API key is stored in this browser's IndexedDB only, never in the data folder or the repo. Requests go straight from the browser to api.anthropic.com. Set a spending limit on the Anthropic console.</p>

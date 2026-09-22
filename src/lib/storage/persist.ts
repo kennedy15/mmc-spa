@@ -81,3 +81,10 @@ export const apiKey = {
   set: (k: string) => kv.set('anthropicApiKey', k),
   clear: () => kv.del('anthropicApiKey'),
 };
+
+/** GitHub token for dispatching workflows; IndexedDB only, like the API key. */
+export const githubToken = {
+  get: () => kv.get<string>('githubToken'),
+  set: (k: string) => kv.set('githubToken', k),
+  clear: () => kv.del('githubToken'),
+};

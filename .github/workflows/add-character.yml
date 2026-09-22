@@ -1,0 +1,62 @@
+name: Add character
+
+on:
+  workflow_dispatch:
+    inputs:
+      name:
+        description: Character name (IGN), exactly as in game
+        required: true
+      role:
+        description: main, mule, legion, friend-main…
+        default: mule
+      owner:
+        description: me or friend
+        default: me
+      world:
+        description: World name or id; blank = the world in characters.json
+        default: ''
+
+concurrency:
+  group: snapshot
+  cancel-in-progress: false
+
+jobs:
+  add:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    outputs:
+      changed: ${{ steps.commit.outputs.changed }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Look up and add
+        run: node scripts/add-character.mjs "${{ inputs.name }}" --role "${{ inputs.role }}" --owner "${{ inputs.owner }}" --world "${{ inputs.world }}"
+      - name: Snapshot the updated roster
+        run: node scripts/snapshot.mjs
+        env:
+          RETRY_DELAY_MS: '120000'
+      - name: Commit
+        id: commit
+        run: |
+          git config user.name "maple-tracker-bot"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data
+          if git diff --cached --quiet; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          else
+            git commit -m "add character: ${{ inputs.name }}"
+            git push
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+
+  deploy:
+    needs: add
+    if: needs.add.outputs.changed == 'true'
+    uses: ./.github/workflows/deploy.yml
+    permissions:
+      contents: read
+      pages: write
+      id-token: write

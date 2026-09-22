@@ -33,8 +33,12 @@ interface State {
   settings: Settings;
   folder: FolderState;
   hasApiKey: boolean;
+  hasGithubToken: boolean;
 
   init(): Promise<void>;
+  /** Re-fetch repo data (characters, snapshots, looks) without touching local docs. */
+  reloadRepoData(): Promise<void>;
+  setGithubToken(token: string | null): Promise<void>;
   connectFolder(): Promise<void>;
   grantFolder(): Promise<void>;
   disconnectFolder(): Promise<void>;
@@ -100,6 +104,7 @@ export const useStore = create<State>()((set, get) => ({
   settings: DEFAULT_SETTINGS,
   folder: { supported: fs.supported, connected: false, needsPermission: false, name: null },
   hasApiKey: false,
+  hasGithubToken: false,
 
   async init() {
     if (get().ready || get().loading) return;
@@ -144,18 +149,38 @@ export const useStore = create<State>()((set, get) => ({
       const worldHeroic = characters ? (worlds[String(characters.worldId)]?.heroic ?? true) : true;
       const settings: Settings = { ...DEFAULT_SETTINGS, heroic: worldHeroic, ...(local.settings ?? {}) };
       const key = await persist.apiKey.get();
+      const ghTok = await persist.githubToken.get();
 
       // Cadence is defined by the boss list (only Black Mage is monthly); re-align stored assignments.
       const isMonthly = (bossId: string, difficulty: string) => bosses?.bosses.find((b) => b.id === bossId)?.difficulties.find((d) => d.key === difficulty)?.cadence === 'monthly';
       const assignments = bosses ? local.assignments.map((a) => ({ ...a, cadence: isMonthly(a.bossId, a.difficulty) ? ('monthly' as const) : ('weekly' as const) })) : local.assignments;
       if (JSON.stringify(assignments) !== JSON.stringify(local.assignments)) await persist.saveDoc('bossing/assignments.json', assignments);
 
-      set({ ready: true, index, characters, snapshots, looks, worlds, bosses, ...local, assignments, settings, hasApiKey: !!key });
+      set({ ready: true, index, characters, snapshots, looks, worlds, bosses, ...local, assignments, settings, hasApiKey: !!key, hasGithubToken: !!ghTok });
     } catch (e) {
       set({ error: e instanceof Error ? e.message : String(e) });
     } finally {
       set({ loading: false });
     }
+  },
+
+  async reloadRepoData() {
+    const [index, characters] = await Promise.all([loadIndex(), loadCharacters()]);
+    const dates = index?.dates ?? [];
+    const snapshots = (await Promise.all(dates.map(loadSnapshot))).filter((s): s is Snapshot => !!s).sort((a, b) => a.date.localeCompare(b.date));
+    const names = new Set<string>();
+    for (const c of characters?.characters ?? []) names.add(c.name);
+    for (const s of snapshots) for (const r of s.rows) names.add(r.name);
+    const looks: Record<string, LookEntry[]> = {};
+    await Promise.all([...names].map(async (n) => { const l = await loadLooks(n); if (l && l.length) looks[n] = l; }));
+    for (const s of snapshots) void persist.mirrorSnapshot(s.date, s);
+    set({ index, characters, snapshots, looks });
+  },
+
+  async setGithubToken(token) {
+    if (token) await persist.githubToken.set(token);
+    else await persist.githubToken.clear();
+    set({ hasGithubToken: !!token });
   },
 
   async connectFolder() {

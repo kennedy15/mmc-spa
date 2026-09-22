@@ -12,6 +12,14 @@ The design doc is in [`MapleTracker + Build Board — Design Doc.md`](./MapleTra
 4. **Data folder** (optional, Chrome/Edge). Open the site → Settings → *Choose data folder*. Ideas, photos, boss clears, settings and a mirror of every snapshot are written there as JSON/PNG.
 5. **AI generator** (optional). Settings → paste an Anthropic API key. It is kept in IndexedDB only.
 
+## Adding a character later
+
+Settings → *Add a character by name* looks the IGN up in the rankings, appends it to `data/characters.json`, snapshots it and redeploys. It runs the `Add character` workflow, so it needs a fine-grained GitHub token (this repo only, Actions: read and write) stored in the browser. Without a token, run the same workflow from the Actions tab, or locally:
+
+```bash
+node scripts/add-character.mjs SomeName --role mule
+```
+
 ## Local development
 
 ```bash
