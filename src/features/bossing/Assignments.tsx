@@ -116,7 +116,7 @@ export function Assignments() {
 
   return (
     <>
-      <PageHeader title="Assignments" subtitle={`Crystal values ${bosses.version ?? ''} as of ${bosses.asOf}${settings.heroic ? ' · Heroic ×5 applied' : ''}. Change a boss's difficulty from its dropdown; the tracker follows the wiki cadence (monthly for Black Mage and Extreme bosses).`} />
+      <PageHeader title="Assignments" subtitle={`Crystal values ${bosses.version ?? ''} as of ${bosses.asOf}${settings.heroic ? ' · Heroic ×5 applied' : ''}. Change a boss's difficulty from its dropdown; only Black Mage is monthly; everything else is weekly.`} />
       <div className="flex flex-wrap items-center gap-2 mb-4">
         {names.map((n) => (
           <button key={n} className={character === n ? 'chip-on' : 'chip'} onClick={() => setCharacter(n)}>
@@ -234,7 +234,7 @@ export function Assignments() {
                 <ul className="divide-y divide-border border-y border-border">{weekly.map(row)}</ul>
                 <div className="label px-4 pt-4 pb-1">Monthly</div>
                 <ul className="divide-y divide-border border-y border-border">
-                  {monthly.length ? monthly.map(row) : <li className="px-4 py-2 text-xs text-ink-3">No monthly bosses. Add Black Mage or an Extreme difficulty.</li>}
+                  {monthly.length ? monthly.map(row) : <li className="px-4 py-2 text-xs text-ink-3">No monthly bosses. Add Hard or Extreme Black Mage.</li>}
                 </ul>
               </div>
             )}

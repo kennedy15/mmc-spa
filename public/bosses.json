@@ -5,8 +5,8 @@
  "notes": [
   "Crystal values are for 1 party member; meso per clear = crystal / partySize, floored.",
   "Values are multiplied by 5 in Heroic worlds (Kronos, Hyperion, Solis) per the wiki footnote; the app applies this when the Heroic setting is on.",
-  "cadence is the in-game reset for that difficulty: daily, weekly (Thursday 00:00 UTC) or monthly (1st 00:00 UTC).",
-  "presets: bundles of boss/difficulty pairs that can be applied to a character in one click; weekly entries go to the weekly tracker, monthly ones (Black Mage, Extreme bosses) to the monthly tracker."
+  "cadence is the in-game reset for that difficulty: daily, weekly (Thursday 00:00 UTC) or monthly (1st 00:00 UTC). In GMS only Hard and Extreme Black Mage are monthly; Extreme Lotus/Seren/Kalos/Kaling/First Adversary reset weekly.",
+  "presets: bundles of boss/difficulty pairs that can be applied to a character in one click; Black Mage entries go to the monthly tracker, everything else to the weekly tracker."
  ],
  "bosses": [
   {
@@ -346,7 +346,7 @@
     {
      "key": "extreme",
      "crystal": 279500000,
-     "cadence": "monthly",
+     "cadence": "weekly",
      "minLevel": 190
     }
    ]
@@ -526,7 +526,7 @@
     {
      "key": "extreme",
      "crystal": 847000000,
-     "cadence": "monthly",
+     "cadence": "weekly",
      "minLevel": 260
     }
    ]
@@ -556,7 +556,7 @@
     {
      "key": "extreme",
      "crystal": 1040000000,
-     "cadence": "monthly",
+     "cadence": "weekly",
      "minLevel": 265
     }
    ]
@@ -586,7 +586,7 @@
     {
      "key": "extreme",
      "crystal": 1176000000,
-     "cadence": "monthly",
+     "cadence": "weekly",
      "minLevel": 270
     }
    ]
@@ -616,7 +616,7 @@
     {
      "key": "extreme",
      "crystal": 1205200000,
-     "cadence": "monthly",
+     "cadence": "weekly",
      "minLevel": 275
     }
    ]
@@ -757,7 +757,7 @@
   {
    "id": "grandis",
    "name": "GRANDIS",
-   "description": "Grandis-era rotation (Baldrix to Damien) plus Extreme Lotus and Hard Black Mage monthly.",
+   "description": "Grandis-era rotation (Baldrix to Damien, Extreme Lotus) plus Hard Black Mage monthly.",
    "entries": [
     {
      "bossId": "baldrix",

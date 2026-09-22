@@ -143,7 +143,12 @@ export const useStore = create<State>()((set, get) => ({
       const settings: Settings = { ...DEFAULT_SETTINGS, heroic: worldHeroic, ...(local.settings ?? {}) };
       const key = await persist.apiKey.get();
 
-      set({ ready: true, index, characters, snapshots, looks, worlds, bosses, ...local, settings, hasApiKey: !!key });
+      // Cadence is defined by the boss list (only Black Mage is monthly); re-align stored assignments.
+      const isMonthly = (bossId: string, difficulty: string) => bosses?.bosses.find((b) => b.id === bossId)?.difficulties.find((d) => d.key === difficulty)?.cadence === 'monthly';
+      const assignments = bosses ? local.assignments.map((a) => ({ ...a, cadence: isMonthly(a.bossId, a.difficulty) ? ('monthly' as const) : ('weekly' as const) })) : local.assignments;
+      if (JSON.stringify(assignments) !== JSON.stringify(local.assignments)) await persist.saveDoc('bossing/assignments.json', assignments);
+
+      set({ ready: true, index, characters, snapshots, looks, worlds, bosses, ...local, assignments, settings, hasApiKey: !!key });
     } catch (e) {
       set({ error: e instanceof Error ? e.message : String(e) });
     } finally {
