@@ -1,0 +1,48 @@
+@import "tailwindcss";
+
+@theme {
+  --color-bg: #0b0c0f;
+  --color-surface: #131519;
+  --color-surface-2: #1b1e24;
+  --color-surface-3: #23272f;
+  --color-border: #262a32;
+  --color-border-2: #343945;
+  --color-ink: #ecedef;
+  --color-ink-2: #a2a7b1;
+  --color-ink-3: #6b717d;
+  --color-accent: #ff7a1a;
+  --color-accent-2: #ffa25c;
+  --color-accent-dim: #4a2a14;
+  --color-good: #3ddc97;
+  --color-warn: #f9c74f;
+  --color-bad: #ff5c8a;
+  --color-info: #5b8def;
+  --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+html { color-scheme: dark; }
+body {
+  margin: 0;
+  background: var(--color-bg);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  font-feature-settings: "cv11", "ss01", "tnum";
+}
+* { scrollbar-width: thin; scrollbar-color: var(--color-border-2) transparent; }
+input, select, textarea, button { font: inherit; color: inherit; }
+input[type="number"]::-webkit-inner-spin-button { opacity: 0.4; }
+
+@layer components {
+  .card { @apply bg-surface border border-border rounded-xl; }
+  .btn { @apply inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium border border-border-2 bg-surface-2 text-ink hover:bg-surface-3 hover:border-ink-3 transition-colors disabled:opacity-40 disabled:pointer-events-none cursor-pointer; }
+  .btn-accent { @apply inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium border border-accent bg-accent text-black hover:bg-accent-2 hover:border-accent-2 transition-colors disabled:opacity-40 disabled:pointer-events-none cursor-pointer; }
+  .btn-ghost { @apply inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium border border-transparent bg-transparent text-ink-2 hover:text-ink hover:bg-surface-2 transition-colors disabled:opacity-40 disabled:pointer-events-none cursor-pointer; }
+  .btn-sm { @apply px-2 py-1 text-xs; }
+  .input { @apply w-full rounded-lg bg-bg border border-border-2 px-3 py-1.5 text-sm text-ink placeholder:text-ink-3 focus:outline-none focus:border-accent; }
+  .label { @apply text-[11px] uppercase tracking-wider text-ink-3 font-medium; }
+  .chip { @apply inline-flex items-center rounded-full border border-border-2 px-2.5 py-0.5 text-xs text-ink-2 cursor-pointer hover:border-ink-3 select-none; }
+  .chip-on { @apply inline-flex items-center rounded-full border border-accent px-2.5 py-0.5 text-xs text-accent bg-accent/10 cursor-pointer select-none; }
+  .tabular { font-variant-numeric: tabular-nums; }
+}

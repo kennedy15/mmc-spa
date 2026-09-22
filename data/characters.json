@@ -1,0 +1,7 @@
+{
+  "world": "Kronos",
+  "worldId": 45,
+  "characters": [
+    { "name": "YourMain", "role": "main", "owner": "me" }
+  ]
+}

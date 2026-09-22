@@ -1,0 +1,35 @@
+{
+  "source": "https://maplearchive.org frontend bundle, 2026-09-22; heroic flag from reboot_index probing",
+  "worlds": {
+    "1": {
+      "name": "Bera",
+      "region": "na",
+      "heroic": false
+    },
+    "19": {
+      "name": "Scania",
+      "region": "na",
+      "heroic": false
+    },
+    "45": {
+      "name": "Kronos",
+      "region": "na",
+      "heroic": true
+    },
+    "70": {
+      "name": "Hyperion",
+      "region": "na",
+      "heroic": true
+    },
+    "30": {
+      "name": "Luna",
+      "region": "eu",
+      "heroic": false
+    },
+    "46": {
+      "name": "Solis",
+      "region": "eu",
+      "heroic": true
+    }
+  }
+}

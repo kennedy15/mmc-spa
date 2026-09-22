@@ -1,0 +1,696 @@
+{
+ "asOf": "2026-09-22",
+ "version": "GMS v270",
+ "source": "https://maplestorywiki.net/w/Intense_Power_Crystal",
+ "notes": [
+  "Crystal values are for 1 party member; meso per clear = crystal / partySize, floored.",
+  "Values are multiplied by 5 in Heroic worlds (Kronos, Hyperion, Solis) per the wiki footnote; the app applies this when the Heroic setting is on.",
+  "cadence is the in-game reset for that difficulty: daily, weekly (Thursday 00:00 UTC) or monthly (1st 00:00 UTC)."
+ ],
+ "bosses": [
+  {
+   "id": "zakum",
+   "name": "Zakum",
+   "difficulties": [
+    {
+     "key": "easy",
+     "crystal": 200000,
+     "cadence": "daily",
+     "minLevel": 50
+    },
+    {
+     "key": "normal",
+     "crystal": 612500,
+     "cadence": "daily",
+     "minLevel": 90
+    },
+    {
+     "key": "chaos",
+     "crystal": 16200000,
+     "cadence": "weekly",
+     "minLevel": 90
+    }
+   ]
+  },
+  {
+   "id": "papulatus",
+   "name": "Papulatus",
+   "difficulties": [
+    {
+     "key": "easy",
+     "crystal": 684500,
+     "cadence": "daily",
+     "minLevel": 115
+    },
+    {
+     "key": "normal",
+     "crystal": 2664500,
+     "cadence": "daily",
+     "minLevel": 155
+    },
+    {
+     "key": "chaos",
+     "crystal": 26450000,
+     "cadence": "weekly",
+     "minLevel": 190
+    }
+   ]
+  },
+  {
+   "id": "magnus",
+   "name": "Magnus",
+   "difficulties": [
+    {
+     "key": "easy",
+     "crystal": 722000,
+     "cadence": "daily",
+     "minLevel": 115
+    },
+    {
+     "key": "normal",
+     "crystal": 2592000,
+     "cadence": "daily",
+     "minLevel": 155
+    },
+    {
+     "key": "hard",
+     "crystal": 19012500,
+     "cadence": "weekly",
+     "minLevel": 175
+    }
+   ]
+  },
+  {
+   "id": "hilla",
+   "name": "Hilla",
+   "difficulties": [
+    {
+     "key": "normal",
+     "crystal": 800000,
+     "cadence": "daily",
+     "minLevel": 85
+    },
+    {
+     "key": "hard",
+     "crystal": 11250000,
+     "cadence": "weekly",
+     "minLevel": 170
+    }
+   ]
+  },
+  {
+   "id": "ranmaru",
+   "name": "Mori Ranmaru",
+   "difficulties": [
+    {
+     "key": "normal",
+     "crystal": 840500,
+     "cadence": "daily",
+     "minLevel": 120
+    },
+    {
+     "key": "hard",
+     "crystal": 2664500,
+     "cadence": "weekly",
+     "minLevel": 180
+    }
+   ]
+  },
+  {
+   "id": "horntail",
+   "name": "Horntail",
+   "difficulties": [
+    {
+     "key": "easy",
+     "crystal": 882000,
+     "cadence": "daily",
+     "minLevel": 130
+    },
+    {
+     "key": "normal",
+     "crystal": 1012500,
+     "cadence": "daily",
+     "minLevel": 130
+    },
+    {
+     "key": "chaos",
+     "crystal": 1352000,
+     "cadence": "daily",
+     "minLevel": 135
+    }
+   ]
+  },
+  {
+   "id": "pierre",
+   "name": "Pierre",
+   "difficulties": [
+    {
+     "key": "normal",
+     "crystal": 968000,
+     "cadence": "daily",
+     "minLevel": 125
+    },
+    {
+     "key": "chaos",
+     "crystal": 16200000,
+     "cadence": "weekly",
+     "minLevel": 180
+    }
+   ]
+  },
+  {
+   "id": "von-bon",
+   "name": "Von Bon",
+   "difficulties": [
+    {
+     "key": "normal",
+     "crystal": 968000,
+     "cadence": "daily",
+     "minLevel": 125
+    },
+    {
+     "key": "chaos",
+     "crystal": 16200000,
+     "cadence": "weekly",
+     "minLevel": 180
+    }
+   ]
+  },
+  {
+   "id": "crimson-queen",
+   "name": "Crimson Queen",
+   "difficulties": [
+    {
+     "key": "normal",
+     "crystal": 968000,
+     "cadence": "daily",
+     "minLevel": 125
+    },
+    {
+     "key": "chaos",
+     "crystal": 16200000,
+     "cadence": "weekly",
+     "minLevel": 180
+    }
+   ]
+  },
+  {
+   "id": "vellum",
+   "name": "Vellum",
+   "difficulties": [
+    {
+     "key": "normal",
+     "crystal": 968000,
+     "cadence": "daily",
+     "minLevel": 125
+    },
+    {
+     "key": "chaos",
+     "crystal": 21012500,
+     "cadence": "weekly",
+     "minLevel": 180
+    }
+   ]
+  },
+  {
+   "id": "von-leon",
+   "name": "Von Leon",
+   "difficulties": [
+    {
+     "key": "easy",
+     "crystal": 1058000,
+     "cadence": "daily",
+     "minLevel": 125
+    },
+    {
+     "key": "normal",
+     "crystal": 1458000,
+     "cadence": "daily",
+     "minLevel": 125
+    },
+    {
+     "key": "hard",
+     "crystal": 2450000,
+     "cadence": "daily",
+     "minLevel": 125
+    }
+   ]
+  },
+  {
+   "id": "arkarium",
+   "name": "Arkarium",
+   "difficulties": [
+    {
+     "key": "easy",
+     "crystal": 1152000,
+     "cadence": "daily",
+     "minLevel": 140
+    },
+    {
+     "key": "normal",
+     "crystal": 2520500,
+     "cadence": "daily",
+     "minLevel": 140
+    }
+   ]
+  },
+  {
+   "id": "omni-cln",
+   "name": "OMNI-CLN",
+   "difficulties": [
+    {
+     "key": "normal",
+     "crystal": 1250000,
+     "cadence": "daily",
+     "minLevel": 180
+    }
+   ]
+  },
+  {
+   "id": "pink-bean",
+   "name": "Pink Bean",
+   "difficulties": [
+    {
+     "key": "normal",
+     "crystal": 1404500,
+     "cadence": "daily",
+     "minLevel": 140
+    },
+    {
+     "key": "chaos",
+     "crystal": 12800000,
+     "cadence": "weekly",
+     "minLevel": 170
+    }
+   ]
+  },
+  {
+   "id": "cygnus",
+   "name": "Cygnus",
+   "difficulties": [
+    {
+     "key": "easy",
+     "crystal": 9112500,
+     "cadence": "weekly",
+     "minLevel": 165
+    },
+    {
+     "key": "normal",
+     "crystal": 14450000,
+     "cadence": "weekly",
+     "minLevel": 165
+    }
+   ]
+  },
+  {
+   "id": "princess-no",
+   "name": "Princess No",
+   "difficulties": [
+    {
+     "key": "normal",
+     "crystal": 16200000,
+     "cadence": "weekly",
+     "minLevel": 180
+    }
+   ]
+  },
+  {
+   "id": "akechi",
+   "name": "Akechi Mitsuhide",
+   "difficulties": [
+    {
+     "key": "normal",
+     "crystal": 28800000,
+     "cadence": "weekly",
+     "minLevel": 200
+    }
+   ]
+  },
+  {
+   "id": "lotus",
+   "name": "Lotus",
+   "difficulties": [
+    {
+     "key": "normal",
+     "crystal": 32512500,
+     "cadence": "weekly",
+     "minLevel": 190
+    },
+    {
+     "key": "hard",
+     "crystal": 88935000,
+     "cadence": "weekly",
+     "minLevel": 190
+    },
+    {
+     "key": "extreme",
+     "crystal": 279500000,
+     "cadence": "monthly",
+     "minLevel": 190
+    }
+   ]
+  },
+  {
+   "id": "damien",
+   "name": "Damien",
+   "difficulties": [
+    {
+     "key": "normal",
+     "crystal": 33800000,
+     "cadence": "weekly",
+     "minLevel": 190
+    },
+    {
+     "key": "hard",
+     "crystal": 84375000,
+     "cadence": "weekly",
+     "minLevel": 190
+    }
+   ]
+  },
+  {
+   "id": "slime",
+   "name": "Guardian Angel Slime",
+   "difficulties": [
+    {
+     "key": "normal",
+     "crystal": 46334700,
+     "cadence": "weekly",
+     "minLevel": 210
+    },
+    {
+     "key": "chaos",
+     "crystal": 120115625,
+     "cadence": "weekly",
+     "minLevel": 210
+    }
+   ]
+  },
+  {
+   "id": "lucid",
+   "name": "Lucid",
+   "difficulties": [
+    {
+     "key": "easy",
+     "crystal": 47401875,
+     "cadence": "weekly",
+     "minLevel": 220
+    },
+    {
+     "key": "normal",
+     "crystal": 50765625,
+     "cadence": "weekly",
+     "minLevel": 220
+    },
+    {
+     "key": "hard",
+     "crystal": 100800000,
+     "cadence": "weekly",
+     "minLevel": 220
+    }
+   ]
+  },
+  {
+   "id": "will",
+   "name": "Will",
+   "difficulties": [
+    {
+     "key": "easy",
+     "crystal": 49348950,
+     "cadence": "weekly",
+     "minLevel": 235
+    },
+    {
+     "key": "normal",
+     "crystal": 55815000,
+     "cadence": "weekly",
+     "minLevel": 235
+    },
+    {
+     "key": "hard",
+     "crystal": 124362000,
+     "cadence": "weekly",
+     "minLevel": 235
+    }
+   ]
+  },
+  {
+   "id": "gloom",
+   "name": "Gloom",
+   "difficulties": [
+    {
+     "key": "normal",
+     "crystal": 59535000,
+     "cadence": "weekly",
+     "minLevel": 245
+    },
+    {
+     "key": "chaos",
+     "crystal": 112789000,
+     "cadence": "weekly",
+     "minLevel": 245
+    }
+   ]
+  },
+  {
+   "id": "verus-hilla",
+   "name": "Verus Hilla",
+   "difficulties": [
+    {
+     "key": "normal",
+     "crystal": 116376000,
+     "cadence": "weekly",
+     "minLevel": 250
+    },
+    {
+     "key": "hard",
+     "crystal": 152421000,
+     "cadence": "weekly",
+     "minLevel": 250
+    }
+   ]
+  },
+  {
+   "id": "darknell",
+   "name": "Darknell",
+   "difficulties": [
+    {
+     "key": "normal",
+     "crystal": 63375000,
+     "cadence": "weekly",
+     "minLevel": 255
+    },
+    {
+     "key": "hard",
+     "crystal": 133584000,
+     "cadence": "weekly",
+     "minLevel": 255
+    }
+   ]
+  },
+  {
+   "id": "black-mage",
+   "name": "Black Mage",
+   "difficulties": [
+    {
+     "key": "hard",
+     "crystal": 900000000,
+     "cadence": "monthly",
+     "minLevel": 255
+    },
+    {
+     "key": "extreme",
+     "crystal": 3600000000,
+     "cadence": "monthly",
+     "minLevel": 255
+    }
+   ]
+  },
+  {
+   "id": "seren",
+   "name": "Chosen Seren",
+   "difficulties": [
+    {
+     "key": "normal",
+     "crystal": 177804375,
+     "cadence": "weekly",
+     "minLevel": 260
+    },
+    {
+     "key": "hard",
+     "crystal": 219312000,
+     "cadence": "weekly",
+     "minLevel": 260
+    },
+    {
+     "key": "extreme",
+     "crystal": 847000000,
+     "cadence": "monthly",
+     "minLevel": 260
+    }
+   ]
+  },
+  {
+   "id": "kalos",
+   "name": "Kalos the Guardian",
+   "difficulties": [
+    {
+     "key": "easy",
+     "crystal": 187500000,
+     "cadence": "weekly",
+     "minLevel": 265
+    },
+    {
+     "key": "normal",
+     "crystal": 260000000,
+     "cadence": "weekly",
+     "minLevel": 265
+    },
+    {
+     "key": "chaos",
+     "crystal": 520000000,
+     "cadence": "weekly",
+     "minLevel": 265
+    },
+    {
+     "key": "extreme",
+     "crystal": 1040000000,
+     "cadence": "monthly",
+     "minLevel": 265
+    }
+   ]
+  },
+  {
+   "id": "first-adversary",
+   "name": "First Adversary",
+   "difficulties": [
+    {
+     "key": "easy",
+     "crystal": 197000000,
+     "cadence": "weekly",
+     "minLevel": 270
+    },
+    {
+     "key": "normal",
+     "crystal": 273000000,
+     "cadence": "weekly",
+     "minLevel": 270
+    },
+    {
+     "key": "hard",
+     "crystal": 588000000,
+     "cadence": "weekly",
+     "minLevel": 270
+    },
+    {
+     "key": "extreme",
+     "crystal": 1176000000,
+     "cadence": "monthly",
+     "minLevel": 270
+    }
+   ]
+  },
+  {
+   "id": "kaling",
+   "name": "Kaling",
+   "difficulties": [
+    {
+     "key": "easy",
+     "crystal": 206250000,
+     "cadence": "weekly",
+     "minLevel": 275
+    },
+    {
+     "key": "normal",
+     "crystal": 301300000,
+     "cadence": "weekly",
+     "minLevel": 275
+    },
+    {
+     "key": "hard",
+     "crystal": 598000000,
+     "cadence": "weekly",
+     "minLevel": 275
+    },
+    {
+     "key": "extreme",
+     "crystal": 1205200000,
+     "cadence": "monthly",
+     "minLevel": 275
+    }
+   ]
+  },
+  {
+   "id": "malefic-star",
+   "name": "Malefic Star",
+   "difficulties": [
+    {
+     "key": "normal",
+     "crystal": 290400000,
+     "cadence": "weekly",
+     "minLevel": 280
+    },
+    {
+     "key": "hard",
+     "crystal": 798000000,
+     "cadence": "weekly",
+     "minLevel": 280
+    }
+   ]
+  },
+  {
+   "id": "limbo",
+   "name": "Limbo",
+   "difficulties": [
+    {
+     "key": "normal",
+     "crystal": 420000000,
+     "cadence": "weekly",
+     "minLevel": 285
+    },
+    {
+     "key": "hard",
+     "crystal": 749000000,
+     "cadence": "weekly",
+     "minLevel": 285
+    }
+   ]
+  },
+  {
+   "id": "baldrix",
+   "name": "Baldrix",
+   "difficulties": [
+    {
+     "key": "normal",
+     "crystal": 560000000,
+     "cadence": "weekly",
+     "minLevel": 290
+    },
+    {
+     "key": "hard",
+     "crystal": 840000000,
+     "cadence": "weekly",
+     "minLevel": 290
+    }
+   ]
+  },
+  {
+   "id": "jupiter",
+   "name": "Jupiter",
+   "difficulties": [
+    {
+     "key": "normal",
+     "crystal": 593000000,
+     "cadence": "weekly",
+     "minLevel": 295
+    },
+    {
+     "key": "hard",
+     "crystal": 1190600000,
+     "cadence": "weekly",
+     "minLevel": 295
+    }
+   ]
+  }
+ ]
+}

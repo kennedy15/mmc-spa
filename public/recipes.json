@@ -1,0 +1,925 @@
+{
+ "archetypes": [
+  {
+   "name": "Wayshrine",
+   "type": "Decorative point of interest",
+   "sizes": {
+    "small": "3\u00d73, one lantern",
+    "medium": "5\u00d75 with a bench",
+    "large": "7\u00d77 with a small garden"
+   },
+   "farm": false
+  },
+  {
+   "name": "Ferry Dock",
+   "type": "Decorative point of interest",
+   "sizes": {
+    "small": "6\u00d74 pier",
+    "medium": "10\u00d76 pier and shed",
+    "large": "16\u00d78 pier, crane and boathouse"
+   },
+   "farm": false
+  },
+  {
+   "name": "Ruined Watchtower",
+   "type": "Decorative point of interest",
+   "sizes": {
+    "small": "5\u00d75, 8 tall",
+    "medium": "7\u00d77, 14 tall",
+    "large": "9\u00d79, 22 tall with a collapsed wall"
+   },
+   "farm": false
+  },
+  {
+   "name": "Hermit's Hut",
+   "type": "Decorative point of interest",
+   "sizes": {
+    "small": "5\u00d76 single room",
+    "medium": "7\u00d78 with a porch",
+    "large": "9\u00d710, loft and cellar"
+   },
+   "farm": false
+  },
+  {
+   "name": "Stone Bridge",
+   "type": "Decorative point of interest",
+   "sizes": {
+    "small": "8 long, one arch",
+    "medium": "16 long, two arches",
+    "large": "30 long, three arches with lanterns"
+   },
+   "farm": false
+  },
+  {
+   "name": "Windmill",
+   "type": "Decorative point of interest",
+   "sizes": {
+    "small": "6\u00d76, 12 tall",
+    "medium": "8\u00d78, 18 tall",
+    "large": "10\u00d710, 26 tall with a granary"
+   },
+   "farm": false
+  },
+  {
+   "name": "Forgotten Chapel",
+   "type": "Decorative point of interest",
+   "sizes": {
+    "small": "7\u00d711 nave",
+    "medium": "9\u00d715 nave and bell tower",
+    "large": "11\u00d721 nave, transept, crypt"
+   },
+   "farm": false
+  },
+  {
+   "name": "Lighthouse",
+   "type": "Decorative point of interest",
+   "sizes": {
+    "small": "5\u00d75, 14 tall",
+    "medium": "7\u00d77, 22 tall",
+    "large": "9\u00d79, 34 tall with keeper's cottage"
+   },
+   "farm": false
+  },
+  {
+   "name": "Abandoned Mine Entrance",
+   "type": "Decorative point of interest",
+   "sizes": {
+    "small": "4\u00d74 portal and cart",
+    "medium": "6\u00d76 headframe",
+    "large": "8\u00d710 headframe, sorting shed, tailings"
+   },
+   "farm": false
+  },
+  {
+   "name": "Fishing Shack",
+   "type": "Decorative point of interest",
+   "sizes": {
+    "small": "5\u00d75 on stilts",
+    "medium": "7\u00d76 with drying racks",
+    "large": "9\u00d78, two shacks and a net loft"
+   },
+   "farm": false
+  },
+  {
+   "name": "Roadside Inn",
+   "type": "Decorative point of interest",
+   "sizes": {
+    "small": "9\u00d79 two storeys",
+    "medium": "11\u00d713 two storeys and stable",
+    "large": "15\u00d717, courtyard and stable"
+   },
+   "farm": false
+  },
+  {
+   "name": "Standing Stones",
+   "type": "Decorative point of interest",
+   "sizes": {
+    "small": "ring of 5",
+    "medium": "ring of 9 with an altar",
+    "large": "ring of 13 with a processional way"
+   },
+   "farm": false
+  },
+  {
+   "name": "Overgrown Greenhouse",
+   "type": "Decorative point of interest",
+   "sizes": {
+    "small": "6\u00d78",
+    "medium": "8\u00d712",
+    "large": "12\u00d718 with a potting shed"
+   },
+   "farm": false
+  },
+  {
+   "name": "Hillside Root Cellar",
+   "type": "Decorative point of interest",
+   "sizes": {
+    "small": "4\u00d75 into a hill",
+    "medium": "6\u00d78 into a hill",
+    "large": "8\u00d712 with two chambers"
+   },
+   "farm": false
+  },
+  {
+   "name": "Caravan Camp",
+   "type": "Decorative point of interest",
+   "sizes": {
+    "small": "two wagons and a fire",
+    "medium": "four wagons, tents, corral",
+    "large": "eight wagons, well, market stalls"
+   },
+   "farm": false
+  },
+  {
+   "name": "Beacon Tower",
+   "type": "Decorative point of interest",
+   "sizes": {
+    "small": "5\u00d75, 10 tall",
+    "medium": "7\u00d77, 16 tall",
+    "large": "9\u00d79, 24 tall with a signal fire platform"
+   },
+   "farm": false
+  },
+  {
+   "name": "Aqueduct",
+   "type": "Decorative point of interest",
+   "sizes": {
+    "small": "12 long, one tier",
+    "medium": "24 long, one tier",
+    "large": "40 long, two tiers"
+   },
+   "farm": false
+  },
+  {
+   "name": "Sunken Temple",
+   "type": "Decorative point of interest",
+   "sizes": {
+    "small": "7\u00d77 flooded chamber",
+    "medium": "11\u00d711 with a collapsed dome",
+    "large": "15\u00d715, three chambers, one air pocket"
+   },
+   "farm": false
+  },
+  {
+   "name": "Crossroads Gallows",
+   "type": "Decorative point of interest",
+   "sizes": {
+    "small": "3\u00d73 and a signpost",
+    "medium": "5\u00d75 with a shrine",
+    "large": "7\u00d77 with a small graveyard"
+   },
+   "farm": false
+  },
+  {
+   "name": "Beekeeper's Yard",
+   "type": "Decorative point of interest",
+   "sizes": {
+    "small": "3 hives and a hut",
+    "medium": "6 hives, hut, meadow",
+    "large": "10 hives, honey house, orchard"
+   },
+   "farm": true
+  },
+  {
+   "name": "Apothecary",
+   "type": "Decorative point of interest",
+   "sizes": {
+    "small": "6\u00d77 single storey",
+    "medium": "8\u00d79 two storeys",
+    "large": "10\u00d712 with a herb garden"
+   },
+   "farm": false
+  },
+  {
+   "name": "Ruined Fort",
+   "type": "Decorative point of interest",
+   "sizes": {
+    "small": "11\u00d711 walls",
+    "medium": "17\u00d717 walls, one tower",
+    "large": "25\u00d725 walls, gatehouse, three towers"
+   },
+   "farm": false
+  },
+  {
+   "name": "Canal Lock",
+   "type": "Decorative point of interest",
+   "sizes": {
+    "small": "one gate",
+    "medium": "two gates and a keeper's hut",
+    "large": "three gates, hut, warehouse"
+   },
+   "farm": false
+  },
+  {
+   "name": "Mountain Shrine",
+   "type": "Decorative point of interest",
+   "sizes": {
+    "small": "3\u00d73 on a ledge",
+    "medium": "5\u00d75 with stairs cut into rock",
+    "large": "7\u00d77, stairs, prayer flags, hermitage"
+   },
+   "farm": false
+  },
+  {
+   "name": "Ship Graveyard",
+   "type": "Decorative point of interest",
+   "sizes": {
+    "small": "one wreck",
+    "medium": "two wrecks and a salvager's hut",
+    "large": "four wrecks, cranes, salvage yard"
+   },
+   "farm": false
+  },
+  {
+   "name": "Observatory",
+   "type": "Decorative point of interest",
+   "sizes": {
+    "small": "5\u00d75 dome",
+    "medium": "7\u00d77 dome on a tower",
+    "large": "9\u00d79 dome, library, telescope platform"
+   },
+   "farm": false
+  },
+  {
+   "name": "Tree House",
+   "type": "Decorative point of interest",
+   "sizes": {
+    "small": "one platform",
+    "medium": "two platforms and a rope bridge",
+    "large": "three platforms, bridges, lift"
+   },
+   "farm": false
+  },
+  {
+   "name": "Hot Spring Bathhouse",
+   "type": "Decorative point of interest",
+   "sizes": {
+    "small": "5\u00d77 pool",
+    "medium": "7\u00d711 pool and changing room",
+    "large": "11\u00d715, two pools, teahouse"
+   },
+   "farm": false
+  },
+  {
+   "name": "Bandit Hideout",
+   "type": "Decorative point of interest",
+   "sizes": {
+    "small": "cave mouth and palisade",
+    "medium": "cave, palisade, watch post",
+    "large": "cave complex, palisade, gallows, loot cache"
+   },
+   "farm": false
+  },
+  {
+   "name": "Ice Cellar",
+   "type": "Decorative point of interest",
+   "sizes": {
+    "small": "4\u00d74 sunk into snow",
+    "medium": "6\u00d76 with an ice-cutting shed",
+    "large": "8\u00d710, shed, sled dock"
+   },
+   "farm": false
+  },
+  {
+   "name": "Glassworks",
+   "type": "Decorative point of interest",
+   "sizes": {
+    "small": "6\u00d76 kiln shed",
+    "medium": "8\u00d710 kiln, warehouse",
+    "large": "12\u00d714 kilns, warehouse, sand pit"
+   },
+   "farm": false
+  },
+  {
+   "name": "Pilgrim Rest Stop",
+   "type": "Decorative point of interest",
+   "sizes": {
+    "small": "lean-to and well",
+    "medium": "hut, well, shrine",
+    "large": "hut, well, shrine, stable"
+   },
+   "farm": false
+  },
+  {
+   "name": "Hanging Gardens",
+   "type": "Decorative point of interest",
+   "sizes": {
+    "small": "6\u00d76 terrace",
+    "medium": "10\u00d710 two terraces",
+    "large": "16\u00d716 three terraces with waterfalls"
+   },
+   "farm": false
+  },
+  {
+   "name": "Border Toll Gate",
+   "type": "Decorative point of interest",
+   "sizes": {
+    "small": "gate and hut",
+    "medium": "gate, hut, barrier",
+    "large": "gate, barracks, stable"
+   },
+   "farm": false
+  },
+  {
+   "name": "Forge",
+   "type": "Decorative point of interest",
+   "sizes": {
+    "small": "5\u00d76 open forge",
+    "medium": "7\u00d79 forge and quarters",
+    "large": "9\u00d713 forge, quarters, quench pool"
+   },
+   "farm": false
+  },
+  {
+   "name": "Cliffside Monastery",
+   "type": "Decorative point of interest",
+   "sizes": {
+    "small": "7\u00d77 one chamber",
+    "medium": "9\u00d713 two chambers",
+    "large": "13\u00d721 chapel, cells, library"
+   },
+   "farm": false
+  },
+  {
+   "name": "Kelp Farm Platform",
+   "type": "Farm",
+   "sizes": {
+    "small": "6\u00d76 platform",
+    "medium": "10\u00d710 platform",
+    "large": "16\u00d716 platform with drying tower"
+   },
+   "farm": true
+  },
+  {
+   "name": "Crop Terraces",
+   "type": "Farm",
+   "sizes": {
+    "small": "3 terraces",
+    "medium": "6 terraces and a barn",
+    "large": "10 terraces, barn, irrigation"
+   },
+   "farm": true
+  },
+  {
+   "name": "Mob Grinder Tower",
+   "type": "Farm",
+   "sizes": {
+    "small": "9\u00d79, 20 tall",
+    "medium": "13\u00d713, 32 tall",
+    "large": "17\u00d717, 40 tall disguised as a keep"
+   },
+   "farm": true
+  },
+  {
+   "name": "Mushroom Cavern",
+   "type": "Farm",
+   "sizes": {
+    "small": "5\u00d75 cave",
+    "medium": "9\u00d79 cave",
+    "large": "15\u00d715 cave with walkways"
+   },
+   "farm": true
+  },
+  {
+   "name": "Sheep Meadow",
+   "type": "Farm",
+   "sizes": {
+    "small": "4 pens",
+    "medium": "8 pens and a shearing hut",
+    "large": "12 pens, hut, wool mill"
+   },
+   "farm": true
+  }
+ ],
+ "biomes": [
+  {
+   "name": "Plains",
+   "placements": [
+    "in the open where two rivers meet",
+    "on a low hill visible from spawn",
+    "beside the road out of the village"
+   ],
+   "palettes": [
+    [
+     "oak",
+     "cobblestone",
+     "hay",
+     "lanterns"
+    ],
+    [
+     "stripped oak",
+     "stone bricks",
+     "copper",
+     "lanterns"
+    ]
+   ]
+  },
+  {
+   "name": "Birch Forest",
+   "placements": [
+    "in a clearing one chunk from the river",
+    "where the birch thins into meadow",
+    "on the forest edge facing the sunset"
+   ],
+   "palettes": [
+    [
+     "birch",
+     "stone",
+     "mossy cobblestone",
+     "glow lichen"
+    ],
+    [
+     "white terracotta",
+     "birch",
+     "polished andesite",
+     "lanterns"
+    ]
+   ]
+  },
+  {
+   "name": "Dark Forest",
+   "placements": [
+    "under the mushroom canopy",
+    "in the only clearing for a hundred blocks",
+    "at the forest's ruined heart"
+   ],
+   "palettes": [
+    [
+     "dark oak",
+     "cobbled deepslate",
+     "moss",
+     "soul lanterns"
+    ],
+    [
+     "dark oak",
+     "mud bricks",
+     "mangrove roots",
+     "candles"
+    ]
+   ]
+  },
+  {
+   "name": "Taiga",
+   "placements": [
+    "on the ridge above the frozen creek",
+    "among the tallest spruces",
+    "at the mouth of a hidden valley"
+   ],
+   "palettes": [
+    [
+     "spruce",
+     "cobblestone",
+     "stone bricks",
+     "campfires"
+    ],
+    [
+     "stripped spruce",
+     "deepslate tiles",
+     "copper",
+     "lanterns"
+    ]
+   ]
+  },
+  {
+   "name": "Snowy Tundra",
+   "placements": [
+    "on a windswept rise",
+    "where the ice sheet meets the tundra",
+    "half-buried in a snow drift"
+   ],
+   "palettes": [
+    [
+     "spruce",
+     "packed ice",
+     "stone bricks",
+     "soul lanterns"
+    ],
+    [
+     "stripped spruce",
+     "snow blocks",
+     "blue ice",
+     "lanterns"
+    ]
+   ]
+  },
+  {
+   "name": "Desert",
+   "placements": [
+    "at an oasis",
+    "on top of a mesa",
+    "half-buried in a dune"
+   ],
+   "palettes": [
+    [
+     "sandstone",
+     "cut sandstone",
+     "terracotta",
+     "lanterns"
+    ],
+    [
+     "smooth sandstone",
+     "acacia",
+     "chiseled sandstone",
+     "torches"
+    ]
+   ]
+  },
+  {
+   "name": "Savanna",
+   "placements": [
+    "on a plateau overlooking the grassland",
+    "beneath the largest acacia",
+    "beside a dry riverbed"
+   ],
+   "palettes": [
+    [
+     "acacia",
+     "terracotta",
+     "cobblestone",
+     "hay"
+    ],
+    [
+     "stripped acacia",
+     "orange terracotta",
+     "stone",
+     "lanterns"
+    ]
+   ]
+  },
+  {
+   "name": "Jungle",
+   "placements": [
+    "wrapped around a giant tree",
+    "on the river bend under the canopy",
+    "atop a mossy cliff"
+   ],
+   "palettes": [
+    [
+     "jungle",
+     "mossy cobblestone",
+     "vines",
+     "glow lichen"
+    ],
+    [
+     "stripped jungle",
+     "mud bricks",
+     "moss",
+     "lanterns"
+    ]
+   ]
+  },
+  {
+   "name": "Swamp",
+   "placements": [
+    "on stilts over black water",
+    "on the only dry island",
+    "among the mangrove roots"
+   ],
+   "palettes": [
+    [
+     "mangrove",
+     "mud bricks",
+     "moss",
+     "soul lanterns"
+    ],
+    [
+     "dark oak",
+     "cobbled deepslate",
+     "mud",
+     "candles"
+    ]
+   ]
+  },
+  {
+   "name": "Mountains",
+   "placements": [
+    "on a ledge above the cloud line",
+    "in a saddle between two peaks",
+    "at the foot of a scree slope"
+   ],
+   "palettes": [
+    [
+     "stone bricks",
+     "deepslate",
+     "spruce",
+     "lanterns"
+    ],
+    [
+     "cobbled deepslate",
+     "tuff",
+     "stripped spruce",
+     "copper"
+    ]
+   ]
+  },
+  {
+   "name": "Cherry Grove",
+   "placements": [
+    "in a ring of cherry trees",
+    "by the pond under falling petals",
+    "on the terrace above the grove"
+   ],
+   "palettes": [
+    [
+     "cherry",
+     "white terracotta",
+     "polished andesite",
+     "lanterns"
+    ],
+    [
+     "cherry",
+     "pink petals",
+     "stone bricks",
+     "candles"
+    ]
+   ]
+  },
+  {
+   "name": "Beach",
+   "placements": [
+    "where the dunes meet the tide line",
+    "on a spit of sand",
+    "on the rocks at the headland"
+   ],
+   "palettes": [
+    [
+     "stripped oak",
+     "sand",
+     "cobblestone",
+     "lanterns"
+    ],
+    [
+     "prismarine",
+     "sandstone",
+     "oak",
+     "sea lanterns"
+    ]
+   ]
+  },
+  {
+   "name": "Mushroom Fields",
+   "placements": [
+    "between two giant mushrooms",
+    "on the shore facing the mainland",
+    "in a mycelium hollow"
+   ],
+   "palettes": [
+    [
+     "mushroom stems",
+     "mycelium",
+     "stone",
+     "shroomlight"
+    ],
+    [
+     "red mushroom blocks",
+     "cobblestone",
+     "moss",
+     "lanterns"
+    ]
+   ]
+  },
+  {
+   "name": "Badlands",
+   "placements": [
+    "carved into the striped cliff",
+    "on the canyon floor",
+    "atop a lone hoodoo"
+   ],
+   "palettes": [
+    [
+     "terracotta",
+     "red sandstone",
+     "dark oak",
+     "torches"
+    ],
+    [
+     "cut red sandstone",
+     "orange terracotta",
+     "stripped dark oak",
+     "lanterns"
+    ]
+   ]
+  },
+  {
+   "name": "Ocean",
+   "placements": [
+    "on a reef",
+    "on a sea stack",
+    "anchored over the deep"
+   ],
+   "palettes": [
+    [
+     "prismarine",
+     "dark prismarine",
+     "oak",
+     "sea lanterns"
+    ],
+    [
+     "stone bricks",
+     "stripped spruce",
+     "copper",
+     "sea lanterns"
+    ]
+   ]
+  },
+  {
+   "name": "Deep Dark",
+   "placements": [
+    "above the sculk basin",
+    "in a chasm wall",
+    "around a shrieker circle"
+   ],
+   "palettes": [
+    [
+     "deepslate tiles",
+     "sculk",
+     "tuff",
+     "soul lanterns"
+    ],
+    [
+     "cobbled deepslate",
+     "reinforced deepslate",
+     "candles",
+     "amethyst"
+    ]
+   ]
+  }
+ ],
+ "styles": [
+  {
+   "name": "Rustic",
+   "palette": [
+    "oak",
+    "cobblestone",
+    "hay",
+    "lanterns"
+   ]
+  },
+  {
+   "name": "Medieval",
+   "palette": [
+    "stone bricks",
+    "spruce",
+    "dark oak",
+    "lanterns"
+   ]
+  },
+  {
+   "name": "Gothic",
+   "palette": [
+    "deepslate tiles",
+    "dark oak",
+    "tinted glass",
+    "soul lanterns"
+   ]
+  },
+  {
+   "name": "Nordic",
+   "palette": [
+    "spruce",
+    "stone",
+    "snow",
+    "campfires"
+   ]
+  },
+  {
+   "name": "Steampunk",
+   "palette": [
+    "copper",
+    "oxidised copper",
+    "iron",
+    "glowstone"
+   ]
+  },
+  {
+   "name": "Fantasy",
+   "palette": [
+    "mossy cobblestone",
+    "amethyst",
+    "cherry",
+    "glow lichen"
+   ]
+  },
+  {
+   "name": "Oriental",
+   "palette": [
+    "dark oak",
+    "red terracotta",
+    "bamboo",
+    "paper lanterns"
+   ]
+  },
+  {
+   "name": "Desert",
+   "palette": [
+    "sandstone",
+    "terracotta",
+    "acacia",
+    "torches"
+   ]
+  },
+  {
+   "name": "Elven",
+   "palette": [
+    "birch",
+    "white terracotta",
+    "leaves",
+    "end rods"
+   ]
+  },
+  {
+   "name": "Industrial",
+   "palette": [
+    "iron blocks",
+    "polished blackstone",
+    "copper",
+    "redstone lamps"
+   ]
+  }
+ ],
+ "hooks": [
+  "Nobody remembers who raised the {build} in the {biome}, only that {builder} was the last to keep its lights burning.",
+  "The {build} appears on no map, though every trader knows the {biome} road passes it.",
+  "Long before the village, {builder} built the {build} here and swore never to finish it.",
+  "The {build} was a gift, or a warning; the {biome} has kept the answer.",
+  "Three winters ago the {build} still had a roof. {builder} took it, plank by plank, and left the rest.",
+  "Travellers say the {build} moves a few blocks every year, deeper into the {biome}.",
+  "The {build} was the first thing {builder} built and the last place anyone saw them.",
+  "Carved above the door of the {build}: one name, half scratched out.",
+  "Every stone in the {build} came from somewhere else in the {biome}, hauled by hand.",
+  "The {build} was meant to guard the {biome}. It guards only itself now.",
+  "Once a week a lantern still burns in the {build}, though the {biome} road has been empty for years.",
+  "The {build} was built in a single summer by {builder} and their two apprentices.",
+  "Locals leave bread at the {build} and will not say why.",
+  "The {build} sits exactly where the old river used to bend.",
+  "A bell in the {build} rings when the weather turns, or so the {biome} folk claim.",
+  "The {build} was abandoned mid-repair; the scaffolding is still up.",
+  "Two families built the {build} together and have not spoken since.",
+  "The {build} was here before the {biome} grew around it.",
+  "Ask about the {build} in the tavern and someone will change the subject.",
+  "The {build} marks the spot where {builder} turned back."
+ ],
+ "builders": [
+  "a wandering mason",
+  "an exiled cartographer",
+  "a retired pillager captain",
+  "a lighthouse keeper's daughter",
+  "a monk who spoke only to bees",
+  "a smuggler with an honest face",
+  "the last of the salt merchants",
+  "an alchemist who feared the dark",
+  "a shepherd who counted stars",
+  "a pair of stranded sailors",
+  "a cleric who lost her faith",
+  "a mapmaker paid in emeralds",
+  "a blacksmith with one arm",
+  "a witch who kept cats and secrets",
+  "a drowned king's steward"
+ ],
+ "reasons": [
+  "it was abandoned when the wells ran dry",
+  "they left after a fire took the west wing",
+  "a plague of phantoms drove everyone off",
+  "the road was rerouted and the money followed it",
+  "a feud over a single chest of loot ended it",
+  "the ground shifted and the foundations cracked",
+  "a raid emptied it in one night",
+  "the caretaker simply grew old and walked away",
+  "the river changed course and stranded it",
+  "a promise was broken and no one stayed to explain",
+  "the last lantern oil ran out one winter",
+  "a treasure was found, or claimed to be, and everyone fled with a share"
+ ],
+ "futures": [
+  "a hidden cellar beneath it could lead to a larger dungeon build",
+  "its bell tower begs for a matching village",
+  "the path from its door should one day reach a proper town",
+  "its unfinished wing is the seed of a future workshop",
+  "the graves beside it could grow into a crypt build",
+  "a bridge from here would open the far bank to settlement",
+  "its collapsed roof is the excuse for a grand rebuild",
+  "the nearby cave it guards deserves its own storyline",
+  "the road past it should eventually get a toll house and a rival inn",
+  "a lighthouse offshore would answer its signal fire"
+ ]
+}
