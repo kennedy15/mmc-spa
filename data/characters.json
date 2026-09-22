@@ -2,6 +2,80 @@
   "world": "Kronos",
   "worldId": 45,
   "characters": [
-    { "name": "YourMain", "role": "main", "owner": "me" }
+    {
+      "name": "Pikalus",
+      "role": "main",
+      "owner": "me"
+    },
+    {
+      "name": "Pikanu",
+      "role": "mule",
+      "owner": "me"
+    },
+    {
+      "name": "Strom",
+      "role": "mule",
+      "owner": "me"
+    },
+    {
+      "name": "Fubichi",
+      "role": "mule",
+      "owner": "me"
+    },
+    {
+      "name": "Jurni",
+      "role": "mule",
+      "owner": "me"
+    },
+    {
+      "name": "Exclusivity",
+      "role": "mule",
+      "owner": "me"
+    },
+    {
+      "name": "Apox",
+      "role": "mule",
+      "owner": "me"
+    },
+    {
+      "name": "Stomperz",
+      "role": "mule",
+      "owner": "me"
+    },
+    {
+      "name": "Unsated",
+      "role": "mule",
+      "owner": "me"
+    },
+    {
+      "name": "Aribusi",
+      "role": "mule",
+      "owner": "me"
+    },
+    {
+      "name": "PikaIus",
+      "role": "mule",
+      "owner": "me"
+    },
+    {
+      "name": "JuiIi",
+      "role": "mule",
+      "owner": "me"
+    },
+    {
+      "name": "Pikasa",
+      "role": "mule",
+      "owner": "me"
+    },
+    {
+      "name": "Darkrii",
+      "role": "mule",
+      "owner": "me"
+    },
+    {
+      "name": "Hippaa",
+      "role": "mule",
+      "owner": "me"
+    }
   ]
 }

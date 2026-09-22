@@ -41,11 +41,18 @@ export interface Boss {
   name: string;
   difficulties: BossDifficulty[];
 }
+export interface BossPreset {
+  id: string;
+  name: string;
+  description?: string;
+  entries: { bossId: string; difficulty: string }[];
+}
 export interface BossesDoc {
   asOf: string;
   version?: string;
   source?: string;
   bosses: Boss[];
+  presets?: BossPreset[];
 }
 
 export interface Assignment {
@@ -77,7 +84,10 @@ export interface Clear {
 export type PriceOverrides = Record<string, number>;
 
 export interface Settings {
+  /** Crystals one character can sell per week (GMS: 14). */
   crystalCap: number;
+  /** Crystals the whole world/account can sell per week (GMS: 180). */
+  worldCrystalCap: number;
   /** Multiply crystal values by 5 (GMS Heroic worlds). */
   heroic: boolean;
   /** Extra character names for the ledger that are not in characters.json. */
@@ -90,6 +100,7 @@ export interface Settings {
 
 export const DEFAULT_SETTINGS: Settings = {
   crystalCap: 14,
+  worldCrystalCap: 180,
   heroic: true,
   extraCharacters: [],
   hiddenCharacters: [],

@@ -5,7 +5,8 @@
  "notes": [
   "Crystal values are for 1 party member; meso per clear = crystal / partySize, floored.",
   "Values are multiplied by 5 in Heroic worlds (Kronos, Hyperion, Solis) per the wiki footnote; the app applies this when the Heroic setting is on.",
-  "cadence is the in-game reset for that difficulty: daily, weekly (Thursday 00:00 UTC) or monthly (1st 00:00 UTC)."
+  "cadence is the in-game reset for that difficulty: daily, weekly (Thursday 00:00 UTC) or monthly (1st 00:00 UTC).",
+  "presets: bundles of boss/difficulty pairs that can be applied to a character in one click; weekly entries go to the weekly tracker, monthly ones (Black Mage, Extreme bosses) to the monthly tracker."
  ],
  "bosses": [
   {
@@ -689,6 +690,138 @@
      "crystal": 1190600000,
      "cadence": "weekly",
      "minLevel": 295
+    }
+   ]
+  }
+ ],
+ "presets": [
+  {
+   "id": "ctene",
+   "name": "CTENE",
+   "description": "Standard weekly CTENE rotation plus Hard Black Mage monthly.",
+   "entries": [
+    {
+     "bossId": "darknell",
+     "difficulty": "hard"
+    },
+    {
+     "bossId": "verus-hilla",
+     "difficulty": "hard"
+    },
+    {
+     "bossId": "gloom",
+     "difficulty": "chaos"
+    },
+    {
+     "bossId": "slime",
+     "difficulty": "chaos"
+    },
+    {
+     "bossId": "will",
+     "difficulty": "hard"
+    },
+    {
+     "bossId": "lucid",
+     "difficulty": "hard"
+    },
+    {
+     "bossId": "damien",
+     "difficulty": "hard"
+    },
+    {
+     "bossId": "lotus",
+     "difficulty": "hard"
+    },
+    {
+     "bossId": "magnus",
+     "difficulty": "hard"
+    },
+    {
+     "bossId": "papulatus",
+     "difficulty": "chaos"
+    },
+    {
+     "bossId": "princess-no",
+     "difficulty": "normal"
+    },
+    {
+     "bossId": "akechi",
+     "difficulty": "normal"
+    },
+    {
+     "bossId": "black-mage",
+     "difficulty": "hard"
+    }
+   ]
+  },
+  {
+   "id": "grandis",
+   "name": "GRANDIS",
+   "description": "Grandis-era rotation (Baldrix to Damien) plus Extreme Lotus and Hard Black Mage monthly.",
+   "entries": [
+    {
+     "bossId": "baldrix",
+     "difficulty": "normal"
+    },
+    {
+     "bossId": "limbo",
+     "difficulty": "normal"
+    },
+    {
+     "bossId": "malefic-star",
+     "difficulty": "normal"
+    },
+    {
+     "bossId": "kalos",
+     "difficulty": "chaos"
+    },
+    {
+     "bossId": "kaling",
+     "difficulty": "normal"
+    },
+    {
+     "bossId": "first-adversary",
+     "difficulty": "normal"
+    },
+    {
+     "bossId": "seren",
+     "difficulty": "hard"
+    },
+    {
+     "bossId": "lotus",
+     "difficulty": "extreme"
+    },
+    {
+     "bossId": "darknell",
+     "difficulty": "hard"
+    },
+    {
+     "bossId": "verus-hilla",
+     "difficulty": "hard"
+    },
+    {
+     "bossId": "gloom",
+     "difficulty": "chaos"
+    },
+    {
+     "bossId": "slime",
+     "difficulty": "chaos"
+    },
+    {
+     "bossId": "will",
+     "difficulty": "hard"
+    },
+    {
+     "bossId": "lucid",
+     "difficulty": "hard"
+    },
+    {
+     "bossId": "damien",
+     "difficulty": "hard"
+    },
+    {
+     "bossId": "black-mage",
+     "difficulty": "hard"
     }
    ]
   }

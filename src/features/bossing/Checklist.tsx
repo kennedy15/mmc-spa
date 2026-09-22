@@ -5,8 +5,8 @@ import { useCharacterNames } from '../tracker/hooks';
 import { Card, Empty, PageHeader, Stat, Stepper, Badge } from '../../app/ui';
 import { fmtMeso } from '../../app/format';
 import { formatCountdown, nextReset, periodLabel, previousPeriod } from '../../lib/reset/period';
-import { uid, type Clear } from '../../lib/types';
-import { assignmentMeso, bossLabel, clearFor, crystalValue, currentPeriods, mesoPerClear, visibleCharacters } from './lib';
+import { uid, type Assignment, type Clear } from '../../lib/types';
+import { assignmentMeso, bossLabel, clearFor, crystalValue, crystalsInWeek, currentPeriods, mesoPerClear, visibleCharacters } from './lib';
 
 function useNow(ms = 30_000) {
   const [now, setNow] = useState(() => new Date());
@@ -31,43 +31,80 @@ export function Checklist() {
   const periods = useMemo(() => currentPeriods(now), [now]);
 
   const byChar = useMemo(() => {
-    const m = new Map<string, typeof assignments>();
-    for (const a of [...assignments].sort((x, y) => x.order - y.order)) {
-      if (!names.includes(a.character) && !m.has(a.character)) m.set(a.character, []);
-      m.set(a.character, [...(m.get(a.character) ?? []), a]);
-    }
-    return [...m.entries()].filter(([c]) => names.includes(c) || true).sort((a, b) => names.indexOf(a[0]) - names.indexOf(b[0]));
-  }, [assignments, names]);
+    const m = new Map<string, Assignment[]>();
+    for (const a of [...assignments].sort((x, y) => x.order - y.order)) m.set(a.character, [...(m.get(a.character) ?? []), a]);
+    return [...m.entries()].filter(([c]) => !settings.hiddenCharacters.includes(c)).sort((a, b) => (names.indexOf(a[0]) + 1 || 999) - (names.indexOf(b[0]) + 1 || 999));
+  }, [assignments, names, settings.hiddenCharacters]);
 
-  const weekClears = clears.filter((c) => c.cadence === 'weekly' && c.period === periods.weekly);
-  const monthClears = clears.filter((c) => c.cadence === 'monthly' && c.period === periods.monthly);
-  const weekMeso = weekClears.reduce((n, c) => n + c.meso, 0) + monthClears.reduce((n, c) => n + c.meso, 0);
-  const expectedNow = assignments.reduce((n, a) => n + assignmentMeso(a, bosses, prices, settings), 0);
+  const weekCrystals = useMemo(() => crystalsInWeek(clears, periods.weekly), [clears, periods.weekly]);
   const crystalsByChar = new Map<string, number>();
-  for (const c of weekClears) crystalsByChar.set(c.character, (crystalsByChar.get(c.character) ?? 0) + 1);
-  const anyAtCap = [...crystalsByChar.values()].some((n) => n >= settings.crystalCap);
-  const totalCrystals = weekClears.length;
+  for (const c of weekCrystals) crystalsByChar.set(c.character, (crystalsByChar.get(c.character) ?? 0) + 1);
+  const totalCrystals = weekCrystals.length;
+  const charsAtCap = [...crystalsByChar.entries()].filter(([, n]) => n >= settings.crystalCap).map(([c]) => c);
+  const worldAtCap = totalCrystals >= settings.worldCrystalCap;
+  const periodMeso = clears.filter((c) => c.period === periods[c.cadence]).reduce((n, c) => n + c.meso, 0);
+  const expectedNow = assignments.reduce((n, a) => n + assignmentMeso(a, bosses, prices, settings), 0);
 
   if (!assignments.length) {
     return (
       <>
-        <PageHeader title="Weekly checklist" />
+        <PageHeader title="Checklist" />
         <Empty title="No bosses assigned yet">
-          <Link to="/bossing/assignments" className="btn-accent mt-3">
-            Assign bosses
-          </Link>
+          Apply the CTENE or GRANDIS preset to a character, or pick bosses one by one.
+          <div className="mt-3">
+            <Link to="/bossing/assignments" className="btn-accent">
+              Assign bosses
+            </Link>
+          </div>
         </Empty>
       </>
     );
   }
 
+  const renderRow = (a: Assignment) => {
+    const period = periods[a.cadence];
+    const clear = clearFor(clears, a, period);
+    const missedLast = !clear && !clearFor(clears, a, previousPeriod(a.cadence, period)) && clears.some((c) => c.character === a.character && c.bossId === a.bossId && c.difficulty === a.difficulty);
+    const party = clear?.partySize ?? a.defaultPartySize;
+    const crystal = crystalValue(bosses, prices, settings, a.bossId, a.difficulty);
+    const meso = clear?.meso ?? mesoPerClear(crystal, party);
+    const toggle = () => {
+      if (clear) void removeClear(clear.id);
+      else {
+        const c: Clear = { id: uid(), character: a.character, bossId: a.bossId, difficulty: a.difficulty, cadence: a.cadence, period, clearedAt: new Date().toISOString(), partySize: party, meso: mesoPerClear(crystal, party) };
+        void addClear(c);
+      }
+    };
+    return (
+      <li key={a.id} className={`flex items-center gap-3 px-4 py-1.5 ${clear ? 'bg-good/5' : ''}`}>
+        <input type="checkbox" checked={!!clear} onChange={toggle} className="size-4 accent-[#ff7a1a] cursor-pointer" aria-label={`Cleared ${bossLabel(bosses, a.bossId, a.difficulty)}`} />
+        <button className={`flex-1 text-left text-sm ${clear ? 'text-ink-2 line-through decoration-ink-3' : ''}`} onClick={toggle}>
+          {bossLabel(bosses, a.bossId, a.difficulty)}
+          {missedLast && (
+            <span className="ml-2">
+              <Badge tone="warn">missed last {a.cadence === 'monthly' ? 'month' : 'week'}</Badge>
+            </span>
+          )}
+        </button>
+        <Stepper
+          value={party}
+          onChange={(v) => {
+            if (clear) void updateClear(clear.id, { partySize: v, meso: mesoPerClear(crystal, v) });
+            else void useStore.getState().setAssignments(assignments.map((x) => (x.id === a.id ? { ...x, defaultPartySize: v } : x)));
+          }}
+        />
+        <span className={`w-20 text-right text-sm tabular ${clear ? 'text-good' : 'text-ink-2'}`}>{fmtMeso(meso)}</span>
+      </li>
+    );
+  };
+
   return (
     <>
       <PageHeader
-        title="Weekly checklist"
+        title="Checklist"
         subtitle={
           <>
-            Week of {periodLabel('weekly', periods.weekly)} · month {periodLabel('monthly', periods.monthly)} · resets in UTC
+            Week of {periodLabel('weekly', periods.weekly)} · {periodLabel('monthly', periods.monthly)} · resets in UTC
           </>
         }
         action={
@@ -80,18 +117,24 @@ export function Checklist() {
         <Card><Stat label="Weekly reset" value={formatCountdown(nextReset('weekly', now), now)} sub="Thursday 00:00 UTC" /></Card>
         <Card><Stat label="Monthly reset" value={formatCountdown(nextReset('monthly', now), now)} sub="1st 00:00 UTC" /></Card>
         <Card>
-          <Stat label="Crystals this week" value={`${totalCrystals}`} tone={anyAtCap ? 'warn' : undefined} sub={anyAtCap ? `a character is at the ${settings.crystalCap}/week cap` : `cap ${settings.crystalCap} per character`} />
+          <Stat
+            label="Crystals this week"
+            value={`${totalCrystals} / ${settings.worldCrystalCap}`}
+            tone={worldAtCap ? 'bad' : charsAtCap.length ? 'warn' : undefined}
+            sub={worldAtCap ? 'world cap reached: extra crystals cannot be sold' : charsAtCap.length ? `${charsAtCap.join(', ')} at the ${settings.crystalCap}/character cap` : `world cap · ${settings.crystalCap} per character`}
+          />
         </Card>
-        <Card><Stat label="Meso this period" value={fmtMeso(weekMeso)} tone="accent" sub={`of ${fmtMeso(expectedNow)} if everything is cleared`} /></Card>
+        <Card><Stat label="Meso this period" value={fmtMeso(periodMeso)} tone="accent" sub={`of ${fmtMeso(expectedNow)} if everything is cleared`} /></Card>
       </div>
 
       <div className="grid gap-4 xl:grid-cols-2">
         {byChar.map(([character, list]) => {
           const used = crystalsByChar.get(character) ?? 0;
-          const charMeso = list.reduce((n, a) => {
-            const c = clearFor(clears, a, periods[a.cadence]);
-            return n + (c?.meso ?? 0);
-          }, 0);
+          const weekly = list.filter((a) => a.cadence === 'weekly');
+          const monthly = list.filter((a) => a.cadence === 'monthly');
+          const charMeso = list.reduce((n, a) => n + (clearFor(clears, a, periods[a.cadence])?.meso ?? 0), 0);
+          const weeklyDone = weekly.filter((a) => clearFor(clears, a, periods.weekly)).length;
+          const monthlyDone = monthly.filter((a) => clearFor(clears, a, periods.monthly)).length;
           return (
             <Card
               key={character}
@@ -105,45 +148,22 @@ export function Checklist() {
               }
               action={<span className="text-xs text-ink-2 tabular">{fmtMeso(charMeso)} this period</span>}
             >
-              <ul className="divide-y divide-border -mx-4">
-                {list.map((a) => {
-                  const period = periods[a.cadence];
-                  const clear = clearFor(clears, a, period);
-                  const missedLast = !clear && !clearFor(clears, a, previousPeriod(a.cadence, period)) && clears.some((c) => c.character === a.character && c.bossId === a.bossId && c.difficulty === a.difficulty);
-                  const party = clear?.partySize ?? a.defaultPartySize;
-                  const crystal = crystalValue(bosses, prices, settings, a.bossId, a.difficulty);
-                  const meso = clear?.meso ?? mesoPerClear(crystal, party);
-                  const toggle = () => {
-                    if (clear) void removeClear(clear.id);
-                    else {
-                      const c: Clear = { id: uid(), character: a.character, bossId: a.bossId, difficulty: a.difficulty, cadence: a.cadence, period, clearedAt: new Date().toISOString(), partySize: party, meso: mesoPerClear(crystal, party) };
-                      void addClear(c);
-                    }
-                  };
-                  return (
-                    <li key={a.id} className={`flex items-center gap-3 px-4 py-2 ${clear ? 'bg-good/5' : ''}`}>
-                      <input type="checkbox" checked={!!clear} onChange={toggle} className="size-4 accent-[#ff7a1a] cursor-pointer" aria-label={`Cleared ${bossLabel(bosses, a.bossId, a.difficulty)}`} />
-                      <button className={`flex-1 text-left text-sm ${clear ? 'text-ink-2 line-through decoration-ink-3' : ''}`} onClick={toggle}>
-                        {bossLabel(bosses, a.bossId, a.difficulty)}
-                        {a.cadence === 'monthly' && <Badge>monthly</Badge>}
-                        {missedLast && (
-                          <span className="ml-2">
-                            <Badge tone="warn">missed last {a.cadence === 'monthly' ? 'month' : 'week'}</Badge>
-                          </span>
-                        )}
-                      </button>
-                      <Stepper
-                        value={party}
-                        onChange={(v) => {
-                          if (clear) void updateClear(clear.id, { partySize: v, meso: mesoPerClear(crystal, v) });
-                          else void useStore.getState().setAssignments(assignments.map((x) => (x.id === a.id ? { ...x, defaultPartySize: v } : x)));
-                        }}
-                      />
-                      <span className={`w-20 text-right text-sm tabular ${clear ? 'text-good' : 'text-ink-2'}`}>{fmtMeso(meso)}</span>
-                    </li>
-                  );
-                })}
-              </ul>
+              <div className="-mx-4">
+                <div className="flex items-center justify-between px-4 pb-1">
+                  <span className="label">Weekly</span>
+                  <span className="text-[11px] text-ink-3 tabular">
+                    {weeklyDone}/{weekly.length}
+                  </span>
+                </div>
+                <ul className="divide-y divide-border border-y border-border">{weekly.length ? weekly.map(renderRow) : <li className="px-4 py-2 text-xs text-ink-3">No weekly bosses.</li>}</ul>
+                <div className="flex items-center justify-between px-4 pt-3 pb-1">
+                  <span className="label">Monthly</span>
+                  <span className="text-[11px] text-ink-3 tabular">
+                    {monthlyDone}/{monthly.length}
+                  </span>
+                </div>
+                <ul className="divide-y divide-border border-y border-border">{monthly.length ? monthly.map(renderRow) : <li className="px-4 py-2 text-xs text-ink-3">No monthly bosses assigned.</li>}</ul>
+              </div>
             </Card>
           );
         })}

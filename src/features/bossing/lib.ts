@@ -1,5 +1,5 @@
-import type { Assignment, Boss, BossesDoc, Clear, PriceOverrides, Settings } from '../../lib/types';
-import { periodKey, periodsBetween, previousPeriod, type Cadence } from '../../lib/reset/period';
+import { uid, type Assignment, type Boss, type BossesDoc, type BossPreset, type Clear, type PriceOverrides, type Settings } from '../../lib/types';
+import { periodKey, periodRange, periodsBetween, previousPeriod, type Cadence } from '../../lib/reset/period';
 
 export const priceKey = (bossId: string, difficulty: string) => `${bossId}:${difficulty}`;
 
@@ -77,4 +77,28 @@ export function visibleCharacters(all: string[], settings: Settings): string[] {
 /** The weekly period a clear belongs to on the history chart. */
 export function weekOfClear(c: Clear): string {
   return c.cadence === 'weekly' ? c.period : periodKey('weekly', new Date(c.clearedAt));
+}
+
+/** Tracker cadence for a boss difficulty: monthly stays monthly, daily and weekly go to the weekly tracker. */
+export function cadenceFor(doc: BossesDoc | null, bossId: string, difficulty: string): 'weekly' | 'monthly' {
+  const d = findBoss(doc, bossId)?.difficulties.find((x) => x.key === difficulty);
+  return d?.cadence === 'monthly' ? 'monthly' : 'weekly';
+}
+
+/** Assignments a preset would add for a character (skipping ones already assigned). */
+export function presetAssignments(preset: BossPreset, character: string, existing: Assignment[], doc: BossesDoc | null): Assignment[] {
+  const mine = existing.filter((a) => a.character === character);
+  let order = mine.length ? Math.max(...mine.map((m) => m.order)) + 1 : 0;
+  const out: Assignment[] = [];
+  for (const e of preset.entries) {
+    if (mine.some((a) => a.bossId === e.bossId && a.difficulty === e.difficulty)) continue;
+    out.push({ id: uid(), character, bossId: e.bossId, difficulty: e.difficulty, cadence: cadenceFor(doc, e.bossId, e.difficulty), defaultPartySize: 1, order: order++ });
+  }
+  return out;
+}
+
+/** Clears that consume a crystal in the given weekly period: weekly clears of that period plus monthly clears made during it. */
+export function crystalsInWeek(clears: Clear[], weeklyPeriod: string): Clear[] {
+  const { start, end } = periodRange('weekly', weeklyPeriod);
+  return clears.filter((c) => (c.cadence === 'weekly' ? c.period === weeklyPeriod : c.clearedAt >= start.toISOString() && c.clearedAt < end.toISOString()));
 }

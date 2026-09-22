@@ -7,7 +7,7 @@ The design doc is in [`MapleTracker + Build Board — Design Doc.md`](./MapleTra
 ## Setup (once)
 
 1. **Characters.** Edit [`data/characters.json`](data/characters.json): set `world` / `worldId` (Bera 1, Scania 19, Kronos 45, Hyperion 70, Luna 30, Solis 46) and list every character you want tracked. A friend's characters can go in the same list with `"owner": "friend"` and, if they play elsewhere, their own `"worldId"`.
-2. **Pages.** In the repo: Settings → Pages → Source: **GitHub Actions**. The `Deploy to GitHub Pages` workflow runs on every push to `main`.
+2. **Pages.** In the repo: Settings → Pages → Source: **GitHub Actions**. The `Deploy to GitHub Pages` workflow runs on every push to `main` and publishes to https://kennedy15.github.io/mmc-spa/. Note: GitHub only serves Pages from a **private** repo on GitHub Pro; on a Free account either make the repo public (it holds only public rankings data) or run the site locally with `npm run dev` after `git pull` — the daily snapshot Action works either way.
 3. **First snapshot.** Actions → *Daily snapshot* → *Run workflow*. It runs every day at 18:00 UTC after that and redeploys the site whenever the data changed.
 4. **Data folder** (optional, Chrome/Edge). Open the site → Settings → *Choose data folder*. Ideas, photos, boss clears, settings and a mirror of every snapshot are written there as JSON/PNG.
 5. **AI generator** (optional). Settings → paste an Anthropic API key. It is kept in IndexedDB only.
@@ -16,7 +16,7 @@ The design doc is in [`MapleTracker + Build Board — Design Doc.md`](./MapleTra
 
 ```bash
 npm install
-npm run dev          # http://localhost:5173/maple-tracker/
+npm run dev          # http://localhost:5173/mmc-spa/
 npm run snapshot     # run the collector once against data/characters.json
 npm run build        # type-check + production build into dist/
 ```
@@ -35,6 +35,10 @@ src/features        tracker/, bossing/, ideas/, settings/
 src/lib             nexon/ (BigInt EXP math, snapshot parsing), reset/ (UTC boss periods), storage/ (IndexedDB, File System Access, export/import)
 docs/samples        raw rankings responses captured during verification
 ```
+
+## Boss presets
+
+`public/bosses.json` carries two presets that Assignments can apply to one or all characters in a click: **CTENE** (Hard Darknell, Hard Verus Hilla, Chaos Gloom, Chaos Guardian Angel Slime, Hard Will, Hard Lucid, Hard Damien, Hard Lotus, Hard Magnus, Chaos Papulatus, Normal Princess No, Normal Akechi) and **GRANDIS** (Normal Baldrix, Normal Limbo, Normal Malefic Star, Chaos Kalos, Normal Kaling, Normal First Adversary, Hard Seren, Extreme Lotus, plus the Darknell-to-Damien block). Both add Hard Black Mage to the character's monthly tracker. Each boss's difficulty can be changed from its dropdown afterwards. Caps: 14 crystals per character per week and 180 per world per week (both editable in Settings).
 
 ## Data sources
 
