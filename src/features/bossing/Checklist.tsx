@@ -7,6 +7,7 @@ import { fmtMeso } from '../../app/format';
 import { formatCountdown, nextReset, periodLabel, previousPeriod } from '../../lib/reset/period';
 import { uid, type Assignment, type Clear } from '../../lib/types';
 import { assignmentMeso, bossLabel, clearFor, crystalValue, crystalsInWeek, currentPeriods, mesoPerClear, visibleCharacters } from './lib';
+import { WeeklyMeso } from './WeeklyMeso';
 
 function useNow(ms = 30_000) {
   const [now, setNow] = useState(() => new Date());
@@ -125,6 +126,10 @@ export function Checklist() {
           />
         </Card>
         <Card><Stat label="Meso this period" value={fmtMeso(periodMeso)} tone="accent" sub={`of ${fmtMeso(expectedNow)} if everything is cleared`} /></Card>
+      </div>
+
+      <div className="mb-4">
+        <WeeklyMeso />
       </div>
 
       <div className="grid gap-4 xl:grid-cols-2">

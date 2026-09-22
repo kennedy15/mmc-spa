@@ -6,6 +6,7 @@ import { fmtMeso, fmtDate } from '../../app/format';
 import { SERIES, ACCENT, ChartTip, axisProps, shortDate, Legend } from '../../app/charts';
 import { periodKey, previousPeriod } from '../../lib/reset/period';
 import { assignmentMeso, expectedWeekly, mesoByWeek } from './lib';
+import { WeeklyMeso } from './WeeklyMeso';
 
 export function Summary() {
   const bosses = useStore((s) => s.bosses);
@@ -58,6 +59,9 @@ export function Summary() {
         <Card><Stat label="Clears logged" value={clears.length} sub={`${weeks.length} week${weeks.length === 1 ? '' : 's'} of history`} /></Card>
       </div>
 
+      <div className="mb-4">
+        <WeeklyMeso compact />
+      </div>
       <div className="grid gap-4 lg:grid-cols-2">
         <Card title="Expected vs actual · last 4 weeks">
           <div className="h-56">
