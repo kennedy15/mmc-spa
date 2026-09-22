@@ -5,6 +5,7 @@ import { Card, Empty, PageHeader, Stepper, Field, Badge } from '../../app/ui';
 import { fmtMeso } from '../../app/format';
 import { uid, type Assignment } from '../../lib/types';
 import { assignmentMeso, bossLabel, cadenceFor, crystalValue, findBoss, mesoPerClear, presetAssignments, visibleCharacters } from './lib';
+import { CharacterPicker } from './CharacterPicker';
 
 export function Assignments() {
   const bosses = useStore((s) => s.bosses);
@@ -117,23 +118,19 @@ export function Assignments() {
   return (
     <>
       <PageHeader title="Assignments" subtitle={`Crystal values ${bosses.version ?? ''} as of ${bosses.asOf}${settings.heroic ? ' · Heroic ×5 applied' : ''}. Change a boss's difficulty from its dropdown; only Black Mage is monthly; everything else is weekly.`} />
-      <div className="flex flex-wrap items-center gap-2 mb-4">
-        {names.map((n) => (
-          <button key={n} className={character === n ? 'chip-on' : 'chip'} onClick={() => setCharacter(n)}>
-            {n}
-            {assignments.some((a) => a.character === n) && <span className="ml-1.5 text-ink-3">{assignments.filter((a) => a.character === n).length}</span>}
-          </button>
-        ))}
-        <span className="inline-flex items-center gap-1">
-          <input className="input w-36 py-0.5 text-xs" placeholder="Add character…" value={newChar} onChange={(e) => setNewChar(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && addCharacter()} />
+      <div className="card p-3 mb-4">
+        <CharacterPicker selected={character || null} onSelect={(n) => setCharacter(n ?? '')} />
+        <div className="flex items-center gap-2 mt-3 pt-3 border-t border-border">
+          <span className="text-xs text-ink-3">Drag a character onto a group to apply that preset. Ledger-only character:</span>
+          <input className="input w-40 py-0.5 text-xs" placeholder="Name…" value={newChar} onChange={(e) => setNewChar(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && addCharacter()} />
           <button className="btn btn-sm" onClick={addCharacter} disabled={!newChar.trim()}>
             Add
           </button>
-        </span>
+        </div>
       </div>
 
       {!character ? (
-        <Empty title="Add a character first">Characters come from data/characters.json, or add one by name above for the ledger only.</Empty>
+        <Empty title="Pick a character">Click a tile above to edit its bosses. Characters come from data/characters.json, or add one by name for the ledger only.</Empty>
       ) : (
         <div className="grid gap-4 lg:grid-cols-[minmax(0,2fr)_minmax(0,3fr)]">
           <div className="space-y-4">

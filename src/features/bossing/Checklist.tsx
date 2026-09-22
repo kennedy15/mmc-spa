@@ -8,6 +8,7 @@ import { formatCountdown, nextReset, periodLabel, previousPeriod } from '../../l
 import { uid, type Assignment, type Clear } from '../../lib/types';
 import { assignmentMeso, bossLabel, clearFor, crystalValue, crystalsInWeek, currentPeriods, mesoPerClear, visibleCharacters } from './lib';
 import { WeeklyMeso } from './WeeklyMeso';
+import { CharacterPicker } from './CharacterPicker';
 
 function useNow(ms = 30_000) {
   const [now, setNow] = useState(() => new Date());
@@ -30,6 +31,7 @@ export function Checklist() {
   const updateClear = useStore((s) => s.updateClear);
   const names = visibleCharacters(useCharacterNames(), settings);
   const periods = useMemo(() => currentPeriods(now), [now]);
+  const [focus, setFocus] = useState<string | null>(null);
 
   const byChar = useMemo(() => {
     const m = new Map<string, Assignment[]>();
@@ -131,9 +133,12 @@ export function Checklist() {
       <div className="mb-4">
         <WeeklyMeso />
       </div>
+      <div className="card p-3 mb-4">
+        <CharacterPicker selected={focus} onSelect={setFocus} />
+      </div>
 
       <div className="grid gap-4 xl:grid-cols-2">
-        {byChar.map(([character, list]) => {
+        {byChar.filter(([c]) => !focus || c === focus).map(([character, list]) => {
           const used = crystalsByChar.get(character) ?? 0;
           const weekly = list.filter((a) => a.cadence === 'weekly');
           const monthly = list.filter((a) => a.cadence === 'monthly');
