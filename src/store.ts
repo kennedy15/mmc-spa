@@ -47,6 +47,8 @@ interface State {
   addClear(c: Clear): Promise<void>;
   removeClear(id: string): Promise<void>;
   updateClear(id: string, patch: Partial<Clear>): Promise<void>;
+  /** Add and remove clears in one save. */
+  bulkClears(change: { add: Clear[]; remove: string[] }): Promise<void>;
   setPrice(key: string, meso: number | null): Promise<void>;
   setApiKey(key: string | null): Promise<void>;
   importBundle(r: ImportResult): Promise<{ ideas: number; clears: number; assignments: number; photos: number }>;
@@ -234,6 +236,13 @@ export const useStore = create<State>()((set, get) => ({
 
   async removeClear(id) {
     const clears = get().clears.filter((x) => x.id !== id);
+    set({ clears });
+    await persist.saveDoc('bossing/clears.json', clears);
+  },
+
+  async bulkClears({ add, remove }) {
+    const drop = new Set(remove);
+    const clears = [...get().clears.filter((x) => !drop.has(x.id)), ...add];
     set({ clears });
     await persist.saveDoc('bossing/clears.json', clears);
   },

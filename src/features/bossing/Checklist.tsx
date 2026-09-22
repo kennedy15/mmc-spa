@@ -29,6 +29,7 @@ export function Checklist() {
   const addClear = useStore((s) => s.addClear);
   const removeClear = useStore((s) => s.removeClear);
   const updateClear = useStore((s) => s.updateClear);
+  const bulkClears = useStore((s) => s.bulkClears);
   const names = visibleCharacters(useCharacterNames(), settings);
   const periods = useMemo(() => currentPeriods(now), [now]);
   const [focus, setFocus] = useState<string | null>(null);
@@ -63,6 +64,22 @@ export function Checklist() {
       </>
     );
   }
+
+  const newClear = (a: Assignment): Clear => {
+    const period = periods[a.cadence];
+    const crystal = crystalValue(bosses, prices, settings, a.bossId, a.difficulty);
+    return { id: uid(), character: a.character, bossId: a.bossId, difficulty: a.difficulty, cadence: a.cadence, period, clearedAt: new Date().toISOString(), partySize: a.defaultPartySize, meso: mesoPerClear(crystal, a.defaultPartySize) };
+  };
+  const allDone = (list: Assignment[]) => list.length > 0 && list.every((a) => clearFor(clears, a, periods[a.cadence]));
+  /** Check every unticked boss in the list, or untick all of them when everything is already checked. */
+  const toggleAll = (list: Assignment[]) => {
+    if (allDone(list)) {
+      void bulkClears({ add: [], remove: list.map((a) => clearFor(clears, a, periods[a.cadence])!.id) });
+    } else {
+      void bulkClears({ add: list.filter((a) => !clearFor(clears, a, periods[a.cadence])).map(newClear), remove: [] });
+    }
+  };
+  const visibleAssignments = byChar.filter(([c]) => !focus || c === focus).flatMap(([, list]) => list);
 
   const renderRow = (a: Assignment) => {
     const period = periods[a.cadence];
@@ -111,9 +128,15 @@ export function Checklist() {
           </>
         }
         action={
-          <Link to="/bossing/assignments" className="btn">
-            Edit assignments
-          </Link>
+          <div className="flex gap-2">
+            <button className="btn" onClick={() => toggleAll(visibleAssignments)} disabled={!visibleAssignments.length}>
+              {allDone(visibleAssignments) ? 'Uncheck all' : 'Check all'}
+              {focus ? ` · ${focus}` : ''}
+            </button>
+            <Link to="/bossing/assignments" className="btn">
+              Edit assignments
+            </Link>
+          </div>
         }
       />
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 mb-4">
@@ -156,7 +179,14 @@ export function Checklist() {
                   </Badge>
                 </span>
               }
-              action={<span className="text-xs text-ink-2 tabular">{fmtMeso(charMeso)} this period</span>}
+              action={
+                <span className="flex items-center gap-2">
+                  <span className="text-xs text-ink-2 tabular">{fmtMeso(charMeso)} this period</span>
+                  <button className="btn btn-sm" onClick={() => toggleAll(list)}>
+                    {allDone(list) ? 'Uncheck all' : 'Check all'}
+                  </button>
+                </span>
+              }
             >
               <div className="-mx-4">
                 <div className="flex items-center justify-between px-4 pb-1">
