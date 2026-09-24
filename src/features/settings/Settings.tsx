@@ -111,7 +111,7 @@ export function Settings() {
         <Card title="Bossing">
           <div className="space-y-4">
             <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
-              <Field label="Weekly crystal cap" hint="GMS: 14 per character per week">
+              <Field label="Weekly crystal cap" hint="GMS: 14 weekly-boss crystals per character per week">
                 <input type="number" className="input" min={1} max={180} value={s.settings.crystalCap} onChange={(e) => void s.saveSettings({ crystalCap: Math.max(1, Number(e.target.value) || 14) })} />
               </Field>
               <Field label="World crystal cap" hint="GMS: 180 per world per week">

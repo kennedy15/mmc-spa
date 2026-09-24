@@ -10,27 +10,25 @@ import { SERIES } from '../../app/charts';
 import { periodKey, periodLabel } from '../../lib/reset/period';
 import { useCharacterNames } from '../tracker/hooks';
 import { OTHERS } from '../tracker/heat';
-import { bossLabel, mesoByWeek, weekOfClear } from './lib';
+import { bossLabel, clearsIn, mesoByPeriod } from './lib';
 
 interface FlowNode {
   id: string;
   kind: 'boss' | 'char';
 }
-interface FlowLink {
-  monthly: boolean;
-}
+type FlowLink = object;
 type Node = SankeyNode<FlowNode, FlowLink>;
 
 const LEFT = 230;
 const RIGHT = 150;
 const OTHER_CHARS = 'Other characters';
 
-/** One reset week of clears as a flow from boss to character; band width is meso. */
+/** One reset week of weekly-boss clears as a flow from boss to character; band width is meso. Monthly bosses stay out of it. */
 export function MesoFlow() {
   const clears = useStore((s) => s.clears);
   const bosses = useStore((s) => s.bosses);
   const names = useCharacterNames();
-  const weeks = useMemo(() => mesoByWeek(clears).filter((w) => w.total > 0), [clears]);
+  const weeks = useMemo(() => mesoByPeriod(clears, 'weekly').filter((w) => w.total > 0), [clears]);
   const current = periodKey('weekly');
   const [picked, setPicked] = useState<string | null>(null);
   const week = picked ?? weeks.find((w) => w.period === current)?.period ?? weeks[weeks.length - 1]?.period ?? null;
@@ -40,7 +38,7 @@ export function MesoFlow() {
 
   const flow = useMemo(() => {
     if (!week || !width) return null;
-    const inWeek = clears.filter((c) => weekOfClear(c) === week);
+    const inWeek = clearsIn(clears, 'weekly', week);
     if (!inWeek.length) return null;
     const byChar = new Map<string, number>();
     for (const c of inWeek) byChar.set(c.character, (byChar.get(c.character) ?? 0) + c.meso);
@@ -53,12 +51,12 @@ export function MesoFlow() {
     const colors = new Map<string, string>(order.map((c, i) => [c, SERIES[i]]));
     colors.set(OTHER_CHARS, OTHERS);
 
-    const links = new Map<string, { source: string; target: string; value: number; monthly: boolean }>();
+    const links = new Map<string, { source: string; target: string; value: number }>();
     for (const c of inWeek) {
       const source = bossLabel(bosses, c.bossId, c.difficulty);
       const target = charOf(c.character);
       const key = `${source}|${target}`;
-      const l = links.get(key) ?? { source, target, value: 0, monthly: c.cadence === 'monthly' };
+      const l = links.get(key) ?? { source, target, value: 0 };
       l.value += c.meso;
       links.set(key, l);
     }
@@ -86,7 +84,7 @@ export function MesoFlow() {
   if (!weeks.length) {
     return (
       <Card title="Meso flow">
-        <div className="text-sm text-ink-3 py-6 text-center">Tick clears on the Checklist and this shows which bosses each week's meso comes from.</div>
+        <div className="text-sm text-ink-3 py-6 text-center">Tick weekly bosses on the Checklist and this shows which bosses each week's meso comes from.</div>
       </Card>
     );
   }
@@ -103,7 +101,7 @@ export function MesoFlow() {
       ...pointerIn(e, boxEl),
       rows: [
         { value: fmtMeso(l.value), label: `${src} → ${dst}`, color: flow.colors.get(dst) },
-        { value: `${((l.value / flow.total) * 100).toFixed(1)}%`, label: `of the week${l.monthly ? ' · monthly boss' : ''}` },
+        { value: `${((l.value / flow.total) * 100).toFixed(1)}%`, label: 'of the week' },
       ],
     });
   };

@@ -7,8 +7,9 @@ import { Card, Empty, PageHeader, Stat, Stepper, Badge } from '../../app/ui';
 import { fmtMeso } from '../../app/format';
 import { formatCountdown, nextReset, periodLabel, previousPeriod } from '../../lib/reset/period';
 import { uid, type Assignment, type Clear } from '../../lib/types';
-import { assignmentMeso, bossLabel, clearFor, crystalValue, crystalsInWeek, currentPeriods, maxParty, mesoPerClear, visibleCharacters } from './lib';
-import { WeeklyMeso } from './WeeklyMeso';
+import { bossLabel, clearFor, clearsIn, crystalValue, currentPeriods, maxParty, mesoPerClear, visibleCharacters } from './lib';
+import { PeriodMeso } from './PeriodMeso';
+import { usePeriodMeso } from './usePeriodMeso';
 import { CharacterPicker } from './CharacterPicker';
 
 export function Checklist() {
@@ -32,14 +33,16 @@ export function Checklist() {
     return [...m.entries()].filter(([c]) => !settings.hiddenCharacters.includes(c)).sort((a, b) => (names.indexOf(a[0]) + 1 || 999) - (names.indexOf(b[0]) + 1 || 999));
   }, [assignments, names, settings.hiddenCharacters]);
 
-  const weekCrystals = useMemo(() => crystalsInWeek(clears, periods.weekly), [clears, periods.weekly]);
+  // Weekly and monthly bosses are tracked apart: crystals and meso for the week count weekly bosses only.
+  const weekClears = useMemo(() => clearsIn(clears, 'weekly', periods.weekly), [clears, periods.weekly]);
+  const monthClears = useMemo(() => clearsIn(clears, 'monthly', periods.monthly), [clears, periods.monthly]);
+  const month = usePeriodMeso('monthly', now);
   const crystalsByChar = new Map<string, number>();
-  for (const c of weekCrystals) crystalsByChar.set(c.character, (crystalsByChar.get(c.character) ?? 0) + 1);
-  const totalCrystals = weekCrystals.length;
+  for (const c of weekClears) crystalsByChar.set(c.character, (crystalsByChar.get(c.character) ?? 0) + 1);
+  const totalCrystals = weekClears.length;
   const charsAtCap = [...crystalsByChar.entries()].filter(([, n]) => n >= settings.crystalCap).map(([c]) => c);
   const worldAtCap = totalCrystals >= settings.worldCrystalCap;
-  const periodMeso = clears.filter((c) => c.period === periods[c.cadence]).reduce((n, c) => n + c.meso, 0);
-  const expectedNow = assignments.reduce((n, a) => n + assignmentMeso(a, bosses, prices, settings), 0);
+  const mesoOf = (list: Clear[], character: string) => list.reduce((n, c) => n + (c.character === character ? c.meso : 0), 0);
 
   if (!assignments.length) {
     return (
@@ -62,13 +65,15 @@ export function Checklist() {
     const crystal = crystalValue(bosses, prices, settings, a.bossId, a.difficulty);
     return { id: uid(), character: a.character, bossId: a.bossId, difficulty: a.difficulty, cadence: a.cadence, period, clearedAt: new Date().toISOString(), partySize: a.defaultPartySize, meso: mesoPerClear(crystal, a.defaultPartySize) };
   };
-  const allDone = (list: Assignment[]) => list.length > 0 && list.every((a) => clearFor(clears, a, periods[a.cadence]));
-  /** Check every unticked boss in the list, or untick all of them when everything is already checked. */
+  const weeklyOf = (list: Assignment[]) => list.filter((a) => a.cadence === 'weekly');
+  const allDone = (list: Assignment[]) => weeklyOf(list).length > 0 && weeklyOf(list).every((a) => clearFor(clears, a, periods.weekly));
+  /** Check every unticked weekly boss in the list, or untick them all when all are checked. Monthly bosses are ticked on their own. */
   const toggleAll = (list: Assignment[]) => {
+    const weekly = weeklyOf(list);
     if (allDone(list)) {
-      void bulkClears({ add: [], remove: list.map((a) => clearFor(clears, a, periods[a.cadence])!.id) });
+      void bulkClears({ add: [], remove: weekly.map((a) => clearFor(clears, a, periods.weekly)!.id) });
     } else {
-      void bulkClears({ add: list.filter((a) => !clearFor(clears, a, periods[a.cadence])).map(newClear), remove: [] });
+      void bulkClears({ add: weekly.filter((a) => !clearFor(clears, a, periods.weekly)).map(newClear), remove: [] });
     }
   };
   const visibleAssignments = byChar.filter(([c]) => !focus || c === focus).flatMap(([, list]) => list);
@@ -122,8 +127,8 @@ export function Checklist() {
         }
         action={
           <div className="flex gap-2">
-            <button className="btn" onClick={() => toggleAll(visibleAssignments)} disabled={!visibleAssignments.length}>
-              {allDone(visibleAssignments) ? 'Uncheck all' : 'Check all'}
+            <button className="btn" onClick={() => toggleAll(visibleAssignments)} disabled={!weeklyOf(visibleAssignments).length}>
+              {allDone(visibleAssignments) ? 'Uncheck all weekly' : 'Check all weekly'}
               {focus ? ` · ${focus}` : ''}
             </button>
             <Link to="/bossing/assignments" className="btn">
@@ -134,20 +139,22 @@ export function Checklist() {
       />
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 mb-4">
         <Card><Stat label="Weekly reset" value={formatCountdown(nextReset('weekly', now), now)} sub="Thursday 00:00 UTC" /></Card>
-        <Card><Stat label="Monthly reset" value={formatCountdown(nextReset('monthly', now), now)} sub="1st 00:00 UTC" /></Card>
         <Card>
           <Stat
             label="Crystals this week"
             value={`${totalCrystals} / ${settings.worldCrystalCap}`}
             tone={worldAtCap ? 'bad' : charsAtCap.length ? 'warn' : undefined}
-            sub={worldAtCap ? 'world cap reached: extra crystals cannot be sold' : charsAtCap.length ? `${charsAtCap.join(', ')} at the ${settings.crystalCap}/character cap` : `world cap · ${settings.crystalCap} per character`}
+            sub={worldAtCap ? 'world cap reached: extra crystals cannot be sold' : charsAtCap.length ? `${charsAtCap.join(', ')} at the ${settings.crystalCap}/character cap` : `weekly bosses · ${settings.crystalCap} per character`}
           />
         </Card>
-        <Card><Stat label="Meso this period" value={fmtMeso(periodMeso)} tone="accent" sub={`of ${fmtMeso(expectedNow)} if everything is cleared`} /></Card>
+        <Card><Stat label="Monthly reset" value={formatCountdown(nextReset('monthly', now), now)} sub="1st 00:00 UTC" /></Card>
+        <Card>
+          <Stat label="Meso this month" value={fmtMeso(month.sold)} tone="accent" sub={month.total ? `${month.done}/${month.total} monthly bosses · ${fmtMeso(month.expected)} if all cleared` : 'no monthly bosses assigned'} />
+        </Card>
       </div>
 
       <div className="mb-4">
-        <WeeklyMeso />
+        <PeriodMeso cadence="weekly" />
       </div>
       <div className="card p-3 mb-4">
         <CharacterPicker selected={focus} onSelect={setFocus} />
@@ -158,7 +165,8 @@ export function Checklist() {
           const used = crystalsByChar.get(character) ?? 0;
           const weekly = list.filter((a) => a.cadence === 'weekly');
           const monthly = list.filter((a) => a.cadence === 'monthly');
-          const charMeso = list.reduce((n, a) => n + (clearFor(clears, a, periods[a.cadence])?.meso ?? 0), 0);
+          const weekMeso = mesoOf(weekClears, character);
+          const monthMeso = mesoOf(monthClears, character);
           const weeklyDone = weekly.filter((a) => clearFor(clears, a, periods.weekly)).length;
           const monthlyDone = monthly.filter((a) => clearFor(clears, a, periods.monthly)).length;
           return (
@@ -173,19 +181,24 @@ export function Checklist() {
                 </span>
               }
               action={
-                <span className="flex items-center gap-2">
-                  <span className="text-xs text-ink-2 tabular">{fmtMeso(charMeso)} this period</span>
-                  <button className="btn btn-sm" onClick={() => toggleAll(list)}>
-                    {allDone(list) ? 'Uncheck all' : 'Check all'}
-                  </button>
+                <span className="text-xs text-ink-2 tabular text-right">
+                  {fmtMeso(weekMeso)} this week
+                  {monthly.length > 0 || monthMeso > 0 ? ` · ${fmtMeso(monthMeso)} this month` : ''}
                 </span>
               }
             >
               <div className="-mx-4">
                 <div className="flex items-center justify-between px-4 pb-1">
                   <span className="label">Weekly</span>
-                  <span className="text-[11px] text-ink-3 tabular">
-                    {weeklyDone}/{weekly.length}
+                  <span className="flex items-center gap-2">
+                    <span className="text-[11px] text-ink-3 tabular">
+                      {weeklyDone}/{weekly.length}
+                    </span>
+                    {weekly.length > 0 && (
+                      <button className="btn btn-sm py-0.5" onClick={() => toggleAll(list)}>
+                        {allDone(list) ? 'Uncheck all' : 'Check all'}
+                      </button>
+                    )}
                   </span>
                 </div>
                 <ul className="divide-y divide-border border-y border-border">{weekly.length ? weekly.map(renderRow) : <li className="px-4 py-2 text-xs text-ink-3">No weekly bosses.</li>}</ul>

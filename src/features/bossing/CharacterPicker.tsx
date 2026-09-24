@@ -12,9 +12,15 @@ interface TileInfo {
   img: string | null;
   level: number | null;
   group: GroupId;
-  total: number;
+  /** Every assigned boss, weekly and monthly. */
+  assigned: number;
+  /** Weekly bosses cleared this reset week / assigned. */
   done: number;
+  total: number;
   complete: boolean;
+  /** Monthly bosses cleared this month / assigned, tracked apart from the week. */
+  monthDone: number;
+  monthTotal: number;
 }
 
 /** Most specific preset whose entries are all assigned to the character, else custom / none. */
@@ -44,10 +50,13 @@ export function CharacterPicker({ selected, onSelect, draggable = true }: { sele
     const periods = currentPeriods();
     return names.map((name): TileInfo => {
       const mine = assignments.filter((a) => a.character === name);
-      const done = mine.filter((a) => clearFor(clears, a, periods[a.cadence])).length;
+      const weekly = mine.filter((a) => a.cadence === 'weekly');
+      const monthly = mine.filter((a) => a.cadence === 'monthly');
+      const done = weekly.filter((a) => clearFor(clears, a, periods.weekly)).length;
+      const monthDone = monthly.filter((a) => clearFor(clears, a, periods.monthly)).length;
       const row = latestRow(snapshots, name);
       const hash = row?.lookHash ?? looks[name]?.[looks[name].length - 1]?.hash ?? null;
-      return { name, img: hash ? lookImageUrl(name, hash) : (row?.imgUrl ?? null), level: row?.level ?? null, group: groupOf(mine, presets), total: mine.length, done, complete: mine.length > 0 && done === mine.length };
+      return { name, img: hash ? lookImageUrl(name, hash) : (row?.imgUrl ?? null), level: row?.level ?? null, group: groupOf(mine, presets), assigned: mine.length, done, total: weekly.length, complete: weekly.length > 0 && done === weekly.length, monthDone, monthTotal: monthly.length };
     });
   }, [names, assignments, clears, snapshots, looks, presets]);
 
@@ -62,13 +71,13 @@ export function CharacterPicker({ selected, onSelect, draggable = true }: { sele
     if (!tile || tile.group === to || to === 'custom') return;
     const others = assignments.filter((a) => a.character !== name);
     if (to === 'none') {
-      if (tile.total && !confirm(`Remove all ${tile.total} bosses from ${name}? Recorded clears are kept.`)) return;
+      if (tile.assigned && !confirm(`Remove all ${tile.assigned} bosses from ${name}? Recorded clears are kept.`)) return;
       void setAssignments(others);
       return;
     }
     const preset = presets.find((p) => p.id === to);
     if (!preset) return;
-    if (tile.total && !confirm(`Replace ${name}'s ${tile.total} bosses with the ${preset.name} preset? Recorded clears are kept.`)) return;
+    if (tile.assigned && !confirm(`Replace ${name}'s ${tile.assigned} bosses with the ${preset.name} preset? Recorded clears are kept.`)) return;
     void setAssignments([...others, ...presetAssignments(preset, name, others, bosses)]);
   };
 
@@ -116,7 +125,7 @@ export function CharacterPicker({ selected, onSelect, draggable = true }: { sele
                       setOver(null);
                     }}
                     onClick={() => onSelect(on ? null : t.name)}
-                    title={t.total ? `${t.done}/${t.total} cleared this period` : 'No bosses assigned'}
+                    title={t.assigned ? [t.total ? `${t.done}/${t.total} weekly cleared this week` : 'no weekly bosses', t.monthTotal ? `${t.monthDone}/${t.monthTotal} monthly cleared this month` : ''].filter(Boolean).join(' · ') : 'No bosses assigned'}
                     className={`relative overflow-hidden flex items-center gap-2 pl-1 pr-2.5 py-1 rounded-lg border text-sm transition-colors ${
                       t.complete ? 'border-good bg-good/10' : on ? 'border-accent bg-accent/10' : 'border-border-2 bg-surface-2 hover:border-ink-3'
                     } ${on ? 'ring-2 ring-accent/40' : ''} ${dragging === t.name ? 'opacity-40' : ''}`}
@@ -129,6 +138,11 @@ export function CharacterPicker({ selected, onSelect, draggable = true }: { sele
                       {t.name === main && <span className="text-accent ml-0.5" title="Main">★</span>}
                     </span>
                     <span className={`text-[11px] tabular ${t.complete ? 'text-good' : 'text-ink-3'}`}>{t.total ? `${t.done}/${t.total}` : '–'}</span>
+                    {t.monthTotal > 0 && (
+                      <span className={`rounded border px-1 text-[10px] leading-4 ${t.monthDone === t.monthTotal ? 'border-good/50 text-good' : 'border-border-2 text-ink-3'}`} aria-label={`Monthly ${t.monthDone} of ${t.monthTotal}`}>
+                        M{t.monthTotal > 1 ? ` ${t.monthDone}/${t.monthTotal}` : ''}
+                      </span>
+                    )}
                     {t.total > 0 && (
                       <span className="absolute left-0 right-0 bottom-0 h-0.5 bg-surface-3">
                         <span className={`block h-full ${t.complete ? 'bg-good' : 'bg-accent'}`} style={{ width: `${pct}%` }} />

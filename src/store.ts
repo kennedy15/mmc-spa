@@ -7,6 +7,7 @@ import * as fs from './lib/storage/fs-access';
 import * as persist from './lib/storage/persist';
 import { mergeById, type ImportResult } from './lib/storage/exportImport';
 import { DEFAULT_SETTINGS, uid, type Assignment, type BossesDoc, type Clear, type Goal, type Idea, type PhotoMeta, type PriceOverrides, type Settings } from './lib/types';
+import { periodKey, type Cadence } from './lib/reset/period';
 
 export interface FolderState {
   supported: boolean;
@@ -76,6 +77,35 @@ async function downscale(file: Blob, maxEdge: number): Promise<Blob> {
   } catch {
     return file;
   }
+}
+
+/**
+ * Re-files clears whose cadence disagrees with the boss list (say an Extreme
+ * boss ticked as monthly before only Black Mage was monthly) into the reset
+ * week or month they were cleared in, so the weekly and monthly trackers each
+ * see only their own bosses. A moved clear that would duplicate one already
+ * in that period is dropped.
+ */
+function realignClears(clears: Clear[], cadenceOf: (c: Clear) => Cadence | null): Clear[] {
+  const keyOf = (c: Clear) => `${c.character}|${c.bossId}|${c.difficulty}|${c.period}`;
+  const misfiled = (c: Clear) => {
+    const cadence = cadenceOf(c);
+    return cadence != null && cadence !== c.cadence;
+  };
+  const taken = new Set(clears.filter((c) => !misfiled(c)).map(keyOf));
+  const out: Clear[] = [];
+  for (const c of clears) {
+    if (!misfiled(c)) {
+      out.push(c);
+      continue;
+    }
+    const cadence = cadenceOf(c)!;
+    const moved: Clear = { ...c, cadence, period: periodKey(cadence, new Date(c.clearedAt)) };
+    if (taken.has(keyOf(moved))) continue;
+    taken.add(keyOf(moved));
+    out.push(moved);
+  }
+  return out;
 }
 
 async function loadLocal(fallback: Pick<State, 'ideas' | 'photos' | 'assignments' | 'clears' | 'prices' | 'goals'> & { settings: Settings | null }) {
@@ -161,8 +191,14 @@ export const useStore = create<State>()((set, get) => ({
       const isMonthly = (bossId: string, difficulty: string) => bosses?.bosses.find((b) => b.id === bossId)?.difficulties.find((d) => d.key === difficulty)?.cadence === 'monthly';
       const assignments = bosses ? local.assignments.map((a) => ({ ...a, cadence: isMonthly(a.bossId, a.difficulty) ? ('monthly' as const) : ('weekly' as const) })) : local.assignments;
       if (JSON.stringify(assignments) !== JSON.stringify(local.assignments)) await persist.saveDoc('bossing/assignments.json', assignments);
+      const cadenceOf = (c: Clear): Cadence | null => {
+        const d = bosses?.bosses.find((b) => b.id === c.bossId)?.difficulties.find((x) => x.key === c.difficulty);
+        return d ? (d.cadence === 'monthly' ? 'monthly' : 'weekly') : null;
+      };
+      const clears = bosses ? realignClears(local.clears, cadenceOf) : local.clears;
+      if (clears.length !== local.clears.length || clears.some((c, i) => c !== local.clears[i])) await persist.saveDoc('bossing/clears.json', clears);
 
-      set({ ready: true, index, characters, snapshots, looks, worlds, bosses, ...local, assignments, settings, hasApiKey: !!key, hasGithubToken: !!ghTok });
+      set({ ready: true, index, characters, snapshots, looks, worlds, bosses, ...local, assignments, clears, settings, hasApiKey: !!key, hasGithubToken: !!ghTok });
     } catch (e) {
       set({ error: e instanceof Error ? e.message : String(e) });
     } finally {

@@ -1,23 +1,28 @@
 import { useStore } from '../../store';
 import { Card, Badge } from '../../app/ui';
 import { fmtMeso } from '../../app/format';
-import { useWeeklyMeso } from './useWeeklyMeso';
+import { periodLabel, type Cadence } from '../../lib/reset/period';
+import { usePeriodMeso } from './usePeriodMeso';
 
-/** Weekly meso tracker: expected vs sold this week, per character and in total. */
-export function WeeklyMeso({ compact = false }: { compact?: boolean }) {
-  const assignments = useStore((s) => s.assignments);
+/**
+ * Expected vs sold for this reset week's weekly bosses, or this month's
+ * monthly bosses, per character and in total. Renders nothing when no boss of
+ * that cadence is assigned or cleared.
+ */
+export function PeriodMeso({ cadence, compact = false }: { cadence: Cadence; compact?: boolean }) {
   const settings = useStore((s) => s.settings);
-  const data = useWeeklyMeso();
+  const data = usePeriodMeso(cadence);
 
-  if (!assignments.length) return null;
+  if (!data.total && !data.sold) return null;
+  const weekly = cadence === 'weekly';
   const pct = data.expected > 0 ? Math.min(1, data.sold / data.expected) : 0;
 
   return (
     <Card
-      title="Meso this week"
+      title={weekly ? 'Meso this week' : 'Meso this month'}
       action={
         <span className="text-xs text-ink-3">
-          {data.done}/{data.total} weekly clears · {data.crystals}/{settings.worldCrystalCap} crystals
+          {data.done}/{data.total} {weekly ? 'weekly' : 'monthly'} clears · {weekly ? `${data.crystals}/${settings.worldCrystalCap} crystals` : periodLabel('monthly', data.period)}
         </span>
       }
     >
@@ -40,12 +45,12 @@ export function WeeklyMeso({ compact = false }: { compact?: boolean }) {
           {data.rows.map(([name, r]) => {
             const p = r.expected > 0 ? Math.min(1, r.sold / r.expected) : 0;
             return (
-              <li key={name} className="grid grid-cols-[minmax(0,9rem)_1fr_auto] items-center gap-3 text-sm">
+              <li key={name} className="grid grid-cols-[minmax(0,1fr)_auto] sm:grid-cols-[minmax(0,9rem)_1fr_auto] items-center gap-3 text-sm">
                 <span className="truncate flex items-center gap-1.5">
                   {name}
-                  {r.crystals >= settings.crystalCap && <Badge tone="warn">cap</Badge>}
+                  {weekly && r.crystals >= settings.crystalCap && <Badge tone="warn">cap</Badge>}
                 </span>
-                <div className="h-1.5 rounded-full bg-surface-3 overflow-hidden">
+                <div className="hidden sm:block h-1.5 rounded-full bg-surface-3 overflow-hidden">
                   <div className="h-full rounded-full bg-good" style={{ width: `${p * 100}%` }} />
                 </div>
                 <span className="tabular text-xs text-ink-2 w-36 text-right">

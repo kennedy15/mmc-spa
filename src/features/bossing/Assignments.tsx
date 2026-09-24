@@ -4,7 +4,7 @@ import { useCharacterNames } from '../tracker/hooks';
 import { Card, Empty, PageHeader, Stepper, Field, Badge } from '../../app/ui';
 import { fmtMeso } from '../../app/format';
 import { uid, type Assignment } from '../../lib/types';
-import { assignmentMeso, bossLabel, cadenceFor, crystalValue, findBoss, maxParty, mesoPerClear, presetAssignments, visibleCharacters } from './lib';
+import { assignmentMeso, bossLabel, cadenceFor, crystalValue, expectedPer, findBoss, maxParty, mesoPerClear, presetAssignments, visibleCharacters } from './lib';
 import { CharacterPicker } from './CharacterPicker';
 
 export function Assignments() {
@@ -81,7 +81,8 @@ export function Assignments() {
 
   const weekly = mine.filter((a) => a.cadence === 'weekly');
   const monthly = mine.filter((a) => a.cadence === 'monthly');
-  const total = mine.reduce((n, a) => n + assignmentMeso(a, bosses, prices, settings) / (a.cadence === 'monthly' ? 4.345 : 1), 0);
+  const perWeek = expectedPer('weekly', mine, bosses, prices, settings);
+  const perMonth = expectedPer('monthly', mine, bosses, prices, settings);
 
   const row = (a: Assignment) => {
     const b = findBoss(bosses, a.bossId);
@@ -216,7 +217,10 @@ export function Assignments() {
             title={`${character} · ${weekly.length} weekly · ${monthly.length} monthly`}
             action={
               <span className="flex items-center gap-3">
-                <span className="text-xs text-ink-2 tabular">≈ {fmtMeso(total)} / week</span>
+                <span className="text-xs text-ink-2 tabular">
+                  ≈ {fmtMeso(perWeek)} / week
+                  {perMonth > 0 && ` · ${fmtMeso(perMonth)} / month`}
+                </span>
                 {mine.length > 0 && (
                   <button className="btn-ghost btn-sm" onClick={clearCharacter}>
                     Clear all

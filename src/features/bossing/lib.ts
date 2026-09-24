@@ -1,5 +1,5 @@
 import { uid, type Assignment, type Boss, type BossesDoc, type BossPreset, type Clear, type PriceOverrides, type Settings } from '../../lib/types';
-import { periodKey, periodRange, periodsBetween, previousPeriod, type Cadence } from '../../lib/reset/period';
+import { periodKey, periodsBetween, previousPeriod, type Cadence } from '../../lib/reset/period';
 
 export const priceKey = (bossId: string, difficulty: string) => `${bossId}:${difficulty}`;
 
@@ -53,16 +53,32 @@ export function streak(clears: Clear[], a: Assignment, now = new Date()): number
   return n;
 }
 
-/** Meso per weekly period, per character, across the ledger. Monthly clears land in the week they were cleared. */
-export function mesoByWeek(clears: Clear[], now = new Date()): { period: string; total: number; byCharacter: Record<string, number> }[] {
-  if (!clears.length) return [];
-  const weeks = clears.map(weekOfClear);
-  const first = weeks.reduce((a, b) => (a < b ? a : b));
-  const last = periodKey('weekly', now);
-  const rows = periodsBetween('weekly', first, last).map((period) => ({ period, total: 0, byCharacter: {} as Record<string, number> }));
+/**
+ * Weekly and monthly bosses are tracked apart: a reset week only ever holds
+ * weekly-boss clears (they are what the 14-per-character crystal cap counts),
+ * and a month only holds monthly-boss clears, so a Black Mage clear never
+ * inflates the week it happened in.
+ */
+export function clearsIn(clears: Clear[], cadence: Cadence, period: string): Clear[] {
+  return clears.filter((c) => c.cadence === cadence && c.period === period);
+}
+
+export interface PeriodMeso {
+  /** Reset-week start (YYYY-MM-DD) or month (YYYY-MM). */
+  period: string;
+  total: number;
+  byCharacter: Record<string, number>;
+}
+
+/** Meso per reset week (weekly bosses) or per month (monthly bosses), from the first clear to now; empty periods are zero. */
+export function mesoByPeriod(clears: Clear[], cadence: Cadence, now = new Date()): PeriodMeso[] {
+  const mine = clears.filter((c) => c.cadence === cadence);
+  if (!mine.length) return [];
+  const first = mine.reduce((a, c) => (c.period < a ? c.period : a), mine[0].period);
+  const rows = periodsBetween(cadence, first, periodKey(cadence, now)).map((period) => ({ period, total: 0, byCharacter: {} as Record<string, number> }));
   const idx = new Map(rows.map((r, i) => [r.period, i]));
-  for (const c of clears) {
-    const r = rows[idx.get(weekOfClear(c)) ?? -1];
+  for (const c of mine) {
+    const r = rows[idx.get(c.period) ?? -1];
     if (!r) continue;
     r.total += c.meso;
     r.byCharacter[c.character] = (r.byCharacter[c.character] ?? 0) + c.meso;
@@ -70,18 +86,13 @@ export function mesoByWeek(clears: Clear[], now = new Date()): { period: string;
   return rows;
 }
 
-/** Expected meso per week if every assignment is cleared (monthly ones spread over ~4.35 weeks). */
-export function expectedWeekly(assignments: Assignment[], doc: BossesDoc | null, prices: PriceOverrides, settings: Settings): number {
-  return assignments.reduce((n, a) => n + assignmentMeso(a, doc, prices, settings) / (a.cadence === 'monthly' ? 4.345 : 1), 0);
+/** Meso per period if every assignment of that cadence is cleared: per reset week for weekly bosses, per month for monthly ones. */
+export function expectedPer(cadence: Cadence, assignments: Assignment[], doc: BossesDoc | null, prices: PriceOverrides, settings: Settings): number {
+  return assignments.reduce((n, a) => n + (a.cadence === cadence ? assignmentMeso(a, doc, prices, settings) : 0), 0);
 }
 
 export function visibleCharacters(all: string[], settings: Settings): string[] {
   return all.filter((n) => !settings.hiddenCharacters.includes(n));
-}
-
-/** The weekly period a clear belongs to on the history chart. */
-export function weekOfClear(c: Clear): string {
-  return c.cadence === 'weekly' ? c.period : periodKey('weekly', new Date(c.clearedAt));
 }
 
 /** Tracker cadence for a boss difficulty: monthly stays monthly, daily and weekly go to the weekly tracker. */
@@ -100,10 +111,4 @@ export function presetAssignments(preset: BossPreset, character: string, existin
     out.push({ id: uid(), character, bossId: e.bossId, difficulty: e.difficulty, cadence: cadenceFor(doc, e.bossId, e.difficulty), defaultPartySize: 1, order: order++ });
   }
   return out;
-}
-
-/** Clears that consume a crystal in the given weekly period: weekly clears of that period plus monthly clears made during it. */
-export function crystalsInWeek(clears: Clear[], weeklyPeriod: string): Clear[] {
-  const { start, end } = periodRange('weekly', weeklyPeriod);
-  return clears.filter((c) => (c.cadence === 'weekly' ? c.period === weeklyPeriod : c.clearedAt >= start.toISOString() && c.clearedAt < end.toISOString()));
 }

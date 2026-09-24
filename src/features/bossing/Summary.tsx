@@ -6,8 +6,9 @@ import { fmtMeso, fmtDate } from '../../app/format';
 import { SERIES, ACCENT, MAX_BAR, ChartTip, axisProps, shortDate, Legend } from '../../app/charts';
 import { useNow } from '../../app/useNow';
 import { nextReset, periodKey, previousPeriod } from '../../lib/reset/period';
-import { assignmentMeso, expectedWeekly, mesoByWeek } from './lib';
-import { WeeklyMeso } from './WeeklyMeso';
+import { assignmentMeso, clearsIn, expectedPer, mesoByPeriod } from './lib';
+import { PeriodMeso } from './PeriodMeso';
+import { usePeriodMeso } from './usePeriodMeso';
 import { MesoFlow } from './MesoFlow';
 
 export function Summary() {
@@ -16,10 +17,15 @@ export function Summary() {
   const assignments = useStore((s) => s.assignments);
   const prices = useStore((s) => s.prices);
   const settings = useStore((s) => s.settings);
-  const expected = expectedWeekly(assignments, bosses, prices, settings);
+  // Weekly figures count weekly bosses only; monthly bosses have their own figures.
+  const expected = expectedPer('weekly', assignments, bosses, prices, settings);
+  const expectedMonth = expectedPer('monthly', assignments, bosses, prices, settings);
+  const weeklyCount = assignments.filter((a) => a.cadence === 'weekly').length;
   const now = useNow(60_000);
   const current = periodKey('weekly', now);
-  const weeks = useMemo(() => mesoByWeek(clears, now), [clears, now]);
+  const weeks = useMemo(() => mesoByPeriod(clears, 'weekly', now), [clears, now]);
+  const month = usePeriodMeso('monthly', now);
+  const hasMonthly = month.total > 0 || month.sold > 0;
 
   // Up to four reset weeks ending with the current one, never reaching back
   // before the ledger's first week (those weeks weren't missed, just untracked).
@@ -33,6 +39,7 @@ export function Summary() {
   }, [weeks, expected, current]);
 
   const total = clears.reduce((n, c) => n + c.meso, 0);
+  const firstClear = clears.reduce<string | null>((a, c) => (!a || c.clearedAt < a ? c.clearedAt : a), null);
   // The week in progress would drag the average down right after every reset.
   const completed = recent.filter((w) => !w.inProgress);
   const avg = completed.length ? completed.reduce((n, w) => n + w.actual, 0) / completed.length : null;
@@ -40,13 +47,12 @@ export function Summary() {
   const perChar = useMemo(() => {
     const m = new Map<string, { expected: number; actual: number }>();
     for (const a of assignments) {
+      if (a.cadence !== 'weekly') continue;
       const e = m.get(a.character) ?? { expected: 0, actual: 0 };
-      e.expected += assignmentMeso(a, bosses, prices, settings) / (a.cadence === 'monthly' ? 4.345 : 1);
+      e.expected += assignmentMeso(a, bosses, prices, settings);
       m.set(a.character, e);
     }
-    for (const c of clears) {
-      const week = c.cadence === 'weekly' ? c.period : periodKey('weekly', new Date(c.clearedAt));
-      if (week !== current) continue;
+    for (const c of clearsIn(clears, 'weekly', current)) {
       const e = m.get(c.character) ?? { expected: 0, actual: 0 };
       e.actual += c.meso;
       m.set(c.character, e);
@@ -58,9 +64,9 @@ export function Summary() {
 
   return (
     <>
-      <PageHeader title="Summary" subtitle="Expected weekly meso assumes every assigned boss is cleared at its default party size. Monthly bosses are spread over the month." />
+      <PageHeader title="Summary" subtitle="Weekly and monthly bosses are tracked separately. Expected meso assumes every assigned boss is cleared at its default party size." />
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 mb-4">
-        <Card><Stat label="Expected / week" value={fmtMeso(expected)} tone="accent" sub={`${assignments.length} assignments`} /></Card>
+        <Card><Stat label="Expected / week" value={fmtMeso(expected)} tone="accent" sub={`${weeklyCount} weekly boss${weeklyCount === 1 ? '' : 'es'}`} /></Card>
         <Card>
           <Stat
             label="Actual per week"
@@ -68,12 +74,15 @@ export function Summary() {
             sub={avg == null ? `first full week ends ${fmtDate(firstFullWeekEnds)}` : `${completed.length} completed week${completed.length === 1 ? '' : 's'}${expected > 0 ? ` · ${Math.round((avg / expected) * 100)}% of expected` : ''}`}
           />
         </Card>
-        <Card><Stat label="Total earned" value={fmtMeso(total)} sub={weeks.length ? `since ${fmtDate(weeks[0].period)}` : undefined} /></Card>
-        <Card><Stat label="Clears logged" value={clears.length} sub={`${weeks.length} week${weeks.length === 1 ? '' : 's'} of history`} /></Card>
+        <Card>
+          <Stat label="Expected / month" value={fmtMeso(expectedMonth)} sub={month.total ? `${fmtMeso(month.sold)} sold this month · ${month.done}/${month.total} cleared` : 'no monthly bosses assigned'} />
+        </Card>
+        <Card><Stat label="Total earned" value={fmtMeso(total)} sub={firstClear ? `${clears.length} clears since ${fmtDate(firstClear)}` : undefined} /></Card>
       </div>
 
-      <div className="mb-4">
-        <WeeklyMeso compact />
+      <div className={`grid gap-4 mb-4 ${hasMonthly ? 'lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]' : ''}`}>
+        <PeriodMeso cadence="weekly" compact />
+        <PeriodMeso cadence="monthly" compact />
       </div>
       <div className="grid gap-4 lg:grid-cols-2">
         <Card title={`Expected vs actual · ${recent.length === 1 ? 'this week' : `last ${recent.length} weeks`}`} action={recent.length < 4 && <span className="text-xs text-ink-3">since the ledger started</span>}>
