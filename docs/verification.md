@@ -8,7 +8,7 @@ Results of the checks the design doc asked for before writing UI code.
 
 - Returns `{ totalCount, ranks: [...] }`. Fields per row (confirmed, see `samples/`): `characterName`, `exp` (integer), `gap`, `level`, `rank`, `worldID` (number, not a name), `characterImgURL`, `jobName`, `legionLevel`, `raidPower`, `tierID`, `starSum`. There is no `jobDetail` or `worldName`.
 - `page_index` is a **rank offset**, not a page number (page_index=1600000 returns ranks 1600000–1600009). 10 rows per response.
-- In the overall ranking `legionLevel` and `raidPower` are always 0. `type=legion&id=<worldID>&character_name=<IGN>` returns the same row shape with `legionLevel`, `raidPower` and the legion `rank` filled in. The collector does one call of each per character.
+- In the overall ranking `legionLevel` and `raidPower` are always 0. `type=legion&id=<worldID>&character_name=<IGN>` returns the same row shape with `legionLevel`, `raidPower` and the legion `rank` filled in, but only for the account's reporting character (its highest level; on a tie, whoever reached the level first). Looking up any other character returns no row, so the collector makes one overall call per character and legion calls only until the reporter answers (normally one).
 - `reboot_index`: 0 = all worlds, 1 = Heroic worlds only, 2 = regular worlds only.
 - `exp` is 0 for level-300 characters (cap). Largest values seen ≈ 8×10^14, still under 2^53, but the collector and the SPA quote `exp` before `JSON.parse` anyway.
 - World IDs (from maplearchive.org's frontend, matched against `reboot_index` probing): Bera 1, Scania 19, Kronos 45 (Heroic), Hyperion 70 (Heroic), Luna 30, Solis 46 (Heroic). Stored in `public/worlds.json`.
