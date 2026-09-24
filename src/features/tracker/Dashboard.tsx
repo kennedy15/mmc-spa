@@ -8,7 +8,8 @@ import { formatBig, fmtInt, fmtDate, relTime, pct, fmtLevels, fmtRankDelta } fro
 import { ACCENT, SERIES, ChartTip, axisProps, shortDate, Legend, dateLabel, fmtBillions } from '../../app/charts';
 import { pctToNext, toBillions } from '../../lib/nexon/exp';
 import { addDays, cumulativeGain, legionOf, lookImageUrl, rankDelta } from '../../lib/nexon/snapshots';
-import { LevelProgress, ActivityHeatmap } from './Activity';
+import { LevelProgress, ActivityCard } from './Activity';
+import { ResetCalendar } from './ResetCalendar';
 import { GoalLine } from './Goals';
 import { BossingTile } from '../bossing/BossingTile';
 
@@ -128,7 +129,7 @@ export function Dashboard() {
                 </div>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-4">
                   <Stat label="Today" value={main.gainToday == null ? '—' : `+${formatBig(main.gainToday)}`} tone={main.gainToday && main.gainToday > 0n ? 'good' : undefined} sub={main.levelsToday ? `${fmtLevels(main.levelsToday)} of a level` : undefined} />
-                  <Stat label="7 days" value={`+${formatBig(main.gain7)}`} sub={`${formatBig(main.avg7)}/day${main.span7 < 7 ? ` · ${main.span7}d of data` : ''}`} />
+                  <Stat label="7 days" value={`+${formatBig(main.gain7)}`} sub={`${formatBig(main.avg7)}/day${main.span7 < 7 ? ` · ${main.span7} day${main.span7 === 1 ? '' : 's'}` : ''}`} />
                   <Stat label="Legion" value={fmtInt(legion?.legionLevel)} sub={legion?.raidPower ? `${formatBig(legion.raidPower)} raid power` : undefined} />
                   <Stat label="Next level" value={main.projected ? fmtDate(main.projected) : '—'} sub={main.projected ? 'at 7-day pace' : 'no recent gain'} />
                 </div>
@@ -204,7 +205,7 @@ export function Dashboard() {
       </div>
 
       <div className="mt-4">
-        <ActivityHeatmap />
+        <ActivityCard />
       </div>
 
       <Card title="Roster" className="mt-4">
@@ -249,6 +250,9 @@ export function Dashboard() {
         </div>
       </Card>
       <MiniGainChart />
+      <div className="mt-4">
+        <ResetCalendar />
+      </div>
     </>
   );
 }

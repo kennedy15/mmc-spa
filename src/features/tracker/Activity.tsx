@@ -1,11 +1,15 @@
 import { useEffect, useMemo, useRef, useState, type MouseEvent } from 'react';
 import { Link } from 'react-router-dom';
 import { Card, Segmented } from '../../app/ui';
+import { HoverTip } from '../../app/HoverTip';
+import { anchorOf, type Tip } from '../../app/tip';
 import { formatBig, fmtDate, fmtLevels } from '../../app/format';
 import { shortDate } from '../../app/charts';
 import { useMediaQuery } from '../../app/useMediaQuery';
 import { addDays, coveredDays, type GainPoint } from '../../lib/nexon/snapshots';
 import { useActivity } from './hooks';
+import { HEAT, HEAT_LABEL, heatColor } from './heat';
+import { PlayStreams } from './PlayStreams';
 
 const WINDOWS: { value: number; label: string }[] = [
   { value: 1, label: 'Last day' },
@@ -82,32 +86,84 @@ export function LevelProgress() {
   );
 }
 
-// One-hue ramp for "share of a level per day", validated as an ordinal ramp
-// against the card surface (#131519): monotone lightness, first step >= 2:1.
-const HEAT = ['#713d19', '#a1521a', '#d0661a', '#ff7a1a', '#ff9e55'];
-const HEAT_MAX = [0.005, 0.015, 0.03, 0.06, Infinity];
-const HEAT_LABEL = ['<0.5%', '0.5–1.5%', '1.5–3%', '3–6%', '6%+'];
-const heatColor = (levels: number) => HEAT[HEAT_MAX.findIndex((m) => levels <= m)];
-
 function cellText(g: GainPoint | null): string {
   if (!g) return 'No snapshot';
   if (!g.levels || g.levels <= 0) return 'No EXP gained';
   return `${fmtLevels(g.levels)} of a level · +${formatBig(g.gain)}`;
 }
 
-interface Tip {
-  x: number;
-  y: number;
-  name: string;
-  date: string;
-  g: GainPoint | null;
+/** Key for the share-of-a-level colors, shared by the activity grid and the reset-week calendar. */
+export function HeatLegend({ className = '' }: { className?: string }) {
+  return (
+    <div className={`flex flex-wrap items-center gap-x-4 gap-y-1.5 text-[11px] text-ink-3 ${className}`}>
+      <span className="inline-flex items-center gap-1.5">
+        <span className="size-3 rounded-[3px] border border-border" /> no snapshot
+      </span>
+      <span className="inline-flex items-center gap-1.5">
+        <span className="size-3 rounded-[3px] bg-surface-3" /> no EXP
+      </span>
+      {HEAT.map((c, i) => (
+        <span key={c} className="inline-flex items-center gap-1.5">
+          <span className="size-3 rounded-[3px]" style={{ background: c }} /> {HEAT_LABEL[i]}
+        </span>
+      ))}
+      <span>of a level</span>
+    </div>
+  );
 }
 
-/** Character × day grid of the share of a level gained; hollow cells are days without a snapshot. */
-export function ActivityHeatmap({ days: fullDays = 30 }: { days?: number }) {
+type View = 'grid' | 'streams';
+const VIEWS: { value: View; label: string }[] = [
+  { value: 'grid', label: 'Grid' },
+  { value: 'streams', label: 'Streams' },
+];
+const VIEW_KEY = 'mt.activityView';
+
+/** Share of a level gained per character per day, as a grid or as streams. */
+export function ActivityCard({ days: fullDays = 30 }: { days?: number }) {
+  // Two weeks of grid fit a phone without scrolling the names out of view.
+  const narrow = useMediaQuery('(max-width: 639px)');
+  const [view, setView] = useState<View>(() => {
+    try {
+      return localStorage.getItem(VIEW_KEY) === 'streams' ? 'streams' : 'grid';
+    } catch {
+      return 'grid';
+    }
+  });
+  const pick = (v: View) => {
+    setView(v);
+    try {
+      localStorage.setItem(VIEW_KEY, v);
+    } catch {
+      // Private windows can refuse storage; the toggle still works for this visit.
+    }
+  };
+  const days = view === 'grid' && narrow ? Math.min(14, fullDays) : fullDays;
+  return (
+    <Card
+      title="Activity · share of a level per day"
+      action={
+        <span className="flex items-center gap-3">
+          <span className="hidden sm:inline text-xs text-ink-3">last {days} days</span>
+          <Segmented value={view} options={VIEWS} onChange={pick} label="Activity view" />
+        </span>
+      }
+    >
+      {view === 'grid' ? (
+        <>
+          <ActivityGrid days={days} />
+          <HeatLegend className="mt-3" />
+        </>
+      ) : (
+        <PlayStreams days={days} />
+      )}
+    </Card>
+  );
+}
+
+/** Character × day grid; rows sorted most active first, hollow cells are days without a snapshot. */
+function ActivityGrid({ days }: { days: number }) {
   const { names, today, gains } = useActivity();
-  // Two weeks fit a phone without scrolling the names out of view.
-  const days = useMediaQuery('(max-width: 639px)') ? Math.min(14, fullDays) : fullDays;
   const wrap = useRef<HTMLDivElement>(null);
   const scroller = useRef<HTMLDivElement>(null);
   const [tip, setTip] = useState<Tip | null>(null);
@@ -134,77 +190,51 @@ export function ActivityHeatmap({ days: fullDays = 30 }: { days?: number }) {
   // Date ticks every 7 days, anchored on the latest day.
   const ticks = new Set([0, 7, 14, 21, 28].map((k) => days - 1 - k).filter((i) => i >= 0));
   const show = (e: MouseEvent<HTMLElement>, name: string, date: string, g: GainPoint | null) => {
-    const box = wrap.current?.getBoundingClientRect();
-    if (!box) return;
-    const cell = e.currentTarget.getBoundingClientRect();
-    setTip({ x: cell.left - box.left + cell.width / 2, y: cell.top - box.top, name, date, g });
+    if (!wrap.current) return;
+    const detail = [fmtDate(date), g && g.spanDays > 1 ? `over ${g.spanDays} days` : '', g?.levelUp ? 'level up' : ''].filter(Boolean).join(' · ');
+    setTip({ ...anchorOf(e.currentTarget, wrap.current), rows: [{ value: cellText(g) }, { value: name, label: detail }] });
   };
 
   return (
-    <Card title="Activity · share of a level per day" action={<span className="text-xs text-ink-3">last {days} days · most active first</span>}>
-      <div ref={wrap} className="relative" onMouseLeave={() => setTip(null)}>
-        <div ref={scroller} className="overflow-x-auto pb-1" onScroll={() => setTip(null)}>
-          <div role="table" aria-label={`Share of a level gained per character per day, last ${days} days`} className="grid gap-[3px] justify-start" style={{ gridTemplateColumns: `minmax(4.5rem, 8rem) repeat(${days}, minmax(10px, 18px)) auto` }}>
-            {rows.map((r) => (
-              <div role="row" key={r.name} className="contents">
-                <div role="rowheader" className="truncate text-xs text-ink-2 pr-2 self-center">
-                  <Link to={charLink(r.name)} className="hover:text-accent">
-                    {r.name}
-                  </Link>
-                </div>
-                {dates.map((d) => {
-                  const g = r.byDate.get(d) ?? null;
-                  const lv = g?.levels ?? 0;
-                  return (
-                    <div
-                      role="cell"
-                      key={d}
-                      aria-label={`${r.name}, ${fmtDate(d)}: ${cellText(g)}`}
-                      onMouseEnter={(e) => show(e, r.name, d, g)}
-                      className={`aspect-square rounded-[3px] hover:ring-1 hover:ring-ink-2 ${!g ? 'border border-border' : lv > 0 ? '' : 'bg-surface-3'}`}
-                      style={g && lv > 0 ? { background: heatColor(lv) } : undefined}
-                    />
-                  );
-                })}
-                <div role="cell" className="text-[11px] text-ink-3 tabular pl-2 self-center whitespace-nowrap">
-                  {r.total > 0 ? fmtLevels(r.total) : ''}
-                </div>
+    <div ref={wrap} className="relative" onMouseLeave={() => setTip(null)}>
+      <div ref={scroller} className="overflow-x-auto pb-1" onScroll={() => setTip(null)}>
+        <div role="table" aria-label={`Share of a level gained per character per day, last ${days} days`} className="grid gap-[3px] justify-start" style={{ gridTemplateColumns: `minmax(4.5rem, 8rem) repeat(${days}, minmax(10px, 18px)) auto` }}>
+          {rows.map((r) => (
+            <div role="row" key={r.name} className="contents">
+              <div role="rowheader" className="truncate text-xs text-ink-2 pr-2 self-center">
+                <Link to={charLink(r.name)} className="hover:text-accent">
+                  {r.name}
+                </Link>
               </div>
-            ))}
-            <div aria-hidden />
-            {dates.map((d, i) => (
-              <div key={d} aria-hidden className="relative h-4">
-                {ticks.has(i) && <span className="absolute left-1/2 -translate-x-1/2 top-0.5 text-[10px] text-ink-3 whitespace-nowrap">{shortDate(d)}</span>}
+              {dates.map((d) => {
+                const g = r.byDate.get(d) ?? null;
+                const lv = g?.levels ?? 0;
+                return (
+                  <div
+                    role="cell"
+                    key={d}
+                    aria-label={`${r.name}, ${fmtDate(d)}: ${cellText(g)}`}
+                    onMouseEnter={(e) => show(e, r.name, d, g)}
+                    className={`aspect-square rounded-[3px] hover:ring-1 hover:ring-ink-2 ${!g ? 'border border-border' : lv > 0 ? '' : 'bg-surface-3'}`}
+                    style={g && lv > 0 ? { background: heatColor(lv) } : undefined}
+                  />
+                );
+              })}
+              <div role="cell" className="text-[11px] text-ink-3 tabular pl-2 self-center whitespace-nowrap">
+                {r.total > 0 ? fmtLevels(r.total) : ''}
               </div>
-            ))}
-            <div aria-hidden />
-          </div>
-        </div>
-        {tip && (
-          <div className="pointer-events-none absolute z-10 -translate-x-1/2 -translate-y-full rounded-lg border border-border-2 bg-surface-2/95 backdrop-blur px-2.5 py-1.5 text-xs shadow-xl whitespace-nowrap" style={{ left: tip.x, top: tip.y - 6 }}>
-            <div className="text-ink font-medium tabular">{cellText(tip.g)}</div>
-            <div className="text-ink-3">
-              {tip.name} · {fmtDate(tip.date)}
-              {tip.g && tip.g.spanDays > 1 ? ` · over ${tip.g.spanDays} days` : ''}
-              {tip.g?.levelUp ? ' · level up' : ''}
             </div>
-          </div>
-        )}
+          ))}
+          <div aria-hidden />
+          {dates.map((d, i) => (
+            <div key={d} aria-hidden className="relative h-4">
+              {ticks.has(i) && <span className="absolute left-1/2 -translate-x-1/2 top-0.5 text-[10px] text-ink-3 whitespace-nowrap">{shortDate(d)}</span>}
+            </div>
+          ))}
+          <div aria-hidden />
+        </div>
       </div>
-      <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 mt-3 text-[11px] text-ink-3">
-        <span className="inline-flex items-center gap-1.5">
-          <span className="size-3 rounded-[3px] border border-border" /> no snapshot
-        </span>
-        <span className="inline-flex items-center gap-1.5">
-          <span className="size-3 rounded-[3px] bg-surface-3" /> no EXP
-        </span>
-        {HEAT.map((c, i) => (
-          <span key={c} className="inline-flex items-center gap-1.5">
-            <span className="size-3 rounded-[3px]" style={{ background: c }} /> {HEAT_LABEL[i]}
-          </span>
-        ))}
-        <span>of a level</span>
-      </div>
-    </Card>
+      <HoverTip tip={tip} />
+    </div>
   );
 }

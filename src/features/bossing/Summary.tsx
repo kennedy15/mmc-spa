@@ -8,6 +8,7 @@ import { useNow } from '../../app/useNow';
 import { nextReset, periodKey, previousPeriod } from '../../lib/reset/period';
 import { assignmentMeso, expectedWeekly, mesoByWeek } from './lib';
 import { WeeklyMeso } from './WeeklyMeso';
+import { MesoFlow } from './MesoFlow';
 
 export function Summary() {
   const bosses = useStore((s) => s.bosses);
@@ -111,6 +112,9 @@ export function Summary() {
             </tbody>
           </table>
         </Card>
+      </div>
+      <div className="mt-4">
+        <MesoFlow />
       </div>
     </>
   );

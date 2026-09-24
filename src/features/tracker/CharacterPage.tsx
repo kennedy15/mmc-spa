@@ -10,6 +10,8 @@ import { pctToNext, toBillions, expRemaining } from '../../lib/nexon/exp';
 import { cumulativeGain, latestRow } from '../../lib/nexon/snapshots';
 import { legionRank } from '../../lib/nexon/legion';
 import { GoalCard } from './Goals';
+import { LevelLadder } from './LevelLadder';
+import { ResetCalendar } from './ResetCalendar';
 
 export function CharacterList() {
   const names = useTrackedNames();
@@ -19,6 +21,9 @@ export function CharacterList() {
   return (
     <>
       <PageHeader title="Characters" subtitle="Every character seen in the snapshots. Open one for its full history." />
+      <div className="mb-4">
+        <LevelLadder />
+      </div>
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
         {names.map((name) => {
           const row = latestRow(snapshots, name);
@@ -197,6 +202,10 @@ export function CharacterPage() {
             </div>
           )}
         </Card>
+      </div>
+
+      <div className="mt-4">
+        <ResetCalendar key={name} character={name} />
       </div>
 
       <Card title="History" className="mt-4">
