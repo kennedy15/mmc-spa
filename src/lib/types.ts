@@ -35,6 +35,8 @@ export interface BossDifficulty {
   crystal: number;
   cadence: BossCadence;
   minLevel?: number;
+  /** Largest party the boss allows; 6 when absent. */
+  maxParty?: number;
 }
 export interface Boss {
   id: string;

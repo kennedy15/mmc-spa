@@ -29,7 +29,7 @@ export function AddCharacter() {
     const run = runId ? await getRun(tok, runId) : await findRun(tok, since);
     if (!run) {
       if (tries > 20) return setPhase({ kind: 'failed', run: null, message: 'The workflow did not start. Check the Actions tab.' });
-      timer.current = window.setTimeout(() => void poll(tok, since, null, submitted, tries + 1), 3000);
+      timer.current = window.setTimeout(() => void poll(tok, since, runId, submitted, tries + 1), 3000);
       return;
     }
     if (run.status !== 'completed') {
@@ -52,10 +52,10 @@ export function AddCharacter() {
     if (!tok || !submitted) return;
     setPhase({ kind: 'dispatching' });
     const since = new Date(Date.now() - 5000).toISOString();
-    const err = await dispatchAddCharacter(tok, { name: submitted, role, owner, world });
-    if (err) return setPhase({ kind: 'failed', run: null, message: err });
+    const res = await dispatchAddCharacter(tok, { name: submitted, role, owner, world });
+    if (!res.ok) return setPhase({ kind: 'failed', run: null, message: res.error });
     setPhase({ kind: 'waiting', since });
-    timer.current = window.setTimeout(() => void poll(tok, since, null, submitted), 4000);
+    timer.current = window.setTimeout(() => void poll(tok, since, res.runId, submitted), 4000);
   };
 
   return (

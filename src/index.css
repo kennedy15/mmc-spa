@@ -17,7 +17,7 @@
   --color-warn: #f9c74f;
   --color-bad: #ff5c8a;
   --color-info: #5b8def;
-  --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-sans: "InterVariable", "Inter", ui-sans-serif, system-ui, -apple-system, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
 }
 
@@ -28,7 +28,11 @@ body {
   color: var(--color-ink);
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
-  font-feature-settings: "cv11", "ss01", "tnum";
+  /* tnum: tabular figures. cv08: serifed capital I, so names like PikaIus and
+     Pikalus (or JuiIi and Juili) read differently. Optical sizing stays at the
+     text size, as the static Google Fonts build rendered it. */
+  font-feature-settings: "tnum", "cv08";
+  font-optical-sizing: none;
 }
 * { scrollbar-width: thin; scrollbar-color: var(--color-border-2) transparent; }
 input, select, textarea, button { font: inherit; color: inherit; }

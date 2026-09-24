@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useStore } from '../../store';
 import { Empty, PageHeader, Modal, Field, Toggle, Badge } from '../../app/ui';
@@ -7,7 +7,6 @@ import { uid, type Idea, type IdeaStatus } from '../../lib/types';
 import { CardEditor } from './CardEditor';
 import { usePhotoUrl } from './photos';
 import { generateOffline, loadRecipes, type Recipes } from './generator/offline';
-import { generateAI, describeAiError } from './generator/ai';
 import { apiKey as apiKeyStore } from '../../lib/storage/persist';
 import type { Draft, GenerateOptions } from './generator/types';
 
@@ -125,7 +124,7 @@ function IdeaCard({ idea, dragging, onDragStart, onDragEnd, onOpen }: { idea: Id
   const thumb = firstPhoto ?? idea.imageUrls[0] ?? null;
   return (
     <article draggable onDragStart={onDragStart} onDragEnd={onDragEnd} onClick={onOpen} className={`card p-3 cursor-pointer hover:border-ink-3 transition-colors ${dragging ? 'opacity-40' : ''}`}>
-      {thumb && <img src={thumb} alt="" className="w-full h-28 object-cover rounded-lg mb-2 bg-surface-2" loading="lazy" referrerPolicy="no-referrer" />}
+      {thumb && <img key={thumb} src={thumb} alt="" className="w-full h-28 object-cover rounded-lg mb-2 bg-surface-2" loading="lazy" referrerPolicy="no-referrer" onError={(e) => (e.currentTarget.hidden = true)} />}
       <div className="font-medium leading-snug">{idea.title}</div>
       <div className="text-xs text-ink-3 mt-0.5">
         {idea.buildType}
@@ -162,7 +161,13 @@ function GenerateDialog({ onClose, onDraft }: { onClose: () => void; onDraft: (d
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [seed, setSeed] = useState('');
-  if (!recipes) void loadRecipes().then(setRecipes);
+  useEffect(() => {
+    let alive = true;
+    void loadRecipes().then((r) => alive && setRecipes(r));
+    return () => {
+      alive = false;
+    };
+  }, []);
 
   const run = async () => {
     setBusy(true);
@@ -172,13 +177,16 @@ function GenerateDialog({ onClose, onDraft }: { onClose: () => void; onDraft: (d
       if (mode === 'ai') {
         const key = await apiKeyStore.get();
         if (!key) throw new Error('No API key stored.');
+        // The Claude SDK is a large module, so it only loads when AI mode runs.
+        const { generateAI } = await import('./generator/ai');
         onDraft(await generateAI(key, o), true);
       } else {
         const d = await generateOffline(o);
         onDraft(d, true);
       }
     } catch (e) {
-      setError(describeAiError(e));
+      const describe = mode === 'ai' ? await import('./generator/ai').then((m) => m.describeAiError, () => null) : null;
+      setError(describe ? describe(e) : e instanceof Error ? e.message : String(e));
     } finally {
       setBusy(false);
     }

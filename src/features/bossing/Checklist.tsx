@@ -7,7 +7,7 @@ import { Card, Empty, PageHeader, Stat, Stepper, Badge } from '../../app/ui';
 import { fmtMeso } from '../../app/format';
 import { formatCountdown, nextReset, periodLabel, previousPeriod } from '../../lib/reset/period';
 import { uid, type Assignment, type Clear } from '../../lib/types';
-import { assignmentMeso, bossLabel, clearFor, crystalValue, crystalsInWeek, currentPeriods, mesoPerClear, visibleCharacters } from './lib';
+import { assignmentMeso, bossLabel, clearFor, crystalValue, crystalsInWeek, currentPeriods, maxParty, mesoPerClear, visibleCharacters } from './lib';
 import { WeeklyMeso } from './WeeklyMeso';
 import { CharacterPicker } from './CharacterPicker';
 
@@ -100,6 +100,7 @@ export function Checklist() {
         </button>
         <Stepper
           value={party}
+          max={maxParty(bosses, a.bossId, a.difficulty)}
           onChange={(v) => {
             if (clear) void updateClear(clear.id, { partySize: v, meso: mesoPerClear(crystal, v) });
             else void useStore.getState().setAssignments(assignments.map((x) => (x.id === a.id ? { ...x, defaultPartySize: v } : x)));

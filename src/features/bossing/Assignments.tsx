@@ -4,7 +4,7 @@ import { useCharacterNames } from '../tracker/hooks';
 import { Card, Empty, PageHeader, Stepper, Field, Badge } from '../../app/ui';
 import { fmtMeso } from '../../app/format';
 import { uid, type Assignment } from '../../lib/types';
-import { assignmentMeso, bossLabel, cadenceFor, crystalValue, findBoss, mesoPerClear, presetAssignments, visibleCharacters } from './lib';
+import { assignmentMeso, bossLabel, cadenceFor, crystalValue, findBoss, maxParty, mesoPerClear, presetAssignments, visibleCharacters } from './lib';
 import { CharacterPicker } from './CharacterPicker';
 
 export function Assignments() {
@@ -27,6 +27,8 @@ export function Assignments() {
   const diff = boss?.difficulties.find((d) => d.key === difficulty);
   const mine = useMemo(() => assignments.filter((a) => a.character === character).sort((a, b) => a.order - b.order), [assignments, character]);
   const already = mine.some((a) => a.bossId === bossId && a.difficulty === difficulty);
+  const partyCap = diff?.maxParty ?? 6;
+  const addParty = Math.min(party, partyCap);
 
   const pickBoss = (id: string) => {
     setBossId(id);
@@ -36,14 +38,14 @@ export function Assignments() {
 
   const add = () => {
     if (!character || !boss || !diff || already) return;
-    const a: Assignment = { id: uid(), character, bossId, difficulty, cadence: cadenceFor(bosses, bossId, difficulty), defaultPartySize: party, order: mine.length ? Math.max(...mine.map((m) => m.order)) + 1 : 0 };
+    const a: Assignment = { id: uid(), character, bossId, difficulty, cadence: cadenceFor(bosses, bossId, difficulty), defaultPartySize: addParty, order: mine.length ? Math.max(...mine.map((m) => m.order)) + 1 : 0 };
     void setAssignments([...assignments, a]);
   };
   const remove = (id: string) => void setAssignments(assignments.filter((a) => a.id !== id));
   const update = (id: string, patch: Partial<Assignment>) => void setAssignments(assignments.map((a) => (a.id === id ? { ...a, ...patch } : a)));
   const changeDifficulty = (a: Assignment, key: string) => {
     if (mine.some((x) => x.id !== a.id && x.bossId === a.bossId && x.difficulty === key)) return;
-    update(a.id, { difficulty: key, cadence: cadenceFor(bosses, a.bossId, key) });
+    update(a.id, { difficulty: key, cadence: cadenceFor(bosses, a.bossId, key), defaultPartySize: Math.min(a.defaultPartySize, maxParty(bosses, a.bossId, key)) });
   };
   const reorder = (fromId: string, toId: string) => {
     if (fromId === toId) return;
@@ -106,7 +108,7 @@ export function Assignments() {
             </option>
           ))}
         </select>
-        <Stepper value={a.defaultPartySize} onChange={(v) => update(a.id, { defaultPartySize: v })} />
+        <Stepper value={a.defaultPartySize} max={maxParty(bosses, a.bossId, a.difficulty)} onChange={(v) => update(a.id, { defaultPartySize: v })} />
         <span className="w-20 text-right text-sm tabular text-ink-2">{fmtMeso(assignmentMeso(a, bosses, prices, settings))}</span>
         <button className="btn-ghost btn-sm" onClick={() => remove(a.id)} aria-label="Remove">
           ✕
@@ -194,12 +196,12 @@ export function Assignments() {
                       </Field>
                       <Field label="Party size">
                         <div className="pt-1">
-                          <Stepper value={party} onChange={setParty} />
+                          <Stepper value={addParty} max={partyCap} onChange={setParty} />
                         </div>
                       </Field>
                     </div>
                     <div className="text-sm text-ink-2">
-                      Crystal <span className="text-ink tabular">{fmtMeso(crystalValue(bosses, prices, settings, bossId, difficulty))}</span> → <span className="text-accent tabular">{fmtMeso(mesoPerClear(crystalValue(bosses, prices, settings, bossId, difficulty), party))}</span> per clear
+                      Crystal <span className="text-ink tabular">{fmtMeso(crystalValue(bosses, prices, settings, bossId, difficulty))}</span> → <span className="text-accent tabular">{fmtMeso(mesoPerClear(crystalValue(bosses, prices, settings, bossId, difficulty), addParty))}</span> per clear
                     </div>
                     <button className="btn-accent" onClick={add} disabled={already}>
                       {already ? 'Already assigned' : 'Add to tracker'}
@@ -227,7 +229,10 @@ export function Assignments() {
               <div className="text-sm text-ink-3 py-8 text-center">Nothing assigned yet. Apply a preset or add bosses one by one.</div>
             ) : (
               <div className="-mx-4">
-                <div className="label px-4 pb-1">Weekly · {weekly.length > settings.crystalCap && <span className="text-warn normal-case tracking-normal">more than the {settings.crystalCap}-crystal cap</span>}</div>
+                <div className="label px-4 pb-1">
+                  Weekly
+                  {weekly.length > settings.crystalCap && <span className="text-warn normal-case tracking-normal"> · more than the {settings.crystalCap}-crystal cap</span>}
+                </div>
                 <ul className="divide-y divide-border border-y border-border">{weekly.map(row)}</ul>
                 <div className="label px-4 pt-4 pb-1">Monthly</div>
                 <ul className="divide-y divide-border border-y border-border">

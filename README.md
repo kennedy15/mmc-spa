@@ -35,7 +35,7 @@ npm run build        # type-check + production build into dist/
 
 ```
 .github/workflows/  snapshot.yml (daily collector + redeploy), deploy.yml (Pages)
-scripts/snapshot.mjs  collector; Node 20, no dependencies
+scripts/snapshot.mjs  collector; Node 20+ (the Actions use 24), no dependencies
 data/               characters.json (you edit), index.json, snapshots/, looks/ (Action commits)
 public/             exp-table.json, bosses.json (crystal values), recipes.json, worlds.json
 src/app             layout, shared UI, chart theme

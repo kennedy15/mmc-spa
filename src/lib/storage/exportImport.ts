@@ -1,6 +1,8 @@
-import JSZip from 'jszip';
 import type { Assignment, Clear, Goal, Idea, PhotoMeta, PriceOverrides, Settings } from '../types';
 import { loadPhoto } from './persist';
+
+// JSZip is only needed when exporting or importing, so it loads on demand.
+const loadZip = () => import('jszip').then((m) => m.default);
 
 export interface Bundle {
   ideas: Idea[];
@@ -13,6 +15,7 @@ export interface Bundle {
 }
 
 export async function buildExportZip(b: Bundle): Promise<Blob> {
+  const JSZip = await loadZip();
   const zip = new JSZip();
   zip.file('ideas.json', JSON.stringify(b.ideas, null, 2));
   zip.file('photos.json', JSON.stringify(b.photos, null, 2));
@@ -35,6 +38,7 @@ export interface ImportResult {
 }
 
 export async function readImportZip(file: File): Promise<ImportResult> {
+  const JSZip = await loadZip();
   const zip = await JSZip.loadAsync(file);
   const json = async <T>(name: string): Promise<T | undefined> => {
     const f = zip.file(name);

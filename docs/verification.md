@@ -28,8 +28,10 @@ The overall ranking holds 16.7M characters. Level 220 sits around rank 1.67M, le
 
 ## Legion data shape
 
-The legion ranking exposes the account's legion level and raid power on every character row of that world, so the Legion screen shows the account legion level (from any row) and each character's level and block rank.
+The legion ranking returns the account's legion level, legion rank and raid power only on the reporting character's row (see above), so each snapshot carries them on that one row and the Legion screen reads them from whichever row has them. Every other character contributes its level and block rank from the overall ranking.
 
 ## Crystal values
 
 `public/bosses.json` was generated from the GMS v270 table on https://maplestorywiki.net/w/Intense_Power_Crystal (values for one party member). The wiki notes values are quintupled in GMS Heroic worlds; the app applies ×5 when the Heroic setting is on (default follows the world in `characters.json`). Cadence per difficulty (daily / weekly / monthly) was assigned from the boss list on the wiki's Bosses page and the GMS reset rules; per Nathan (2026-09-22) only Hard and Extreme Black Mage are monthly, all Extreme bosses reset weekly. Daily bosses can be assigned to the weekly checklist.
+
+Rechecked 2026-09-24 against GMS v.271 (released 2026-09-09): every crystal value and the EXP table still match the wiki, whose GMS crystal table is still labelled v270. The same table caps the party at 3 for First Adversary, Malefic Star, Limbo, Baldrix and Jupiter and at 2 for Extreme Lotus; `bosses.json` records these as `maxParty` and the party steppers stop there.

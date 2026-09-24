@@ -69,7 +69,9 @@ export function Dashboard() {
   }, [activity]);
 
   const totalLevels = roster.reduce((n, r) => n + r.row.level, 0);
-  const prevTotal = prev ? prev.rows.reduce((n, r) => n + r.level, 0) : null;
+  // Only characters in both snapshots, so adding a character doesn't count as levels gained.
+  const prevLevels = new Map(prev?.rows.map((r) => [r.name, r.level]) ?? []);
+  const levelsSincePrev = latest && prev ? latest.rows.reduce((n, r) => n + (prevLevels.has(r.name) ? r.level - prevLevels.get(r.name)! : 0), 0) : 0;
 
   if (!snapshots.length) {
     return (
@@ -144,7 +146,7 @@ export function Dashboard() {
         <Card title="Account">
           <div className="grid grid-cols-2 gap-4">
             <Stat label="Characters" value={roster.length} sub={characters ? `${characters.characters.length} configured` : undefined} />
-            <Stat label="Total levels" value={fmtInt(totalLevels)} sub={prevTotal != null && totalLevels - prevTotal !== 0 ? `${totalLevels - prevTotal > 0 ? '+' : ''}${totalLevels - prevTotal} since last snapshot` : undefined} />
+            <Stat label="Total levels" value={fmtInt(totalLevels)} sub={levelsSincePrev !== 0 ? `${levelsSincePrev > 0 ? '+' : ''}${levelsSincePrev} since last snapshot` : undefined} />
             <Stat label="Legion level" value={fmtInt(legion?.legionLevel)} sub={legion ? `reported by ${legion.reporter}` : undefined} />
             <Stat label="Raid power" value={formatBig(legion?.raidPower)} />
           </div>

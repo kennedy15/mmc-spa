@@ -82,7 +82,7 @@ export function CharacterPage() {
         </Link>
       </div>
       <Card>
-        <div className="flex gap-5">
+        <div className="flex flex-col sm:flex-row gap-4 sm:gap-5">
           <CharacterAvatar src={stats.imageUrl} size={110} alt={name} />
           <div className="flex-1 min-w-0">
             <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
@@ -227,7 +227,7 @@ export function CharacterPage() {
                 const g = stats.gains.find((x) => x.date === p.date);
                 return (
                   <tr key={p.date} className="border-t border-border">
-                    <td className="py-1.5 px-2 first:pl-0 last:pr-0">{fmtDateLong(p.date)}</td>
+                    <td className="py-1.5 px-2 first:pl-0 last:pr-0 whitespace-nowrap">{fmtDateLong(p.date)}</td>
                     <td className="py-1.5 px-2 first:pl-0 last:pr-0 text-right tabular">{p.level}</td>
                     <td className="py-1.5 px-2 first:pl-0 last:pr-0 text-right tabular text-ink-2" title={formatFull(p.exp)}>
                       {formatBig(p.exp)}

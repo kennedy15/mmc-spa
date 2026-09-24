@@ -107,7 +107,9 @@ export function History() {
                     <td className="py-1.5 px-2 first:pl-0 last:pr-0 text-ink-2">{c.character}</td>
                     <td className="py-1.5 px-2 first:pl-0 last:pr-0 text-right tabular">{c.partySize}</td>
                     <td className="py-1.5 px-2 first:pl-0 last:pr-0 text-right tabular text-good">{fmtMeso(c.meso)}</td>
-                    <td className="py-1.5 px-2 first:pl-0 last:pr-0 text-right text-ink-3 text-xs">{fmtDate(c.clearedAt)}</td>
+                    <td className="py-1.5 px-2 first:pl-0 last:pr-0 text-right text-ink-3 text-xs whitespace-nowrap" title={`${new Date(c.clearedAt).toLocaleString('en-US', { weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })} your time`}>
+                      {fmtDate(c.clearedAt)}
+                    </td>
                     <td className="py-1.5 px-2 first:pl-0 last:pr-0 text-right">
                       <button className="btn-ghost btn-sm" onClick={() => confirm('Delete this clear record?') && void removeClear(c.id)} aria-label="Delete">
                         ✕

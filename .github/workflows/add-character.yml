@@ -19,6 +19,8 @@ on:
 concurrency:
   group: snapshot
   cancel-in-progress: false
+  # A second run waits its turn instead of replacing the one already waiting.
+  queue: max
 
 jobs:
   add:
@@ -28,18 +30,27 @@ jobs:
     outputs:
       changed: ${{ steps.commit.outputs.changed }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
         with:
-          node-version: 20
+          node-version: 24
       - name: Look up and add
-        run: node scripts/add-character.mjs "${{ inputs.name }}" --role "${{ inputs.role }}" --owner "${{ inputs.owner }}" --world "${{ inputs.world }}"
+        # Inputs go through env vars rather than ${{ }} in the script, so a quote
+        # or $ in a typed name can't change the shell command.
+        env:
+          NAME: ${{ inputs.name }}
+          ROLE: ${{ inputs.role }}
+          OWNER: ${{ inputs.owner }}
+          WORLD: ${{ inputs.world }}
+        run: node scripts/add-character.mjs "$NAME" --role "$ROLE" --owner "$OWNER" --world "$WORLD"
       - name: Snapshot the updated roster
         run: node scripts/snapshot.mjs
         env:
           RETRY_DELAY_MS: '120000'
       - name: Commit
         id: commit
+        env:
+          NAME: ${{ inputs.name }}
         run: |
           git config user.name "maple-tracker-bot"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
@@ -47,7 +58,7 @@ jobs:
           if git diff --cached --quiet; then
             echo "changed=false" >> "$GITHUB_OUTPUT"
           else
-            git commit -m "add character: ${{ inputs.name }}"
+            git commit -m "add character: $NAME"
             git push
             echo "changed=true" >> "$GITHUB_OUTPUT"
           fi

@@ -7,6 +7,11 @@ import Anthropic from '@anthropic-ai/sdk';
 import type { Draft, GenerateOptions } from './types';
 
 const MODEL = 'claude-opus-5';
+// Claude Opus 5 thinks by default and max_tokens caps thinking plus the answer,
+// so leave room; only tokens actually generated are billed.
+const MAX_TOKENS = 16000;
+// Server-side web search can pause a long turn; resume it this many times at most.
+const MAX_CONTINUATIONS = 3;
 
 const SCHEMA: Record<string, unknown> = {
   type: 'object',
@@ -27,6 +32,27 @@ const SCHEMA: Record<string, unknown> = {
 
 const SYSTEM = `You invent Minecraft survival build ideas for a small private server. Each idea is a single structure with a short backstory. Prefer decorative points of interest (ruins, shrines, outposts, bridges, docks, wayshrines, follies) over farms unless farms are allowed. Use web search (2–4 searches) on Planet Minecraft, r/Minecraftbuilds or GrabCraft to find real reference pages for the build type and cite them as sourceLinks with their real URLs; only list imageUrls that are direct image files you actually saw on those pages. Never invent URLs. Respond only with the JSON object.`;
 
+type Params = Anthropic.Beta.Messages.MessageCreateParamsNonStreaming;
+
+/** Runs one request, resuming if server-side web search pauses the turn; returns the final message. */
+async function complete(client: Anthropic, params: Params): Promise<Anthropic.Beta.Messages.BetaMessage> {
+  let res = await client.beta.messages.create(params);
+  for (let i = 0; res.stop_reason === 'pause_turn' && i < MAX_CONTINUATIONS; i++) {
+    res = await client.beta.messages.create({ ...params, messages: [...params.messages, { role: 'assistant', content: res.content as Anthropic.Beta.Messages.BetaContentBlockParam[] }] });
+  }
+  if (res.stop_reason === 'refusal') throw new Error('Claude declined this request. Try different options.');
+  if (res.stop_reason === 'max_tokens') throw new Error('The answer was cut off before it finished. Try again.');
+  if (res.stop_reason === 'pause_turn') throw new Error('The web search took too long to finish. Try again.');
+  return res;
+}
+
+/** The answer text: text blocks after the last search step, so a preamble before the searches is left out. */
+function answerText(content: Anthropic.Beta.Messages.BetaContentBlock[]): string {
+  const lastStep = content.findLastIndex((b) => b.type !== 'text' && b.type !== 'thinking' && b.type !== 'redacted_thinking');
+  const text = (blocks: Anthropic.Beta.Messages.BetaContentBlock[]) => blocks.flatMap((b) => (b.type === 'text' ? [b.text] : [])).join('');
+  return text(content.slice(lastStep + 1)) || text(content);
+}
+
 export async function generateAI(apiKey: string, opts: GenerateOptions): Promise<Draft> {
   const client = new Anthropic({ apiKey, dangerouslyAllowBrowser: true });
   const constraints = [
@@ -40,26 +66,28 @@ export async function generateAI(apiKey: string, opts: GenerateOptions): Promise
     .join(' ');
   const user = `Generate one new build idea. ${constraints}`;
 
-  const base: Anthropic.MessageCreateParamsNonStreaming = {
+  const base: Params = {
     model: MODEL,
-    max_tokens: 4000,
+    max_tokens: MAX_TOKENS,
     system: SYSTEM,
     tools: [{ type: 'web_search_20260209', name: 'web_search', max_uses: 4 }],
     messages: [{ role: 'user', content: user }],
   };
 
-  let text = '';
+  let res: Anthropic.Beta.Messages.BetaMessage;
   try {
-    const res = await client.messages.create({ ...base, output_config: { format: { type: 'json_schema', schema: SCHEMA } } });
-    text = res.content.filter((b) => b.type === 'text').map((b) => b.text).join('');
+    // If a safety classifier declines, the API re-runs the request on its recommended fallback model.
+    res = await complete(client, { ...base, betas: ['server-side-fallback-2026-07-01'], fallbacks: 'default', output_config: { format: { type: 'json_schema', schema: SCHEMA } } });
   } catch (e) {
     if (!(e instanceof Anthropic.BadRequestError)) throw e;
     // Structured output may not combine with server tools everywhere; fall back to plain JSON in text.
-    const res = await client.messages.create({ ...base, system: SYSTEM + ' Output a single JSON object and nothing else.' });
-    text = res.content.filter((b) => b.type === 'text').map((b) => b.text).join('');
+    res = await complete(client, { ...base, system: SYSTEM + ' Output a single JSON object and nothing else.' });
   }
-  const json = text.slice(text.indexOf('{'), text.lastIndexOf('}') + 1);
-  const parsed = JSON.parse(json) as Partial<Draft>;
+  const text = answerText(res.content);
+  const start = text.indexOf('{');
+  const end = text.lastIndexOf('}');
+  if (start < 0 || end < start) throw new Error('Claude did not return an idea. Try again.');
+  const parsed = JSON.parse(text.slice(start, end + 1)) as Partial<Draft>;
   const isHttp = (u: unknown): u is string => typeof u === 'string' && /^https?:\/\//.test(u);
   return {
     title: parsed.title ?? 'Untitled build',
@@ -78,5 +106,6 @@ export function describeAiError(e: unknown): string {
   if (e instanceof Anthropic.AuthenticationError) return 'The API key was rejected. Check it in Settings.';
   if (e instanceof Anthropic.RateLimitError) return 'Rate limited by the API; try again in a minute.';
   if (e instanceof Anthropic.APIError) return `API error ${e.status ?? ''}: ${e.message}`;
+  if (e instanceof SyntaxError) return 'Claude returned an idea that could not be read. Try again.';
   return e instanceof Error ? e.message : String(e);
 }

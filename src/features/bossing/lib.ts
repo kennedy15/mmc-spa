@@ -19,6 +19,11 @@ export function crystalValue(doc: BossesDoc | null, prices: PriceOverrides, sett
   return base * (settings.heroic ? 5 : 1);
 }
 
+/** Largest party a boss difficulty allows (Extreme Lotus 2, the Grandis bosses from First Adversary on 3, others 6). */
+export function maxParty(doc: BossesDoc | null, bossId: string, difficulty: string): number {
+  return findBoss(doc, bossId)?.difficulties.find((d) => d.key === difficulty)?.maxParty ?? 6;
+}
+
 export function mesoPerClear(crystal: number, partySize: number): number {
   return Math.floor(crystal / Math.max(1, partySize));
 }

@@ -1,12 +1,13 @@
 {
- "asOf": "2026-09-22",
- "version": "GMS v270",
+ "asOf": "2026-09-24",
+ "version": "GMS v271",
  "source": "https://maplestorywiki.net/w/Intense_Power_Crystal",
  "notes": [
-  "Crystal values are for 1 party member; meso per clear = crystal / partySize, floored.",
+  "Crystal values are for 1 party member; meso per clear = crystal / partySize, floored. maxParty is the largest party the boss allows (6 when absent).",
   "Values are multiplied by 5 in Heroic worlds (Kronos, Hyperion, Solis) per the wiki footnote; the app applies this when the Heroic setting is on.",
   "cadence is the in-game reset for that difficulty: daily, weekly (Thursday 00:00 UTC) or monthly (1st 00:00 UTC). In GMS only Hard and Extreme Black Mage are monthly; Extreme Lotus/Seren/Kalos/Kaling/First Adversary reset weekly.",
-  "presets: bundles of boss/difficulty pairs that can be applied to a character in one click; Black Mage entries go to the monthly tracker, everything else to the weekly tracker."
+  "presets: bundles of boss/difficulty pairs that can be applied to a character in one click; Black Mage entries go to the monthly tracker, everything else to the weekly tracker.",
+  "Rechecked 2026-09-24 against the wiki's GMS table (still labelled v270): no value changed in v.271."
  ],
  "bosses": [
   {
@@ -347,7 +348,8 @@
      "key": "extreme",
      "crystal": 279500000,
      "cadence": "weekly",
-     "minLevel": 190
+     "minLevel": 190,
+     "maxParty": 2
     }
    ]
   },
@@ -569,25 +571,29 @@
      "key": "easy",
      "crystal": 197000000,
      "cadence": "weekly",
-     "minLevel": 270
+     "minLevel": 270,
+     "maxParty": 3
     },
     {
      "key": "normal",
      "crystal": 273000000,
      "cadence": "weekly",
-     "minLevel": 270
+     "minLevel": 270,
+     "maxParty": 3
     },
     {
      "key": "hard",
      "crystal": 588000000,
      "cadence": "weekly",
-     "minLevel": 270
+     "minLevel": 270,
+     "maxParty": 3
     },
     {
      "key": "extreme",
      "crystal": 1176000000,
      "cadence": "weekly",
-     "minLevel": 270
+     "minLevel": 270,
+     "maxParty": 3
     }
    ]
   },
@@ -629,13 +635,15 @@
      "key": "normal",
      "crystal": 290400000,
      "cadence": "weekly",
-     "minLevel": 280
+     "minLevel": 280,
+     "maxParty": 3
     },
     {
      "key": "hard",
      "crystal": 798000000,
      "cadence": "weekly",
-     "minLevel": 280
+     "minLevel": 280,
+     "maxParty": 3
     }
    ]
   },
@@ -647,13 +655,15 @@
      "key": "normal",
      "crystal": 420000000,
      "cadence": "weekly",
-     "minLevel": 285
+     "minLevel": 285,
+     "maxParty": 3
     },
     {
      "key": "hard",
      "crystal": 749000000,
      "cadence": "weekly",
-     "minLevel": 285
+     "minLevel": 285,
+     "maxParty": 3
     }
    ]
   },
@@ -665,13 +675,15 @@
      "key": "normal",
      "crystal": 560000000,
      "cadence": "weekly",
-     "minLevel": 290
+     "minLevel": 290,
+     "maxParty": 3
     },
     {
      "key": "hard",
      "crystal": 840000000,
      "cadence": "weekly",
-     "minLevel": 290
+     "minLevel": 290,
+     "maxParty": 3
     }
    ]
   },
@@ -683,13 +695,15 @@
      "key": "normal",
      "crystal": 593000000,
      "cadence": "weekly",
-     "minLevel": 295
+     "minLevel": 295,
+     "maxParty": 3
     },
     {
      "key": "hard",
      "crystal": 1190600000,
      "cadence": "weekly",
-     "minLevel": 295
+     "minLevel": 295,
+     "maxParty": 3
     }
    ]
   }
