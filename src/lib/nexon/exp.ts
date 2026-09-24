@@ -33,6 +33,36 @@ export function pctToNext(level: number, exp: string | bigint): number {
   return Number((e * 10000n) / need) / 10000;
 }
 
+const big = (v: string | bigint) => (typeof v === 'bigint' ? v : BigInt(v || '0'));
+
+/** How far into `level` the character is (0..1), at full precision; pctToNext rounds to 0.01%. */
+function fractionOfLevel(level: number, exp: bigint): number | null {
+  const need = expToNext(level);
+  if (!need) return level >= MAX_LEVEL ? 0 : null;
+  return Number((exp * 1_000_000_000n) / need) / 1e9;
+}
+
+/**
+ * Levels gained between two observations: 0.014 is 1.4% of a level, 1.2 is a
+ * level-up plus 20%. Puts characters of any level on one scale. Null when the
+ * EXP table lacks a level.
+ */
+export function levelsGained(prevLevel: number, prevExp: string | bigint, nextLevel: number, nextExp: string | bigint): number | null {
+  const a = fractionOfLevel(prevLevel, big(prevExp));
+  const b = fractionOfLevel(nextLevel, big(nextExp));
+  if (a == null || b == null) return null;
+  return nextLevel - prevLevel + (b - a);
+}
+
+/** EXP still needed to reach `target` (0% into it) from `level` with `exp` into it. */
+export function expToReach(level: number, exp: string | bigint, target: number): bigint | null {
+  if (target <= level) return 0n;
+  const from = cumulativeExp(level, exp);
+  const to = cumulativeExp(target, 0n);
+  if (from == null || to == null) return null;
+  return to > from ? to - from : 0n;
+}
+
 /** EXP remaining until the next level. */
 export function expRemaining(level: number, exp: string | bigint): bigint | null {
   const need = expToNext(level);

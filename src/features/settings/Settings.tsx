@@ -26,7 +26,7 @@ export function Settings() {
   const exportZip = async () => {
     setBusy(true);
     try {
-      const blob = await buildExportZip({ ideas: s.ideas, photos: s.photos, assignments: s.assignments, clears: s.clears, prices: s.prices, settings: s.settings });
+      const blob = await buildExportZip({ ideas: s.ideas, photos: s.photos, assignments: s.assignments, clears: s.clears, prices: s.prices, goals: s.goals, settings: s.settings });
       const a = document.createElement('a');
       a.href = URL.createObjectURL(blob);
       a.download = `maple-tracker-export-${new Date().toISOString().slice(0, 10)}.zip`;
@@ -42,7 +42,7 @@ export function Settings() {
     try {
       const r = await readImportZip(file);
       const n = await s.importBundle(r);
-      setMsg(`Imported ${n.ideas} ideas, ${n.clears} clears, ${n.assignments} assignments, ${n.photos} photos.`);
+      setMsg(`Imported ${n.ideas} ideas, ${n.clears} clears, ${n.assignments} assignments, ${n.photos} photos, ${n.goals} goals.`);
     } catch (e) {
       setMsg(`Import failed: ${e instanceof Error ? e.message : String(e)}`);
     } finally {
@@ -96,7 +96,7 @@ export function Settings() {
         </Card>
 
         <Card title="Export / import">
-          <p className="text-sm text-ink-2 mb-3">A zip with the board, photos, boss assignments, clears and price overrides. Import merges by id, so you can view a friend's history next to yours.</p>
+          <p className="text-sm text-ink-2 mb-3">A zip with the board, photos, boss assignments, clears, price overrides and level goals. Import merges by id, so you can view a friend's history next to yours.</p>
           <div className="flex flex-wrap gap-2">
             <button className="btn" onClick={() => void exportZip()} disabled={busy}>
               Export zip

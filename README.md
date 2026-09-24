@@ -8,8 +8,8 @@ The design doc is in [`MapleTracker + Build Board — Design Doc.md`](./MapleTra
 
 1. **Characters.** Edit [`data/characters.json`](data/characters.json): set `world` / `worldId` (Bera 1, Scania 19, Kronos 45, Hyperion 70, Luna 30, Solis 46) and list every character you want tracked. A friend's characters can go in the same list with `"owner": "friend"` and, if they play elsewhere, their own `"worldId"`.
 2. **Pages.** Open https://github.com/kennedy15/mmc-spa/settings/pages and under "Build and deployment" change the Source dropdown from "Deploy from a branch" to **GitHub Actions** (no branch or folder to pick). Until this is done the deploy workflow fails at the `configure-pages` step. The `Deploy to GitHub Pages` workflow runs on every push to `main` and publishes to https://kennedy15.github.io/mmc-spa/. Note: GitHub only serves Pages from a **private** repo on GitHub Pro; on a Free account either make the repo public (it holds only public rankings data) or run the site locally with `npm run dev` after `git pull` — the daily snapshot Action works either way.
-3. **First snapshot.** Actions → *Daily snapshot* → *Run workflow*. It runs every day at 18:00 UTC after that and redeploys the site whenever the data changed.
-4. **Data folder** (optional, Chrome/Edge). Open the site → Settings → *Choose data folder*. Ideas, photos, boss clears, settings and a mirror of every snapshot are written there as JSON/PNG.
+3. **First snapshot.** Actions → *Daily snapshot* → *Run workflow*. It runs every day at 18:37 UTC after that (GitHub can start scheduled runs late) and redeploys the site whenever the data changed.
+4. **Data folder** (optional, Chrome/Edge). Open the site → Settings → *Choose data folder*. Ideas, photos, boss clears, level goals, settings and a mirror of every snapshot are written there as JSON/PNG.
 5. **AI generator** (optional). Settings → paste an Anthropic API key. It is kept in IndexedDB only.
 
 ## Adding a character later
@@ -29,7 +29,7 @@ npm run snapshot     # run the collector once against data/characters.json
 npm run build        # type-check + production build into dist/
 ```
 
-`npm run snapshot` writes `data/snapshots/<date>.json`, downloads changed character images into `data/looks/<name>/`, and updates `data/index.json`. Running it twice on the same day leaves the files untouched.
+`npm run snapshot` writes `data/snapshots/<date>.json`, downloads changed character images into `data/looks/<name>/`, and updates `data/index.json`. Running it again on the same day replaces that day's file with the newer numbers, and leaves it untouched when nothing changed.
 
 ## Layout
 
@@ -50,5 +50,5 @@ docs/samples        raw rankings responses captured during verification
 
 ## Data sources
 
-- Rankings: `https://www.nexon.com/api/maplestory/no-auth/ranking/v2/na` (undocumented, no auth, no CORS). Two requests per character per day.
+- Rankings: `https://www.nexon.com/api/maplestory/no-auth/ranking/v2/na` (undocumented, no auth, no CORS). One overall-ranking request per character per day, plus one legion-ranking request per account: the legion row is filed under the account's highest-level character, and on a level tie the character that got there first keeps it ([`scripts/legion.mjs`](scripts/legion.mjs)).
 - EXP table, crystal values, boss list: [maplestorywiki.net](https://maplestorywiki.net/) (`public/exp-table.json`, `public/bosses.json` carry the fetch date). Update `public/bosses.json` and its `asOf` when Nexon changes crystal prices; old clears keep the meso recorded at the time.

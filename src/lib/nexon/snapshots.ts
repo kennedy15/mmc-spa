@@ -1,6 +1,6 @@
 import { dataUrl } from '../paths';
 import type { CharactersConfig, LookEntry, Snapshot, SnapshotIndex, SnapshotRow, WorldsDoc } from './types';
-import { gainBetween, expToNext, expRemaining } from './exp';
+import { gainBetween, expToNext, expRemaining, levelsGained } from './exp';
 
 async function getJson<T>(url: string): Promise<T | null> {
   try {
@@ -45,6 +45,8 @@ export function seriesFor(name: string, snapshots: Snapshot[]): SeriesPoint[] {
 export interface GainPoint {
   date: string;
   gain: bigint;
+  /** Levels gained (0.014 = 1.4% of a level); null when the EXP table lacks a level. */
+  levels: number | null;
   /** Days between this observation and the previous one (gaps in history). */
   spanDays: number;
   levelUp: boolean;
@@ -57,7 +59,7 @@ export function dailyGains(series: SeriesPoint[]): GainPoint[] {
     const b = series[i];
     const gain = gainBetween(a.level, a.exp, b.level, b.exp);
     if (gain == null) continue;
-    out.push({ date: b.date, gain, spanDays: daysBetween(a.date, b.date), levelUp: b.level > a.level });
+    out.push({ date: b.date, gain, levels: levelsGained(a.level, a.exp, b.level, b.exp), spanDays: daysBetween(a.date, b.date), levelUp: b.level > a.level });
   }
   return out;
 }
@@ -70,9 +72,18 @@ export function addDays(date: string, n: number): string {
   return new Date(Date.parse(date + 'T00:00:00Z') + n * 86_400_000).toISOString().slice(0, 10);
 }
 
-/** Average gain per day over the last `days` calendar days (gaps count as zero-gain days). */
-export function averageGain(gains: GainPoint[], days: number, today: string): bigint {
-  return gainOver(gains, days, today) / BigInt(days);
+/** Days of a `days`-long window that history actually covers: fewer while tracking is younger than the window. */
+export function coveredDays(days: number, firstDate: string, today: string): number {
+  return Math.max(0, Math.min(days, daysBetween(firstDate, today)));
+}
+
+/**
+ * Average gain per day over the last `days` calendar days. Gaps count as
+ * zero-gain days; days before the first snapshot (`firstDate`) don't count.
+ */
+export function averageGain(gains: GainPoint[], days: number, today: string, firstDate: string): bigint {
+  const span = coveredDays(days, firstDate, today);
+  return span > 0 ? gainOver(gains, days, today) / BigInt(span) : 0n;
 }
 
 /** Gain over a window: sum of gains dated after `today - days`. */
@@ -83,14 +94,43 @@ export function gainOver(gains: GainPoint[], days: number, today: string): bigin
   return total;
 }
 
-/** Projected date to reach the next level, or null when the rate is zero. */
-export function projectedLevelDate(latest: SeriesPoint, avgPerDay: bigint, today: string): string | null {
+/**
+ * EXP gained since the first observation after `since`, per observation date
+ * (the first is 0). Charts plot this rather than lifetime EXP, which is ~10^15
+ * and moves by fractions of a percent a day.
+ */
+export function cumulativeGain(series: SeriesPoint[], gains: GainPoint[], since = ''): Map<string, bigint> {
+  const byDate = new Map(gains.map((g) => [g.date, g.gain]));
+  const out = new Map<string, bigint>();
+  let total = 0n;
+  for (const p of series) {
+    if (p.date <= since) continue;
+    if (out.size > 0) total += byDate.get(p.date) ?? 0n;
+    out.set(p.date, total);
+  }
+  return out;
+}
+
+/** Date `remaining` EXP runs out at `avgPerDay`, or null when the rate is zero. */
+export function projectDate(remaining: bigint, avgPerDay: bigint, today: string): string | null {
   if (avgPerDay <= 0n) return null;
-  const remaining = expRemaining(latest.level, latest.exp);
-  if (remaining == null || expToNext(latest.level) == null) return null;
+  if (remaining <= 0n) return today;
   const days = Number((remaining + avgPerDay - 1n) / avgPerDay);
   if (!Number.isFinite(days) || days > 36500) return null;
   return addDays(today, days);
+}
+
+/** Projected date to reach the next level, or null when the rate is zero. */
+export function projectedLevelDate(latest: SeriesPoint, avgPerDay: bigint, today: string): string | null {
+  const remaining = expRemaining(latest.level, latest.exp);
+  if (remaining == null || expToNext(latest.level) == null) return null;
+  return projectDate(remaining, avgPerDay, today);
+}
+
+/** Places climbed in the overall ranking since the previous snapshot (negative = slipped). */
+export function rankDelta(series: SeriesPoint[]): number | null {
+  if (series.length < 2) return null;
+  return series[series.length - 2].rank - series[series.length - 1].rank;
 }
 
 export function latestRow(snapshots: Snapshot[], name: string): SnapshotRow | undefined {
@@ -99,4 +139,21 @@ export function latestRow(snapshots: Snapshot[], name: string): SnapshotRow | un
     if (r) return r;
   }
   return undefined;
+}
+
+export interface LegionPoint {
+  date: string;
+  /** The character the legion ranking files the account under (its highest level). */
+  reporter: string;
+  worldId: number;
+  legionLevel: number;
+  legionRank: number | null;
+  raidPower: number | null;
+}
+
+/** An account's legion on one snapshot, from whichever row carries it. */
+export function legionOf(snapshot: Snapshot, owner = 'me'): LegionPoint | null {
+  const r = snapshot.rows.find((x) => x.legionLevel != null && (x.owner ?? 'me') === owner);
+  if (!r || r.legionLevel == null) return null;
+  return { date: snapshot.date, reporter: r.name, worldId: r.worldId, legionLevel: r.legionLevel, legionRank: r.legionRank, raidPower: r.raidPower };
 }

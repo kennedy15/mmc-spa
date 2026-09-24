@@ -12,6 +12,7 @@ export type DocName =
   | 'bossing/assignments.json'
   | 'bossing/clears.json'
   | 'bossing/prices.json'
+  | 'goals.json'
   | 'settings.json';
 
 let folder: FileSystemDirectoryHandle | null = null;

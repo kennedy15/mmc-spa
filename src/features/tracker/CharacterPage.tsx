@@ -4,11 +4,12 @@ import { Bar, BarChart, Cell, Line, LineChart, ResponsiveContainer, Tooltip, XAx
 import { useStore } from '../../store';
 import { useCharacterStats, useTrackedNames } from './hooks';
 import { Card, Stat, Empty, PageHeader, Progress, CharacterAvatar, Badge } from '../../app/ui';
-import { formatBig, formatFull, fmtInt, fmtDate, fmtDateLong, pct } from '../../app/format';
-import { ACCENT, SERIES, ChartTip, axisProps, shortDate, dateLabel, fmtBillions } from '../../app/charts';
-import { pctToNext, toBillions, cumulativeExp, expRemaining } from '../../lib/nexon/exp';
-import { latestRow } from '../../lib/nexon/snapshots';
+import { formatBig, formatFull, fmtInt, fmtDate, fmtDateLong, pct, fmtLevels, fmtRankDelta } from '../../app/format';
+import { ACCENT, SERIES, MAX_BAR, ChartTip, axisProps, shortDate, dateLabel, fmtBillions } from '../../app/charts';
+import { pctToNext, toBillions, expRemaining } from '../../lib/nexon/exp';
+import { cumulativeGain, latestRow } from '../../lib/nexon/snapshots';
 import { legionRank } from '../../lib/nexon/legion';
+import { GoalCard } from './Goals';
 
 export function CharacterList() {
   const names = useTrackedNames();
@@ -47,8 +48,13 @@ export function CharacterPage() {
   const stats = useCharacterStats(name);
   const looks = useStore((s) => s.looks)[name] ?? [];
 
-  const expData = useMemo(() => (stats ? stats.series.map((p) => ({ date: p.date, total: toBillions(cumulativeExp(p.level, p.exp) ?? p.exp), level: p.level, rank: p.rank })) : []), [stats]);
-  const gainData = useMemo(() => (stats ? stats.gains.slice(-60).map((g) => ({ date: g.date, gain: toBillions(g.gain), levelUp: g.levelUp, spanDays: g.spanDays })) : []), [stats]);
+  const expData = useMemo(() => {
+    if (!stats) return [];
+    const gained = cumulativeGain(stats.series, stats.gains);
+    return stats.series.map((p) => ({ date: p.date, gained: toBillions(gained.get(p.date) ?? 0n), level: p.level, pct: pctToNext(p.level, p.exp), rank: p.rank }));
+  }, [stats]);
+  const gainData = useMemo(() => (stats ? stats.gains.slice(-60).map((g) => ({ date: g.date, gain: toBillions(g.gain), levels: g.levels, levelUp: g.levelUp, spanDays: g.spanDays })) : []), [stats]);
+  const reportsLegion = useMemo(() => !!stats?.series.some((p) => p.legionLevel != null), [stats]);
   const levelUps = useMemo(() => (stats ? stats.series.filter((p, i) => i > 0 && p.level > stats.series[i - 1].level) : []), [stats]);
 
   if (!stats || !stats.latest) {
@@ -80,7 +86,9 @@ export function CharacterPage() {
               <Badge tone="accent">Lv. {L.level}</Badge>
               {rank && <Badge>Legion {rank}</Badge>}
               <span className="text-ink-3 text-xs">
-                {L.world} · #{fmtInt(L.rank)} overall{L.legionRank ? ` · #${fmtInt(L.legionRank)} legion` : ''}
+                {L.world} · #{fmtInt(L.rank)} overall
+                {stats.rankDelta ? <span className={stats.rankDelta > 0 ? 'text-good' : ''}> {fmtRankDelta(stats.rankDelta)}</span> : null}
+                {L.legionRank ? ` · #${fmtInt(L.legionRank)} legion` : ''}
               </span>
             </div>
             <div className="mt-3">
@@ -93,9 +101,9 @@ export function CharacterPage() {
               <Progress value={pctToNext(L.level, L.exp)} />
             </div>
             <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mt-4">
-              <Stat label="Today" value={stats.gainToday == null ? '—' : `+${formatBig(stats.gainToday)}`} tone={stats.gainToday && stats.gainToday > 0n ? 'good' : undefined} />
-              <Stat label="7-day avg" value={`${formatBig(stats.avg7)}/d`} sub={`+${formatBig(stats.gain7)} total`} />
-              <Stat label="30-day avg" value={`${formatBig(stats.avg30)}/d`} sub={`+${formatBig(stats.gain30)} total`} />
+              <Stat label="Today" value={stats.gainToday == null ? '—' : `+${formatBig(stats.gainToday)}`} tone={stats.gainToday && stats.gainToday > 0n ? 'good' : undefined} sub={stats.levelsToday ? `${fmtLevels(stats.levelsToday)} of a level` : undefined} />
+              <Stat label="7-day avg" value={`${formatBig(stats.avg7)}/d`} sub={`+${formatBig(stats.gain7)} total${stats.span7 < 7 ? ` · ${stats.span7}d of data` : ''}`} />
+              <Stat label="30-day avg" value={`${formatBig(stats.avg30)}/d`} sub={`+${formatBig(stats.gain30)} total${stats.span30 < 30 ? ` · ${stats.span30}d of data` : ''}`} />
               <Stat label="Remaining" value={remaining == null ? '—' : formatBig(remaining)} sub="to next level" />
               <Stat label="Projected" value={stats.projected ? fmtDate(stats.projected) : '—'} sub={stats.projected ? `Lv. ${L.level + 1} at 7-day pace` : 'no recent gain'} />
             </div>
@@ -104,7 +112,7 @@ export function CharacterPage() {
       </Card>
 
       <div className="grid gap-4 lg:grid-cols-2 mt-4">
-        <Card title="Total EXP" action={<span className="text-xs text-ink-3">{stats.series.length} days · level-ups marked</span>}>
+        <Card title={`EXP gained since ${fmtDate(stats.firstDate)}`} action={<span className="text-xs text-ink-3">{stats.series.length} snapshots · level-ups marked</span>}>
           {expData.length < 2 ? (
             <NeedMore />
           ) : (
@@ -112,12 +120,12 @@ export function CharacterPage() {
               <ResponsiveContainer>
                 <LineChart data={expData} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
                   <XAxis dataKey="date" {...axisProps} tickFormatter={shortDate} minTickGap={40} />
-                  <YAxis {...axisProps} width={60} tickFormatter={(v: number) => fmtBillions(v)} domain={['auto', 'auto']} />
-                  <Tooltip content={<ChartTip format={(v, _n, row) => `${fmtBillions(v, 2)} (Lv. ${(row as { level: number }).level})`} labelFormat={dateLabel} />} cursor={{ stroke: '#343945' }} />
+                  <YAxis {...axisProps} width={60} tickFormatter={(v: number) => fmtBillions(v)} />
+                  <Tooltip content={<ChartTip format={(v, _n, row) => `+${fmtBillions(v, 2)} · Lv. ${(row as { level: number }).level} ${pct((row as { pct: number }).pct)}`} labelFormat={dateLabel} />} cursor={{ stroke: '#343945' }} />
                   {levelUps.map((p) => (
                     <ReferenceLine key={p.date} x={p.date} stroke={SERIES[0]} strokeDasharray="3 3" label={{ value: `${p.level}`, fill: SERIES[0], fontSize: 10, position: 'top' }} />
                   ))}
-                  <Line type="monotone" dataKey="total" name="Total EXP" stroke={ACCENT} strokeWidth={2} dot={false} activeDot={{ r: 4 }} isAnimationActive={false} />
+                  <Line type="monotone" dataKey="gained" name="Gained" stroke={ACCENT} strokeWidth={2} dot={false} activeDot={{ r: 4 }} isAnimationActive={false} />
                 </LineChart>
               </ResponsiveContainer>
             </div>
@@ -130,11 +138,19 @@ export function CharacterPage() {
           ) : (
             <div className="h-60">
               <ResponsiveContainer>
-                <BarChart data={gainData} margin={{ top: 8, right: 8, left: 0, bottom: 0 }} barCategoryGap={2}>
+                <BarChart data={gainData} margin={{ top: 8, right: 8, left: 0, bottom: 0 }} barCategoryGap={2} maxBarSize={MAX_BAR}>
                   <XAxis dataKey="date" {...axisProps} tickFormatter={shortDate} minTickGap={40} />
                   <YAxis {...axisProps} width={60} tickFormatter={(v: number) => fmtBillions(v)} />
                   <Tooltip
-                    content={<ChartTip format={(v, _n, row) => `${fmtBillions(v, 2)}${(row as { levelUp: boolean }).levelUp ? ' · level up' : ''}${(row as { spanDays: number }).spanDays > 1 ? ` · over ${(row as { spanDays: number }).spanDays} days` : ''}`} labelFormat={dateLabel} />}
+                    content={
+                      <ChartTip
+                        format={(v, _n, row) => {
+                          const r = row as { levels: number | null; levelUp: boolean; spanDays: number };
+                          return `${fmtBillions(v, 2)} · ${fmtLevels(r.levels)} of a level${r.levelUp ? ' · level up' : ''}${r.spanDays > 1 ? ` · over ${r.spanDays} days` : ''}`;
+                        }}
+                        labelFormat={dateLabel}
+                      />
+                    }
                     cursor={{ fill: '#1b1e24' }}
                   />
                   <Bar dataKey="gain" name="Gain" radius={[4, 4, 0, 0]} isAnimationActive={false}>
@@ -165,7 +181,9 @@ export function CharacterPage() {
           )}
         </Card>
 
-        <Card title="Looks" action={<Link to="/fashion" className="text-xs text-ink-3 hover:text-ink">Fashion timeline →</Link>}>
+        <GoalCard key={name} stats={stats} />
+
+        <Card title="Looks" className="lg:col-span-2" action={<Link to="/fashion" className="text-xs text-ink-3 hover:text-ink">Fashion timeline →</Link>}>
           {looks.length === 0 ? (
             <div className="text-sm text-ink-3 py-6 text-center">No archived looks yet.</div>
           ) : (
@@ -190,8 +208,9 @@ export function CharacterPage() {
                 <th className="py-2 px-2 first:pl-0 last:pr-0 font-medium text-right">Level</th>
                 <th className="py-2 px-2 first:pl-0 last:pr-0 font-medium text-right">EXP</th>
                 <th className="py-2 px-2 first:pl-0 last:pr-0 font-medium text-right">Gain</th>
+                <th className="py-2 px-2 first:pl-0 last:pr-0 font-medium text-right">Of a level</th>
                 <th className="py-2 px-2 first:pl-0 last:pr-0 font-medium text-right">Rank</th>
-                <th className="py-2 px-2 first:pl-0 last:pr-0 font-medium text-right">Legion</th>
+                {reportsLegion && <th className="py-2 px-2 first:pl-0 last:pr-0 font-medium text-right">Legion</th>}
               </tr>
             </thead>
             <tbody>
@@ -204,9 +223,10 @@ export function CharacterPage() {
                     <td className="py-1.5 px-2 first:pl-0 last:pr-0 text-right tabular text-ink-2" title={formatFull(p.exp)}>
                       {formatBig(p.exp)}
                     </td>
-                    <td className={`py-1.5 text-right tabular ${g && g.gain > 0n ? 'text-good' : 'text-ink-3'}`}>{g ? `+${formatBig(g.gain)}` : '—'}</td>
+                    <td className={`py-1.5 px-2 first:pl-0 last:pr-0 text-right tabular ${g && g.gain > 0n ? 'text-good' : 'text-ink-3'}`}>{g ? `+${formatBig(g.gain)}` : '—'}</td>
+                    <td className="py-1.5 px-2 first:pl-0 last:pr-0 text-right tabular text-ink-2">{g ? fmtLevels(g.levels) : '—'}</td>
                     <td className="py-1.5 px-2 first:pl-0 last:pr-0 text-right tabular text-ink-2">#{fmtInt(p.rank)}</td>
-                    <td className="py-1.5 px-2 first:pl-0 last:pr-0 text-right tabular text-ink-2">{fmtInt(p.legionLevel)}</td>
+                    {reportsLegion && <td className="py-1.5 px-2 first:pl-0 last:pr-0 text-right tabular text-ink-2">{fmtInt(p.legionLevel)}</td>}
                   </tr>
                 );
               })}

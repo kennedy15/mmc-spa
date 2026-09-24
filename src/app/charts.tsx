@@ -62,13 +62,22 @@ export function dateLabel(label: unknown): string {
   return s;
 }
 
-/** Format a value expressed in billions (chart units) compactly: 12.5B, 1.3T, 2.14Q. */
+/**
+ * Format a value expressed in billions (chart units) compactly: 12.5B, 1.25T,
+ * 2.14Q. Without `digits`, trailing zeros are dropped so axis ticks read 0,
+ * 1.25T, 2.5T rather than 0.0B, 1.3T, 2.5T.
+ */
 export function fmtBillions(v: unknown, digits?: number): string {
   const n = Number(v);
   if (!Number.isFinite(n)) return '—';
+  if (n === 0) return '0';
   const abs = Math.abs(n);
   const sign = n < 0 ? '-' : '';
-  if (abs >= 1e6) return `${sign}${(abs / 1e6).toFixed(digits ?? 2)}Q`;
-  if (abs >= 1e3) return `${sign}${(abs / 1e3).toFixed(digits ?? 1)}T`;
-  return `${sign}${abs.toFixed(digits ?? (abs < 10 ? 1 : 0))}B`;
+  const fix = (x: number, d: number) => (digits == null ? String(Number(x.toFixed(d))) : x.toFixed(digits));
+  if (abs >= 1e6) return `${sign}${fix(abs / 1e6, 2)}Q`;
+  if (abs >= 1e3) return `${sign}${fix(abs / 1e3, 2)}T`;
+  return `${sign}${fix(abs, abs < 10 ? 2 : abs < 100 ? 1 : 0)}B`;
 }
+
+/** Bars never get thicker than this, so one or two data points don't turn into slabs. */
+export const MAX_BAR = 24;

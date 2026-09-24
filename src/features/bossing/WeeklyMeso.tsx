@@ -1,64 +1,13 @@
-import { useMemo } from 'react';
 import { useStore } from '../../store';
 import { Card, Badge } from '../../app/ui';
 import { fmtMeso } from '../../app/format';
-import { periodKey } from '../../lib/reset/period';
-import { assignmentMeso, clearFor, crystalsInWeek, visibleCharacters } from './lib';
-import { useCharacterNames } from '../tracker/hooks';
+import { useWeeklyMeso } from './useWeeklyMeso';
 
-/**
- * Weekly meso tracker: what every assignment would pay this week (expected)
- * against what has been checked off (sold), per character and in total.
- * Monthly bosses count in the week they are cleared; their expected value is
- * spread across the month.
- */
+/** Weekly meso tracker: expected vs sold this week, per character and in total. */
 export function WeeklyMeso({ compact = false }: { compact?: boolean }) {
-  const bosses = useStore((s) => s.bosses);
   const assignments = useStore((s) => s.assignments);
-  const clears = useStore((s) => s.clears);
-  const prices = useStore((s) => s.prices);
   const settings = useStore((s) => s.settings);
-  const names = visibleCharacters(useCharacterNames(), settings);
-
-  const data = useMemo(() => {
-    const week = periodKey('weekly');
-    const month = periodKey('monthly');
-    const weekClears = crystalsInWeek(clears, week);
-    const perChar = new Map<string, { expected: number; sold: number; done: number; total: number; crystals: number }>();
-    const bump = (c: string) => {
-      const e = perChar.get(c) ?? { expected: 0, sold: 0, done: 0, total: 0, crystals: 0 };
-      perChar.set(c, e);
-      return e;
-    };
-    for (const a of assignments) {
-      if (settings.hiddenCharacters.includes(a.character)) continue;
-      const e = bump(a.character);
-      const value = assignmentMeso(a, bosses, prices, settings);
-      if (a.cadence === 'weekly') {
-        e.expected += value;
-        e.total += 1;
-        const c = clearFor(clears, a, week);
-        if (c) {
-          e.sold += c.meso;
-          e.done += 1;
-        }
-      } else {
-        e.expected += value / 4.345;
-        const c = clearFor(clears, a, month);
-        if (c && weekClears.some((w) => w.id === c.id)) e.sold += c.meso;
-      }
-    }
-    for (const c of weekClears) {
-      if (settings.hiddenCharacters.includes(c.character)) continue;
-      bump(c.character).crystals += 1;
-    }
-    const rows = [...perChar.entries()].sort((a, b) => (names.indexOf(a[0]) + 1 || 999) - (names.indexOf(b[0]) + 1 || 999));
-    const expected = rows.reduce((n, [, r]) => n + r.expected, 0);
-    const sold = rows.reduce((n, [, r]) => n + r.sold, 0);
-    const done = rows.reduce((n, [, r]) => n + r.done, 0);
-    const total = rows.reduce((n, [, r]) => n + r.total, 0);
-    return { rows, expected, sold, done, total, crystals: weekClears.length };
-  }, [assignments, clears, bosses, prices, settings, names]);
+  const data = useWeeklyMeso();
 
   if (!assignments.length) return null;
   const pct = data.expected > 0 ? Math.min(1, data.sold / data.expected) : 0;

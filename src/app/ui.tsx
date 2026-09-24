@@ -144,3 +144,21 @@ export function CharacterAvatar({ src, size = 72, alt }: { src: string | null; s
     </div>
   );
 }
+
+export function Segmented<T extends string | number>({ value, options, onChange, label }: { value: T; options: readonly { value: T; label: string }[]; onChange: (v: T) => void; label?: string }) {
+  return (
+    <div className="inline-flex rounded-lg border border-border-2 p-0.5 text-xs" role="group" aria-label={label}>
+      {options.map((o) => (
+        <button
+          key={String(o.value)}
+          type="button"
+          aria-pressed={o.value === value}
+          onClick={() => onChange(o.value)}
+          className={`px-2 py-0.5 rounded-md whitespace-nowrap transition-colors cursor-pointer ${o.value === value ? 'bg-surface-3 text-ink' : 'text-ink-3 hover:text-ink'}`}
+        >
+          {o.label}
+        </button>
+      ))}
+    </div>
+  );
+}

@@ -4,7 +4,7 @@ import { useStore } from '../../store';
 import { useCharacterNames } from '../tracker/hooks';
 import { Card, Empty, PageHeader, Badge } from '../../app/ui';
 import { fmtMeso, fmtDate } from '../../app/format';
-import { SERIES, ChartTip, axisProps, shortDate, Legend } from '../../app/charts';
+import { SERIES, MAX_BAR, ChartTip, axisProps, shortDate, Legend } from '../../app/charts';
 import { periodLabel } from '../../lib/reset/period';
 import { bossLabel, mesoByWeek, streak, weekOfClear } from './lib';
 
@@ -58,7 +58,7 @@ export function History() {
       <Card title="Meso per reset week · stacked by character" action={<span className="text-xs text-ink-3">click a bar to inspect that week</span>}>
         <div className="h-64">
           <ResponsiveContainer>
-            <BarChart data={chartData} margin={{ top: 8, right: 8, left: 0, bottom: 0 }} barCategoryGap={3} onClick={(e) => e && e.activeLabel != null && setSelected(String(e.activeLabel))}>
+            <BarChart data={chartData} margin={{ top: 8, right: 8, left: 0, bottom: 0 }} barCategoryGap={3} maxBarSize={MAX_BAR} onClick={(e) => e && e.activeLabel != null && setSelected(String(e.activeLabel))}>
               <XAxis dataKey="period" {...axisProps} tickFormatter={shortDate} minTickGap={30} />
               <YAxis {...axisProps} width={56} tickFormatter={(v: number) => fmtMeso(v)} />
               <Tooltip content={<ChartTip format={(v) => fmtMeso(Number(v))} labelFormat={(l) => `Week of ${shortDate(l)}`} />} cursor={{ fill: '#1b1e24' }} />

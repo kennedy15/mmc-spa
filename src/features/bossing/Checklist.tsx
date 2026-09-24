@@ -1,6 +1,7 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useStore } from '../../store';
+import { useNow } from '../../app/useNow';
 import { useCharacterNames } from '../tracker/hooks';
 import { Card, Empty, PageHeader, Stat, Stepper, Badge } from '../../app/ui';
 import { fmtMeso } from '../../app/format';
@@ -9,15 +10,6 @@ import { uid, type Assignment, type Clear } from '../../lib/types';
 import { assignmentMeso, bossLabel, clearFor, crystalValue, crystalsInWeek, currentPeriods, mesoPerClear, visibleCharacters } from './lib';
 import { WeeklyMeso } from './WeeklyMeso';
 import { CharacterPicker } from './CharacterPicker';
-
-function useNow(ms = 30_000) {
-  const [now, setNow] = useState(() => new Date());
-  useEffect(() => {
-    const t = setInterval(() => setNow(new Date()), ms);
-    return () => clearInterval(t);
-  }, [ms]);
-  return now;
-}
 
 export function Checklist() {
   const now = useNow();

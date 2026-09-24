@@ -6,7 +6,7 @@ import { dataUrl } from './lib/paths';
 import * as fs from './lib/storage/fs-access';
 import * as persist from './lib/storage/persist';
 import { mergeById, type ImportResult } from './lib/storage/exportImport';
-import { DEFAULT_SETTINGS, uid, type Assignment, type BossesDoc, type Clear, type Idea, type PhotoMeta, type PriceOverrides, type Settings } from './lib/types';
+import { DEFAULT_SETTINGS, uid, type Assignment, type BossesDoc, type Clear, type Goal, type Idea, type PhotoMeta, type PriceOverrides, type Settings } from './lib/types';
 
 export interface FolderState {
   supported: boolean;
@@ -30,6 +30,7 @@ interface State {
   assignments: Assignment[];
   clears: Clear[];
   prices: PriceOverrides;
+  goals: Goal[];
   settings: Settings;
   folder: FolderState;
   hasApiKey: boolean;
@@ -54,8 +55,11 @@ interface State {
   /** Add and remove clears in one save. */
   bulkClears(change: { add: Clear[]; remove: string[] }): Promise<void>;
   setPrice(key: string, meso: number | null): Promise<void>;
+  /** Set a character's level goal, replacing any earlier one for that character. */
+  saveGoal(goal: Goal): Promise<void>;
+  removeGoal(id: string): Promise<void>;
   setApiKey(key: string | null): Promise<void>;
-  importBundle(r: ImportResult): Promise<{ ideas: number; clears: number; assignments: number; photos: number }>;
+  importBundle(r: ImportResult): Promise<{ ideas: number; clears: number; assignments: number; photos: number; goals: number }>;
 }
 
 async function downscale(file: Blob, maxEdge: number): Promise<Blob> {
@@ -74,16 +78,17 @@ async function downscale(file: Blob, maxEdge: number): Promise<Blob> {
   }
 }
 
-async function loadLocal(fallback: Pick<State, 'ideas' | 'photos' | 'assignments' | 'clears' | 'prices'> & { settings: Settings | null }) {
-  const [ideas, photos, assignments, clears, prices, settings] = await Promise.all([
+async function loadLocal(fallback: Pick<State, 'ideas' | 'photos' | 'assignments' | 'clears' | 'prices' | 'goals'> & { settings: Settings | null }) {
+  const [ideas, photos, assignments, clears, prices, goals, settings] = await Promise.all([
     persist.loadDoc<Idea[]>('ideas.json', fallback.ideas),
     persist.loadDoc<PhotoMeta[]>('photos.json', fallback.photos),
     persist.loadDoc<Assignment[]>('bossing/assignments.json', fallback.assignments),
     persist.loadDoc<Clear[]>('bossing/clears.json', fallback.clears),
     persist.loadDoc<PriceOverrides>('bossing/prices.json', fallback.prices),
+    persist.loadDoc<Goal[]>('goals.json', fallback.goals),
     persist.loadDoc<Settings | null>('settings.json', fallback.settings),
   ]);
-  return { ideas, photos, assignments, clears, prices, settings };
+  return { ideas, photos, assignments, clears, prices, goals, settings };
 }
 
 export const useStore = create<State>()((set, get) => ({
@@ -101,6 +106,7 @@ export const useStore = create<State>()((set, get) => ({
   assignments: [],
   clears: [],
   prices: {},
+  goals: [],
   settings: DEFAULT_SETTINGS,
   folder: { supported: fs.supported, connected: false, needsPermission: false, name: null },
   hasApiKey: false,
@@ -145,7 +151,7 @@ export const useStore = create<State>()((set, get) => ({
       );
 
       const worlds = worldsDoc?.worlds ?? {};
-      const local = await loadLocal({ ideas: [], photos: [], assignments: [], clears: [], prices: {}, settings: null });
+      const local = await loadLocal({ ideas: [], photos: [], assignments: [], clears: [], prices: {}, goals: [], settings: null });
       const worldHeroic = characters ? (worlds[String(characters.worldId)]?.heroic ?? true) : true;
       const settings: Settings = { ...DEFAULT_SETTINGS, heroic: worldHeroic, ...(local.settings ?? {}) };
       const key = await persist.apiKey.get();
@@ -187,7 +193,7 @@ export const useStore = create<State>()((set, get) => ({
     const handle = await fs.pickFolder();
     persist.setFolder(handle);
     const s = get();
-    const local = await loadLocal({ ideas: s.ideas, photos: s.photos, assignments: s.assignments, clears: s.clears, prices: s.prices, settings: s.settings });
+    const local = await loadLocal({ ideas: s.ideas, photos: s.photos, assignments: s.assignments, clears: s.clears, prices: s.prices, goals: s.goals, settings: s.settings });
     for (const snap of s.snapshots) void persist.mirrorSnapshot(snap.date, snap);
     set({ ...local, settings: local.settings ?? s.settings, folder: { supported: true, connected: true, needsPermission: false, name: handle.name } });
     await persist.saveDoc('settings.json', get().settings);
@@ -200,7 +206,7 @@ export const useStore = create<State>()((set, get) => ({
     if (p !== 'granted') return;
     persist.setFolder(handle);
     const s = get();
-    const local = await loadLocal({ ideas: s.ideas, photos: s.photos, assignments: s.assignments, clears: s.clears, prices: s.prices, settings: s.settings });
+    const local = await loadLocal({ ideas: s.ideas, photos: s.photos, assignments: s.assignments, clears: s.clears, prices: s.prices, goals: s.goals, settings: s.settings });
     for (const snap of s.snapshots) void persist.mirrorSnapshot(snap.date, snap);
     set({ ...local, settings: local.settings ?? s.settings, folder: { supported: true, connected: true, needsPermission: false, name: handle.name } });
   },
@@ -286,6 +292,18 @@ export const useStore = create<State>()((set, get) => ({
     await persist.saveDoc('bossing/prices.json', prices);
   },
 
+  async saveGoal(goal) {
+    const goals = [...get().goals.filter((g) => g.character !== goal.character && g.id !== goal.id), goal];
+    set({ goals });
+    await persist.saveDoc('goals.json', goals);
+  },
+
+  async removeGoal(id) {
+    const goals = get().goals.filter((g) => g.id !== id);
+    set({ goals });
+    await persist.saveDoc('goals.json', goals);
+  },
+
   async setApiKey(key) {
     if (key) await persist.apiKey.set(key);
     else await persist.apiKey.clear();
@@ -296,6 +314,7 @@ export const useStore = create<State>()((set, get) => ({
     const s = get();
     const ideas = mergeById(s.ideas, r.bundle.ideas);
     const clears = mergeById(s.clears, r.bundle.clears);
+    const goals = mergeById(s.goals, r.bundle.goals);
     const assignKey = (a: Assignment) => `${a.character}|${a.bossId}|${a.difficulty}`;
     const have = new Set(s.assignments.map(assignKey));
     const assignments = [...s.assignments, ...(r.bundle.assignments ?? []).filter((a) => !have.has(assignKey(a)))];
@@ -310,14 +329,15 @@ export const useStore = create<State>()((set, get) => ({
       photos.push(p);
       added++;
     }
-    set({ ideas, clears, assignments, photos });
+    set({ ideas, clears, assignments, photos, goals });
     await Promise.all([
       persist.saveDoc('ideas.json', ideas),
       persist.saveDoc('bossing/clears.json', clears),
       persist.saveDoc('bossing/assignments.json', assignments),
       persist.saveDoc('photos.json', photos),
+      persist.saveDoc('goals.json', goals),
     ]);
-    return { ideas: ideas.length - s.ideas.length, clears: clears.length - s.clears.length, assignments: assignments.length - s.assignments.length, photos: added };
+    return { ideas: ideas.length - s.ideas.length, clears: clears.length - s.clears.length, assignments: assignments.length - s.assignments.length, photos: added, goals: goals.length - s.goals.length };
   },
 }));
 

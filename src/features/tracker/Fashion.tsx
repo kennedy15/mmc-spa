@@ -11,11 +11,13 @@ export function Fashion() {
   const names = useTrackedNames();
   const [open, setOpen] = useState<{ name: string; hash: string; firstSeen: string; lastSeen: string } | null>(null);
 
+  // A character's first archived look is where tracking started, not a change.
   const feed = useMemo(() => {
     const out: { name: string; hash: string; firstSeen: string; lastSeen: string }[] = [];
-    for (const [name, list] of Object.entries(looks)) for (const l of list) out.push({ name, ...l });
+    for (const [name, list] of Object.entries(looks)) list.forEach((l, i) => i > 0 && out.push({ name, ...l }));
     return out.sort((a, b) => b.firstSeen.localeCompare(a.firstSeen)).slice(0, 12);
   }, [looks]);
+  const trackingStart = useMemo(() => Object.values(looks).reduce<string | null>((min, list) => (list[0] && (!min || list[0].firstSeen < min) ? list[0].firstSeen : min), null), [looks]);
 
   const withLooks = names.filter((n) => looks[n]?.length);
   if (!withLooks.length) return <Empty title="No looks archived yet">The collector saves a PNG whenever a character's avatar image changes.</Empty>;
@@ -44,6 +46,7 @@ export function Fashion() {
           ))}
         </div>
         <Card title="Looks changed">
+          {feed.length === 0 && <div className="text-sm text-ink-3 py-4">No changes yet. Every character's current look was archived{trackingStart ? ` on ${fmtDate(trackingStart)}` : ''}; new outfits show up here.</div>}
           <ul className="space-y-2">
             {feed.map((f) => (
               <li key={f.name + f.hash} className="flex items-center gap-3 text-sm">

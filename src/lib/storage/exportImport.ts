@@ -1,5 +1,5 @@
 import JSZip from 'jszip';
-import type { Assignment, Clear, Idea, PhotoMeta, PriceOverrides, Settings } from '../types';
+import type { Assignment, Clear, Goal, Idea, PhotoMeta, PriceOverrides, Settings } from '../types';
 import { loadPhoto } from './persist';
 
 export interface Bundle {
@@ -8,6 +8,7 @@ export interface Bundle {
   assignments: Assignment[];
   clears: Clear[];
   prices: PriceOverrides;
+  goals: Goal[];
   settings: Settings;
 }
 
@@ -18,6 +19,7 @@ export async function buildExportZip(b: Bundle): Promise<Blob> {
   zip.file('bossing/assignments.json', JSON.stringify(b.assignments, null, 2));
   zip.file('bossing/clears.json', JSON.stringify(b.clears, null, 2));
   zip.file('bossing/prices.json', JSON.stringify(b.prices, null, 2));
+  zip.file('goals.json', JSON.stringify(b.goals, null, 2));
   zip.file('settings.json', JSON.stringify(b.settings, null, 2));
   zip.file('README.txt', 'MapleTracker export. Import from Settings > Import. Photos are in photos/.\n');
   for (const p of b.photos) {
@@ -49,6 +51,7 @@ export async function readImportZip(file: File): Promise<ImportResult> {
     assignments: await json<Assignment[]>('bossing/assignments.json'),
     clears: await json<Clear[]>('bossing/clears.json'),
     prices: await json<PriceOverrides>('bossing/prices.json'),
+    goals: await json<Goal[]>('goals.json'),
   };
   const photoBlobs = new Map<string, Blob>();
   for (const [name, entry] of Object.entries(zip.files)) {

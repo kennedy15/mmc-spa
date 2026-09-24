@@ -44,3 +44,18 @@ export function pct(n: number, digits = 1): string {
 export function titleCase(s: string): string {
   return s.charAt(0).toUpperCase() + s.slice(1);
 }
+
+/** Levels gained as a share of a level: 0.0197 -> 1.97%; a level or more -> 1.25 lv. */
+export function fmtLevels(levels: number | null | undefined, digits = 2): string {
+  if (levels == null) return '—';
+  if (levels === 0) return '0%';
+  if (Math.abs(levels) >= 1) return `${levels.toFixed(2)} lv`;
+  if (levels > 0 && levels * 100 < 10 ** -digits) return `<${(10 ** -digits).toFixed(digits)}%`;
+  return `${(levels * 100).toFixed(digits)}%`;
+}
+
+/** Rank movement, positive = climbed: ▲16, ▼385. */
+export function fmtRankDelta(delta: number | null | undefined): string {
+  if (!delta) return '–';
+  return `${delta > 0 ? '▲' : '▼'}${Math.abs(delta).toLocaleString('en-US')}`;
+}

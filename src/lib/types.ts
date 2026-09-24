@@ -80,6 +80,20 @@ export interface Clear {
   note?: string;
 }
 
+/** A level target for one character; kept locally like the boss ledger. */
+export interface Goal {
+  id: string;
+  character: string;
+  /** Level to reach (0% into it). */
+  level: number;
+  /** Target date, YYYY-MM-DD. */
+  by: string;
+  createdAt: string;
+  /** Where the character stood when the goal was set, for the progress bar. */
+  startLevel: number;
+  startExp: string;
+}
+
 /** Overrides of bundled crystal values, keyed `${bossId}:${difficulty}`. */
 export type PriceOverrides = Record<string, number>;
 
