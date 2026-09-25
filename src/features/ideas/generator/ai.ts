@@ -1,7 +1,8 @@
 /**
  * AI mode: one Messages API request from the browser with the user's own key
  * (bring-your-own-key pattern; the SDK requires dangerouslyAllowBrowser).
- * Web search finds 2–4 reference pages; the answer is constrained to JSON.
+ * The player's images ride along in the prompt, web search finds reference
+ * pages, and the answer is constrained to JSON.
  */
 import Anthropic, { type APIError } from '@anthropic-ai/sdk';
 import type { AiUsage, Draft, GenerateOptions } from './types';
@@ -19,21 +20,29 @@ const PRICE = { input: 5, cacheWrite5m: 6.25, cacheWrite1h: 10, cacheRead: 0.5, 
 const SCHEMA: Record<string, unknown> = {
   type: 'object',
   additionalProperties: false,
-  required: ['title', 'buildType', 'biome', 'placement', 'lore', 'palette', 'scale', 'sourceLinks', 'imageUrls'],
+  required: ['title', 'concept', 'buildType', 'biome', 'placement', 'lore', 'palette', 'scale', 'sourceLinks'],
   properties: {
     title: { type: 'string', description: 'Evocative name, 2–5 words' },
-    buildType: { type: 'string', description: 'e.g. decorative point of interest, ruin, shrine, outpost, bridge, farm' },
+    concept: { type: 'string', description: 'One sentence saying what to build; for a farm + build, the farm and the build around it' },
+    buildType: { type: 'string', description: 'Short category for filtering, 1–3 words, e.g. Tree farm, Witch farm, Castle, Shrine' },
     biome: { type: 'string' },
-    placement: { type: 'string', description: 'Where in a survival world to put it, one sentence' },
-    lore: { type: 'string', description: '3–5 sentences: who built it, why it was abandoned, one hook for a future build' },
-    palette: { type: 'array', items: { type: 'string' }, description: '4–6 block names' },
-    scale: { type: 'string', description: 'Rough footprint, e.g. 12×18, two storeys' },
+    placement: { type: 'string', description: 'Where to build it: biome, terrain and what to look for; 1–2 sentences' },
+    lore: { type: 'string', description: '3–5 sentences' },
+    palette: { type: 'array', items: { type: 'string' }, description: 'Exactly 6 Minecraft block IDs, main block first, e.g. stripped_mangrove_log' },
+    scale: { type: 'string', description: 'Rough footprint, e.g. 40×40, 30 tall' },
     sourceLinks: { type: 'array', items: { type: 'object', additionalProperties: false, required: ['title', 'url'], properties: { title: { type: 'string' }, url: { type: 'string' } } } },
-    imageUrls: { type: 'array', items: { type: 'string' }, description: 'Direct image URLs found on those pages, if any; otherwise empty' },
   },
 };
 
-const SYSTEM = `You invent Minecraft survival build ideas for a small private server. Each idea is a single structure with a short backstory. Prefer decorative points of interest (ruins, shrines, outposts, bridges, docks, wayshrines, follies) over farms unless farms are allowed. Use web search (2–4 searches) on Planet Minecraft, r/Minecraftbuilds or GrabCraft to find real reference pages for the build type and cite them as sourceLinks with their real URLs; only list imageUrls that are direct image files you actually saw on those pages. Never invent URLs. Respond only with the JSON object.`;
+const SYSTEM = `You come up with Minecraft survival build ideas for a small private server where two friends play. Each idea should make them want to build it and feel like part of their world.
+
+An idea is one of two kinds:
+- Farm + build: a working farm they will use, plus a build that houses, hides or decorates it, e.g. a mangrove tree farm covered by pixel art of a stripped mangrove log. Choose a proven farm design and link a tutorial for it.
+- Build: a build with a story and no farm, e.g. a vampire castle on the snowy peaks.
+
+Size sets the scope. Small is an evening or two (a witch farm; a wayside shrine), medium a weekend (a mangrove tree farm with its pixel-art cover; a watermill), large a long project (draining an ocean monument, a perimeter witch farm; a castle town).
+
+Write lore that gives the place a history and ties it to the world around it, ending on a hook for a future build. Suggest where to build it. Give a palette of exactly 6 blocks as Minecraft block IDs, main block first, in the spirit of blockpalettes.com. Use web search (1–3 searches) for real reference pages, such as a tutorial for the farm or similar builds on Planet Minecraft or r/Minecraftbuilds, and cite their real URLs. Never invent URLs. If the player attached images or a note, build the idea around them.`;
 
 type Params = Anthropic.Beta.Messages.MessageCreateParamsNonStreaming;
 
@@ -74,23 +83,27 @@ function answerText(content: Anthropic.Beta.Messages.BetaContentBlock[]): string
 export async function generateAI(apiKey: string, opts: GenerateOptions, signal?: AbortSignal): Promise<{ draft: Draft; usage: AiUsage }> {
   const client = new Anthropic({ apiKey, dangerouslyAllowBrowser: true });
   const usage: AiUsage = { inputTokens: 0, outputTokens: 0, searches: 0, usd: 0 };
-  const constraints = [
-    opts.biome ? `Biome: ${opts.biome}.` : 'Any biome.',
-    opts.size ? `Size: ${opts.size}.` : '',
-    opts.style ? `Style: ${opts.style}.` : '',
-    opts.allowFarms ? 'Farms are allowed.' : 'No farms.',
+  const images = opts.images ?? [];
+  const brief = [
+    `Kind: ${opts.kind === 'farm' ? 'farm + build' : 'build (no farm)'}.`,
+    `Size: ${opts.size}.`,
+    images.length ? `The ${images.length === 1 ? 'image above is' : `${images.length} images above are`} from the player: their world or builds they like.` : '',
+    opts.note?.trim() ? `Player's note: ${opts.note.trim()}` : '',
     opts.exclude.length ? `Avoid anything close to these existing ideas: ${opts.exclude.slice(0, 40).join('; ')}.` : '',
   ]
     .filter(Boolean)
-    .join(' ');
-  const user = `Generate one new build idea. ${constraints}`;
+    .join('\n');
+  const content: Anthropic.Beta.Messages.BetaContentBlockParam[] = [
+    ...images.map((img) => ({ type: 'image' as const, source: { type: 'base64' as const, media_type: img.mediaType, data: img.data } })),
+    { type: 'text', text: `Generate one new build idea.\n${brief}` },
+  ];
 
   const base: Params = {
     model: MODEL,
     max_tokens: MAX_TOKENS,
     system: SYSTEM,
     tools: [{ type: 'web_search_20260209', name: 'web_search', max_uses: 4 }],
-    messages: [{ role: 'user', content: user }],
+    messages: [{ role: 'user', content }],
   };
 
   let res: Anthropic.Beta.Messages.BetaMessage;
@@ -100,7 +113,7 @@ export async function generateAI(apiKey: string, opts: GenerateOptions, signal?:
   } catch (e) {
     if (!(e instanceof Anthropic.BadRequestError)) throw e;
     // Structured output may not combine with server tools everywhere; fall back to plain JSON in text.
-    res = await complete(client, { ...base, system: SYSTEM + ' Output a single JSON object and nothing else.' }, usage, signal);
+    res = await complete(client, { ...base, system: `${SYSTEM}\n\nReply with a single JSON object matching this JSON schema and nothing else: ${JSON.stringify(SCHEMA)}` }, usage, signal);
   }
   const text = answerText(res.content);
   const start = text.indexOf('{');
@@ -108,16 +121,19 @@ export async function generateAI(apiKey: string, opts: GenerateOptions, signal?:
   if (start < 0 || end < start) throw new Error('Claude did not return an idea. Try again.');
   const parsed = JSON.parse(text.slice(start, end + 1)) as Partial<Draft>;
   const isHttp = (u: unknown): u is string => typeof u === 'string' && /^https?:\/\//.test(u);
+  // Block IDs (stripped_mangrove_log) are shown as names (stripped mangrove log); the card turns them back into IDs for links.
+  const blockName = (id: string) => id.replace(/^minecraft:/, '').replace(/_/g, ' ').trim();
   const draft: Draft = {
     title: parsed.title ?? 'Untitled build',
-    buildType: parsed.buildType ?? 'Decorative point of interest',
-    biome: parsed.biome ?? opts.biome ?? '',
+    concept: parsed.concept ?? '',
+    buildType: parsed.buildType ?? (opts.kind === 'farm' ? 'Farm' : 'Build'),
+    biome: parsed.biome ?? '',
     placement: parsed.placement ?? '',
     lore: parsed.lore ?? '',
-    palette: Array.isArray(parsed.palette) ? parsed.palette.slice(0, 8) : [],
+    palette: Array.isArray(parsed.palette) ? parsed.palette.filter((b) => typeof b === 'string').map(blockName).filter(Boolean).slice(0, 8) : [],
     scale: parsed.scale ?? '',
     sourceLinks: Array.isArray(parsed.sourceLinks) ? parsed.sourceLinks.filter((l) => l && isHttp(l.url)).slice(0, 4) : [],
-    imageUrls: Array.isArray(parsed.imageUrls) ? parsed.imageUrls.filter(isHttp).slice(0, 6) : [],
+    imageUrls: [],
   };
   return { draft, usage };
 }

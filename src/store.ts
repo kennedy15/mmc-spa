@@ -6,7 +6,7 @@ import { dataUrl } from './lib/paths';
 import * as fs from './lib/storage/fs-access';
 import * as persist from './lib/storage/persist';
 import { mergeById, type ImportResult } from './lib/storage/exportImport';
-import { DEFAULT_SETTINGS, uid, type Assignment, type BossesDoc, type Clear, type Goal, type Idea, type PhotoMeta, type PriceOverrides, type Settings } from './lib/types';
+import { DEFAULT_SETTINGS, normalizeIdea, uid, type Assignment, type BossesDoc, type Clear, type Goal, type Idea, type PhotoMeta, type PriceOverrides, type Settings } from './lib/types';
 import { periodKey, type Cadence } from './lib/reset/period';
 
 export interface FolderState {
@@ -118,7 +118,7 @@ async function loadLocal(fallback: Pick<State, 'ideas' | 'photos' | 'assignments
     persist.loadDoc<Goal[]>('goals.json', fallback.goals),
     persist.loadDoc<Settings | null>('settings.json', fallback.settings),
   ]);
-  return { ideas, photos, assignments, clears, prices, goals, settings };
+  return { ideas: ideas.map(normalizeIdea), photos, assignments, clears, prices, goals, settings };
 }
 
 export const useStore = create<State>()((set, get) => ({
@@ -348,7 +348,7 @@ export const useStore = create<State>()((set, get) => ({
 
   async importBundle(r) {
     const s = get();
-    const ideas = mergeById(s.ideas, r.bundle.ideas);
+    const ideas = mergeById(s.ideas, r.bundle.ideas?.map(normalizeIdea));
     const clears = mergeById(s.clears, r.bundle.clears);
     const goals = mergeById(s.goals, r.bundle.goals);
     const assignKey = (a: Assignment) => `${a.character}|${a.bossId}|${a.difficulty}`;

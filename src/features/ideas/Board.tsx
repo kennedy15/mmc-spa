@@ -1,20 +1,34 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import { useStore } from '../../store';
-import { Empty, PageHeader, Modal, Field, Toggle, Badge } from '../../app/ui';
+import { Empty, PageHeader, Modal, Field, Badge } from '../../app/ui';
 import { fmtDate, fmtInt } from '../../app/format';
 import { uid, type Idea, type IdeaStatus } from '../../lib/types';
 import { CardEditor } from './CardEditor';
 import { usePhotoUrl } from './photos';
-import { generateOffline, loadRecipes, type Recipes } from './generator/offline';
+import { generateOffline } from './generator/offline';
+import { toPromptImage } from './promptImages';
 import { apiKey as apiKeyStore } from '../../lib/storage/persist';
-import type { AiUsage, Draft, GenerateOptions } from './generator/types';
+import type { AiUsage, Draft, IdeaKind, IdeaSize, PromptImage } from './generator/types';
 
 const COLUMNS: { key: IdeaStatus; label: string }[] = [
-  { key: 'idle', label: 'Idle' },
+  { key: 'new', label: 'New' },
   { key: 'progress', label: 'In progress' },
-  { key: 'done', label: 'Done' },
+  { key: 'complete', label: 'Complete' },
 ];
+
+const KINDS: { key: IdeaKind; label: string; example: string }[] = [
+  { key: 'farm', label: 'Farm + build', example: 'A working farm dressed up as a build, e.g. a mangrove tree farm covered by pixel art of a stripped mangrove log.' },
+  { key: 'build', label: 'Build with lore', example: 'A build with a story, e.g. a vampire castle on the snowy peaks.' },
+];
+
+const SIZES: { key: IdeaSize; label: string; example: Record<IdeaKind, string> }[] = [
+  { key: 'small', label: 'Small', example: { farm: 'e.g. a witch farm', build: 'e.g. a wayside shrine' } },
+  { key: 'medium', label: 'Medium', example: { farm: 'e.g. a mangrove tree farm with its pixel-art cover', build: 'e.g. a watermill' } },
+  { key: 'large', label: 'Large', example: { farm: 'e.g. draining an ocean monument, a perimeter witch farm', build: 'e.g. a vampire castle town' } },
+];
+
+const MAX_PROMPT_IMAGES = 4;
 
 /** "This idea cost about $0.17 (3 web searches, 21,300 tokens in, 1,450 out)" */
 function usageNote(u: AiUsage): string {
@@ -125,11 +139,11 @@ export function Board() {
       {generating && (
         <GenerateDialog
           onClose={() => setGenerating(false)}
-          onDraft={(d, generated, usage) => {
+          onDraft={(d, info) => {
             const now = new Date().toISOString();
             setGenerating(false);
-            setDraftUsage(usage ?? null);
-            setEditing({ id: uid(), ...d, photoIds: [], status: 'idle', createdAt: now, updatedAt: now, generated, allowFarms: false });
+            setDraftUsage(info.usage ?? null);
+            setEditing({ id: uid(), ...d, photoIds: info.photoIds, status: 'new', createdAt: now, updatedAt: now, generated: true, allowFarms: info.kind === 'farm' });
           }}
         />
       )}
@@ -151,7 +165,7 @@ function IdeaCard({ idea, dragging, onDragStart, onDragEnd, onOpen }: { idea: Id
         {idea.biome && ` · ${idea.biome}`}
         {idea.scale && ` · ${idea.scale}`}
       </div>
-      {idea.lore && <p className="text-xs text-ink-2 mt-2 line-clamp-3">{idea.lore}</p>}
+      {(idea.concept || idea.lore) && <p className="text-xs text-ink-2 mt-2 line-clamp-3">{idea.concept || idea.lore}</p>}
       {idea.palette.length > 0 && (
         <div className="flex flex-wrap gap-1 mt-2">
           {idea.palette.slice(0, 5).map((p) => (
@@ -169,43 +183,70 @@ function IdeaCard({ idea, dragging, onDragStart, onDragEnd, onOpen }: { idea: Id
   );
 }
 
-function GenerateDialog({ onClose, onDraft }: { onClose: () => void; onDraft: (d: Draft, generated: boolean, usage?: AiUsage) => void }) {
+interface DraftInfo {
+  kind: IdeaKind;
+  usage?: AiUsage;
+  /** Images sent with the prompt, now stored as the card's photos. */
+  photoIds: string[];
+}
+
+function OptionButton({ on, onClick, title, children }: { on: boolean; onClick: () => void; title: string; children: ReactNode }) {
+  return (
+    <button type="button" aria-pressed={on} onClick={onClick} className={`rounded-xl border p-3 text-left transition-colors ${on ? 'border-accent bg-accent/10' : 'border-border hover:border-ink-3'}`}>
+      <div className="font-medium text-sm">{title}</div>
+      <div className="text-xs text-ink-3 mt-1 leading-snug">{children}</div>
+    </button>
+  );
+}
+
+function GenerateDialog({ onClose, onDraft }: { onClose: () => void; onDraft: (d: Draft, info: DraftInfo) => void }) {
   const ideas = useStore((s) => s.ideas);
   const hasApiKey = useStore((s) => s.hasApiKey);
-  const [recipes, setRecipes] = useState<Recipes | null>(null);
-  const [opts, setOpts] = useState<GenerateOptions>({ allowFarms: false, exclude: [] });
+  const addPhoto = useStore((s) => s.addPhoto);
   const [mode, setMode] = useState<'ai' | 'offline'>(hasApiKey ? 'ai' : 'offline');
+  const [kind, setKind] = useState<IdeaKind | null>(null);
+  const [size, setSize] = useState<IdeaSize | null>(null);
+  const [note, setNote] = useState('');
+  // Downscaled when picked, so the thumbnail and the request share one encoding.
+  const [images, setImages] = useState<{ file: File; prompt: PromptImage }[]>([]);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [seed, setSeed] = useState('');
-  useEffect(() => {
-    let alive = true;
-    void loadRecipes().then((r) => alive && setRecipes(r));
-    return () => {
-      alive = false;
-    };
-  }, []);
   // Closing the dialog aborts a run still in flight, so a late reply can't open the editor.
   const inFlight = useRef<AbortController | null>(null);
   useEffect(() => () => inFlight.current?.abort(), []);
 
+  const addImages = async (files: FileList | null) => {
+    const picked = Array.from(files ?? []).slice(0, MAX_PROMPT_IMAGES - images.length);
+    try {
+      const prepared = await Promise.all(picked.map(async (file) => ({ file, prompt: await toPromptImage(file) })));
+      setImages((cur) => [...cur, ...prepared].slice(0, MAX_PROMPT_IMAGES));
+    } catch {
+      setError('One of those images could not be read. PNG, JPG or WebP work.');
+    }
+  };
+
   const run = async () => {
+    if (!kind || !size) return;
     const ctrl = new AbortController();
     inFlight.current = ctrl;
     setBusy(true);
     setError(null);
-    const o: GenerateOptions = { ...opts, exclude: ideas.map((i) => i.title), seed: seed ? Number(seed) : undefined };
+    const exclude = ideas.map((i) => i.title);
     try {
       if (mode === 'ai') {
         const key = await apiKeyStore.get();
         if (!key) throw new Error('No API key stored.');
         // The Claude SDK is a large module, so it only loads when AI mode runs.
         const { generateAI } = await import('./generator/ai');
-        const { draft, usage } = await generateAI(key, o, ctrl.signal);
-        if (!ctrl.signal.aborted) onDraft(draft, true, usage);
+        const { draft, usage } = await generateAI(key, { kind, size, note, images: images.map((i) => i.prompt), exclude }, ctrl.signal);
+        if (ctrl.signal.aborted) return;
+        // The images go on the card too; the editor drops them again if the draft is cancelled.
+        const photoIds: string[] = [];
+        for (const { file } of images) photoIds.push((await addPhoto(file, file.name)).id);
+        onDraft(draft, { kind, usage, photoIds });
       } else {
-        const d = await generateOffline(o);
-        if (!ctrl.signal.aborted) onDraft(d, true);
+        const d = await generateOffline({ kind, size, exclude });
+        if (!ctrl.signal.aborted) onDraft(d, { kind, photoIds: [] });
       }
     } catch (e) {
       if (ctrl.signal.aborted) return;
@@ -218,7 +259,7 @@ function GenerateDialog({ onClose, onDraft }: { onClose: () => void; onDraft: (d
 
   return (
     <Modal open onClose={onClose} title="Generate a build idea">
-      <div className="space-y-3">
+      <div className="space-y-4">
         <div className="flex gap-1.5">
           <button className={mode === 'ai' ? 'chip-on' : 'chip'} onClick={() => setMode('ai')} disabled={!hasApiKey} title={hasApiKey ? '' : 'Add an API key in Settings'}>
             AI + web search
@@ -227,52 +268,72 @@ function GenerateDialog({ onClose, onDraft }: { onClose: () => void; onDraft: (d
             Offline recipes
           </button>
         </div>
-        <div className="grid grid-cols-2 gap-3">
-          <Field label="Biome">
-            <select className="input" value={opts.biome ?? ''} onChange={(e) => setOpts({ ...opts, biome: e.target.value || undefined })}>
-              <option value="">Any</option>
-              {recipes?.biomes.map((b) => (
-                <option key={b.name} value={b.name}>
-                  {b.name}
-                </option>
-              ))}
-            </select>
-          </Field>
-          <Field label="Size">
-            <select className="input" value={opts.size ?? ''} onChange={(e) => setOpts({ ...opts, size: (e.target.value || undefined) as GenerateOptions['size'] })}>
-              <option value="">Any</option>
-              <option value="small">Small</option>
-              <option value="medium">Medium</option>
-              <option value="large">Large</option>
-            </select>
-          </Field>
-          <Field label="Style">
-            <select className="input" value={opts.style ?? ''} onChange={(e) => setOpts({ ...opts, style: e.target.value || undefined })}>
-              <option value="">Any</option>
-              {recipes?.styles.map((s) => (
-                <option key={s.name} value={s.name}>
-                  {s.name}
-                </option>
-              ))}
-            </select>
-          </Field>
-          {mode === 'offline' && (
-            <Field label="Seed" hint="Same seed → same idea">
-              <input className="input" value={seed} onChange={(e) => setSeed(e.target.value.replace(/\D/g, ''))} placeholder="random" />
-            </Field>
-          )}
+        <div>
+          <div className="label mb-1.5">What kind of idea?</div>
+          <div className="grid grid-cols-2 gap-2">
+            {KINDS.map((k) => (
+              <OptionButton key={k.key} on={kind === k.key} onClick={() => setKind(k.key)} title={k.label}>
+                {k.example}
+              </OptionButton>
+            ))}
+          </div>
         </div>
-        <Toggle checked={opts.allowFarms} onChange={(v) => setOpts({ ...opts, allowFarms: v })} label="Allow farms" />
+        {kind && (
+          <div>
+            <div className="label mb-1.5">How big?</div>
+            <div className="grid grid-cols-3 gap-2">
+              {SIZES.map((s) => (
+                <OptionButton key={s.key} on={size === s.key} onClick={() => setSize(s.key)} title={s.label}>
+                  {s.example[kind]}
+                </OptionButton>
+              ))}
+            </div>
+          </div>
+        )}
+        {kind && size && mode === 'ai' && (
+          <>
+            <Field label={`Images for Claude (optional, ${images.length}/${MAX_PROMPT_IMAGES})`} hint="Screenshots of the spot, or builds you like. About 1¢ each; they're added to the card too.">
+              <div className="flex flex-wrap gap-2">
+                {images.map((im, i) => (
+                  <div key={`${i}-${im.file.name}`} className="relative group">
+                    <img src={`data:${im.prompt.mediaType};base64,${im.prompt.data}`} alt="" className="h-16 w-16 rounded-lg border border-border object-cover" />
+                    <button className="absolute -top-1.5 -right-1.5 size-5 rounded-full bg-surface-3 border border-border-2 text-[10px] opacity-0 group-hover:opacity-100 focus-visible:opacity-100" onClick={() => setImages(images.filter((_, j) => j !== i))} aria-label="Remove image">
+                      ✕
+                    </button>
+                  </div>
+                ))}
+                {images.length < MAX_PROMPT_IMAGES && (
+                  <label className="btn btn-sm cursor-pointer self-center">
+                    + Add images
+                    <input
+                      type="file"
+                      accept="image/png,image/jpeg,image/webp"
+                      multiple
+                      className="hidden"
+                      onChange={(e) => {
+                        void addImages(e.target.files);
+                        e.target.value = '';
+                      }}
+                    />
+                  </label>
+                )}
+              </div>
+            </Field>
+            <Field label="Note for Claude (optional)">
+              <textarea className="input min-h-16" value={note} onChange={(e) => setNote(e.target.value)} placeholder="e.g. near our base in the cherry grove; lots of copper" />
+            </Field>
+          </>
+        )}
         {error && <div className="text-sm text-bad">{error}</div>}
         <div className="text-xs text-ink-3">
-          {mode === 'ai' ? 'Uses your API key: up to 4 web searches plus the write-up, roughly 10–30¢ (the editor shows the real cost). Reference photos stay as links.' : 'Combines bundled archetypes, biomes and lore hooks. No network needed.'}
+          {mode === 'ai' ? 'Uses your API key: a few web searches plus the write-up, roughly 10–30¢ (the editor shows the real cost).' : 'Combines bundled archetypes, biomes and lore hooks. No network needed.'}
           {ideas.length > 0 && ` Avoids ${ideas.length} existing title${ideas.length === 1 ? '' : 's'}.`}
         </div>
         <div className="flex justify-end gap-2 pt-2">
           <button className="btn" onClick={onClose}>
             Cancel
           </button>
-          <button className="btn-accent" onClick={() => void run()} disabled={busy}>
+          <button className="btn-accent" onClick={() => void run()} disabled={busy || !kind || !size}>
             {busy ? (mode === 'ai' ? 'Searching & writing…' : 'Rolling…') : 'Generate'}
           </button>
         </div>

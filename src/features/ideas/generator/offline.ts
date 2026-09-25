@@ -45,14 +45,11 @@ export async function generateOffline(opts: GenerateOptions): Promise<Draft & { 
   const seed = opts.seed ?? Math.floor(Math.random() * 2 ** 31);
   const r = rng(seed);
   const exclude = new Set(opts.exclude.map((t) => t.toLowerCase()));
-  const pool = R.archetypes.filter((a) => (opts.allowFarms || !a.farm) && ![...exclude].some((t) => t.includes(a.name.toLowerCase())));
-  const arche = pick(r, pool.length ? pool : R.archetypes);
-  const wantBiome = opts.biome?.toLowerCase();
-  const biome = (wantBiome && R.biomes.find((b) => b.name.toLowerCase() === wantBiome)) || pick(r, R.biomes);
-  const size = opts.size ?? pick(r, ['small', 'medium', 'large'] as const);
-  const wantStyle = opts.style?.toLowerCase();
-  const style = wantStyle ? R.styles.find((s) => s.name.toLowerCase() === wantStyle) : undefined;
-  const palette = style ? style.palette : pick(r, biome.palettes);
+  const ofKind = R.archetypes.filter((a) => !!a.farm === (opts.kind === 'farm'));
+  const pool = ofKind.filter((a) => ![...exclude].some((t) => t.includes(a.name.toLowerCase())));
+  const arche = pick(r, pool.length ? pool : ofKind);
+  const biome = pick(r, R.biomes);
+  const palette = pick(r, biome.palettes);
   const builder = pick(r, R.builders);
   const reason = pick(r, R.reasons);
   const future = pick(r, R.futures);
@@ -61,16 +58,17 @@ export async function generateOffline(opts: GenerateOptions): Promise<Draft & { 
   const lore = [fill(hook, vars), fill(reason, vars), fill(future, vars)].map((s) => s.charAt(0).toUpperCase() + s.slice(1) + (s.endsWith('.') ? '' : '.')).join(' ');
   const adjective = pick(r, ['Forgotten', 'Lantern', 'Hollow', 'Quiet', 'Last', 'Crooked', 'Sunken', 'Copper', 'Moss', 'Ember', 'Salt', 'Wandering']);
   const title = `The ${adjective} ${arche.name}`;
-  const q = `${arche.name} ${biome.name} ${style?.name ?? ''}`.trim();
+  const q = `${arche.name} ${biome.name}`;
   return {
     seed,
     title,
+    concept: `A ${arche.name.toLowerCase()} in the ${biome.name.toLowerCase()}.`,
     buildType: arche.type,
     biome: biome.name,
     placement: pick(r, biome.placements),
     lore,
     palette,
-    scale: arche.sizes[size],
+    scale: arche.sizes[opts.size],
     sourceLinks: [
       { title: `Planet Minecraft: ${q}`, url: searchUrl(q) },
       { title: `r/Minecraftbuilds: ${arche.name}`, url: `https://www.reddit.com/r/Minecraftbuilds/search/?q=${encodeURIComponent(arche.name + ' ' + biome.name)}` },

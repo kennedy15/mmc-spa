@@ -6,10 +6,13 @@ import { usePhotoUrl, forgetPhotoUrl } from './photos';
 
 export function emptyIdea(): Idea {
   const now = new Date().toISOString();
-  return { id: uid(), title: '', lore: '', buildType: 'Decorative point of interest', biome: '', placement: '', scale: '', palette: [], sourceLinks: [], imageUrls: [], photoIds: [], status: 'idle', createdAt: now, updatedAt: now, generated: false, allowFarms: false };
+  return { id: uid(), title: '', lore: '', buildType: 'Decorative point of interest', biome: '', placement: '', scale: '', palette: [], sourceLinks: [], imageUrls: [], photoIds: [], status: 'new', createdAt: now, updatedAt: now, generated: false, allowFarms: false };
 }
 
 const isHttp = (s: string) => /^https?:\/\/\S+$/.test(s);
+
+/** Block Palettes' most-liked palettes that use a block, e.g. "stripped mangrove log". */
+const blockPalettesUrl = (block: string) => `https://www.blockpalettes.com/palettes?blocks=${encodeURIComponent(block.trim().toLowerCase().replace(/\s+/g, '_'))}&sort=popular`;
 
 // The list fields are edited as plain text and parsed on the way out, so a
 // half-typed line or a trailing comma survives until the next keystroke.
@@ -42,13 +45,15 @@ export function CardEditor({ idea, note, onClose }: { idea: Idea | null; note?: 
     return () => clearTimeout(t);
   }, [imagesText]);
   const [busy, setBusy] = useState(false);
+  const isNew = !useStore.getState().ideas.some((i) => i.id === draft.id);
   // Photos attached in this session are only kept if the idea is saved; photos
-  // detached in this session are only deleted then, so Cancel undoes both.
-  const attached = useRef<string[]>([]);
+  // detached in this session are only deleted then, so Cancel undoes both. A
+  // generated draft arrives with the images sent to Claude, which count as attached.
+  const attached = useRef<string[]>(isNew ? [...draft.photoIds] : []);
   const detached = useRef<string[]>([]);
   const set = (patch: Partial<Idea>) => setDraft((d) => ({ ...d, ...patch }));
-  const isNew = !useStore.getState().ideas.some((i) => i.id === draft.id);
   const links = parseLinks(linksText);
+  const mainBlock = parsePalette(paletteText)[0];
   const imageUrls = parseUrls(imagesText);
   const previewUrls = parseUrls(previewText);
 
@@ -110,6 +115,9 @@ export function CardEditor({ idea, note, onClose }: { idea: Idea | null; note?: 
           <Field label="Title">
             <input className="input" value={draft.title} onChange={(e) => set({ title: e.target.value })} autoFocus placeholder="The Lantern Ferry" />
           </Field>
+          <Field label="Concept">
+            <textarea className="input min-h-16" value={draft.concept ?? ''} onChange={(e) => set({ concept: e.target.value })} placeholder="A mangrove tree farm covered by pixel art of a stripped mangrove log" />
+          </Field>
           <div className="grid grid-cols-2 gap-3">
             <Field label="Build type">
               <input className="input" value={draft.buildType} onChange={(e) => set({ buildType: e.target.value })} />
@@ -130,13 +138,28 @@ export function CardEditor({ idea, note, onClose }: { idea: Idea | null; note?: 
             </Field>
             <Field label="Status">
               <select className="input" value={draft.status} onChange={(e) => set({ status: e.target.value as IdeaStatus })}>
-                <option value="idle">Idle</option>
+                <option value="new">New</option>
                 <option value="progress">In progress</option>
-                <option value="done">Done</option>
+                <option value="complete">Complete</option>
               </select>
             </Field>
           </div>
-          <Field label="Palette" hint="Comma-separated block names">
+          <Field
+            label="Palette"
+            hint={
+              <>
+                Comma-separated block names
+                {mainBlock && (
+                  <>
+                    {' · '}
+                    <a className="underline hover:text-ink" href={blockPalettesUrl(mainBlock)} target="_blank" rel="noreferrer">
+                      Palettes with {mainBlock} on Block Palettes ↗
+                    </a>
+                  </>
+                )}
+              </>
+            }
+          >
             <input className="input" value={paletteText} onChange={(e) => setPaletteText(e.target.value)} placeholder="spruce, deepslate tiles, copper, lanterns" />
           </Field>
           <Toggle checked={!!draft.allowFarms} onChange={(v) => set({ allowFarms: v })} label="Includes a farm" />

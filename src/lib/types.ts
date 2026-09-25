@@ -1,8 +1,10 @@
-export type IdeaStatus = 'idle' | 'progress' | 'done';
+export type IdeaStatus = 'new' | 'progress' | 'complete';
 
 export interface Idea {
   id: string;
   title: string;
+  /** One sentence saying what to build, e.g. the farm and the build around it. */
+  concept?: string;
   lore: string;
   buildType: string;
   biome: string;
@@ -19,6 +21,14 @@ export interface Idea {
   updatedAt: string;
   generated: boolean;
   allowFarms?: boolean;
+}
+
+/** Boards saved before the rename used idle and done; read them as new and complete. */
+export function normalizeIdea(idea: Idea): Idea {
+  const status = idea.status as string;
+  if (status === 'idle') return { ...idea, status: 'new' };
+  if (status === 'done') return { ...idea, status: 'complete' };
+  return idea;
 }
 
 export interface PhotoMeta {
