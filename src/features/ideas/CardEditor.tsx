@@ -25,7 +25,8 @@ function parseLinks(text: string): { title: string; url: string }[] {
   });
 }
 
-export function CardEditor({ idea, onClose }: { idea: Idea | null; onClose: () => void }) {
+/** `note` is shown in the footer of a new card, e.g. what a generated draft cost. */
+export function CardEditor({ idea, note, onClose }: { idea: Idea | null; note?: string; onClose: () => void }) {
   const upsert = useStore((s) => s.upsertIdea);
   const del = useStore((s) => s.deleteIdea);
   const addPhoto = useStore((s) => s.addPhoto);
@@ -187,7 +188,7 @@ export function CardEditor({ idea, onClose }: { idea: Idea | null; onClose: () =
             Delete
           </button>
         ) : (
-          <span />
+          <span className="text-xs text-ink-3">{note}</span>
         )}
         <div className="flex gap-2">
           <button className="btn" onClick={cancel}>

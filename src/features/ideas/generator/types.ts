@@ -8,6 +8,16 @@ export interface GenerateOptions {
   seed?: number;
 }
 
+/** What one AI generation used, summed over all of its requests. */
+export interface AiUsage {
+  /** All input, cache reads and writes included. */
+  inputTokens: number;
+  outputTokens: number;
+  searches: number;
+  /** Estimated at list prices. */
+  usd: number;
+}
+
 export interface Draft {
   title: string;
   buildType: string;

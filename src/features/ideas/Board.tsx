@@ -1,14 +1,14 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useStore } from '../../store';
 import { Empty, PageHeader, Modal, Field, Toggle, Badge } from '../../app/ui';
-import { fmtDate } from '../../app/format';
+import { fmtDate, fmtInt } from '../../app/format';
 import { uid, type Idea, type IdeaStatus } from '../../lib/types';
 import { CardEditor } from './CardEditor';
 import { usePhotoUrl } from './photos';
 import { generateOffline, loadRecipes, type Recipes } from './generator/offline';
 import { apiKey as apiKeyStore } from '../../lib/storage/persist';
-import type { Draft, GenerateOptions } from './generator/types';
+import type { AiUsage, Draft, GenerateOptions } from './generator/types';
 
 const COLUMNS: { key: IdeaStatus; label: string }[] = [
   { key: 'idle', label: 'Idle' },
@@ -16,11 +16,19 @@ const COLUMNS: { key: IdeaStatus; label: string }[] = [
   { key: 'done', label: 'Done' },
 ];
 
+/** "This idea cost about $0.17 (3 web searches, 21,300 tokens in, 1,450 out)" */
+function usageNote(u: AiUsage): string {
+  const cost = u.usd < 0.005 ? 'under $0.01' : `about $${u.usd.toFixed(2)}`;
+  return `This idea cost ${cost} (${u.searches} web search${u.searches === 1 ? '' : 'es'}, ${fmtInt(u.inputTokens)} tokens in, ${fmtInt(u.outputTokens)} out)`;
+}
+
 export function Board() {
   const ideas = useStore((s) => s.ideas);
   const upsert = useStore((s) => s.upsertIdea);
   const hasApiKey = useStore((s) => s.hasApiKey);
   const [editing, setEditing] = useState<Idea | null | 'new'>(null);
+  // What the AI draft now in the editor cost; cleared when the editor closes.
+  const [draftUsage, setDraftUsage] = useState<AiUsage | null>(null);
   const [generating, setGenerating] = useState(false);
   const [dragId, setDragId] = useState<string | null>(null);
   const [filterType, setFilterType] = useState<string | null>(null);
@@ -104,13 +112,23 @@ export function Board() {
           })}
         </div>
       )}
-      {editing && <CardEditor idea={editing === 'new' ? null : editing} onClose={() => setEditing(null)} />}
+      {editing && (
+        <CardEditor
+          idea={editing === 'new' ? null : editing}
+          note={draftUsage ? usageNote(draftUsage) : undefined}
+          onClose={() => {
+            setEditing(null);
+            setDraftUsage(null);
+          }}
+        />
+      )}
       {generating && (
         <GenerateDialog
           onClose={() => setGenerating(false)}
-          onDraft={(d, generated) => {
+          onDraft={(d, generated, usage) => {
             const now = new Date().toISOString();
             setGenerating(false);
+            setDraftUsage(usage ?? null);
             setEditing({ id: uid(), ...d, photoIds: [], status: 'idle', createdAt: now, updatedAt: now, generated, allowFarms: false });
           }}
         />
@@ -122,6 +140,8 @@ export function Board() {
 function IdeaCard({ idea, dragging, onDragStart, onDragEnd, onOpen }: { idea: Idea; dragging: boolean; onDragStart: () => void; onDragEnd: () => void; onOpen: () => void }) {
   const firstPhoto = usePhotoUrl(idea.photoIds[0] ?? null);
   const thumb = firstPhoto ?? idea.imageUrls[0] ?? null;
+  const images = idea.photoIds.length + idea.imageUrls.length;
+  const links = idea.sourceLinks.length;
   return (
     <article draggable onDragStart={onDragStart} onDragEnd={onDragEnd} onClick={onOpen} className={`card p-3 cursor-pointer hover:border-ink-3 transition-colors ${dragging ? 'opacity-40' : ''}`}>
       {thumb && <img key={thumb} src={thumb} alt="" className="w-full h-28 object-cover rounded-lg mb-2 bg-surface-2" loading="lazy" referrerPolicy="no-referrer" onError={(e) => (e.currentTarget.hidden = true)} />}
@@ -143,16 +163,13 @@ function IdeaCard({ idea, dragging, onDragStart, onDragEnd, onOpen }: { idea: Id
         <span>
           {idea.generated ? '✦ generated' : 'manual'} · {fmtDate(idea.updatedAt)}
         </span>
-        <span>
-          {idea.photoIds.length + idea.imageUrls.length > 0 && `${idea.photoIds.length + idea.imageUrls.length} img`}
-          {idea.sourceLinks.length > 0 && ` · ${idea.sourceLinks.length} link${idea.sourceLinks.length === 1 ? '' : 's'}`}
-        </span>
+        <span>{[images > 0 && `${images} img`, links > 0 && `${links} link${links === 1 ? '' : 's'}`].filter(Boolean).join(' · ')}</span>
       </div>
     </article>
   );
 }
 
-function GenerateDialog({ onClose, onDraft }: { onClose: () => void; onDraft: (d: Draft, generated: boolean) => void }) {
+function GenerateDialog({ onClose, onDraft }: { onClose: () => void; onDraft: (d: Draft, generated: boolean, usage?: AiUsage) => void }) {
   const ideas = useStore((s) => s.ideas);
   const hasApiKey = useStore((s) => s.hasApiKey);
   const [recipes, setRecipes] = useState<Recipes | null>(null);
@@ -168,8 +185,13 @@ function GenerateDialog({ onClose, onDraft }: { onClose: () => void; onDraft: (d
       alive = false;
     };
   }, []);
+  // Closing the dialog aborts a run still in flight, so a late reply can't open the editor.
+  const inFlight = useRef<AbortController | null>(null);
+  useEffect(() => () => inFlight.current?.abort(), []);
 
   const run = async () => {
+    const ctrl = new AbortController();
+    inFlight.current = ctrl;
     setBusy(true);
     setError(null);
     const o: GenerateOptions = { ...opts, exclude: ideas.map((i) => i.title), seed: seed ? Number(seed) : undefined };
@@ -179,12 +201,14 @@ function GenerateDialog({ onClose, onDraft }: { onClose: () => void; onDraft: (d
         if (!key) throw new Error('No API key stored.');
         // The Claude SDK is a large module, so it only loads when AI mode runs.
         const { generateAI } = await import('./generator/ai');
-        onDraft(await generateAI(key, o), true);
+        const { draft, usage } = await generateAI(key, o, ctrl.signal);
+        if (!ctrl.signal.aborted) onDraft(draft, true, usage);
       } else {
         const d = await generateOffline(o);
-        onDraft(d, true);
+        if (!ctrl.signal.aborted) onDraft(d, true);
       }
     } catch (e) {
+      if (ctrl.signal.aborted) return;
       const describe = mode === 'ai' ? await import('./generator/ai').then((m) => m.describeAiError, () => null) : null;
       setError(describe ? describe(e) : e instanceof Error ? e.message : String(e));
     } finally {
@@ -241,7 +265,7 @@ function GenerateDialog({ onClose, onDraft }: { onClose: () => void; onDraft: (d
         <Toggle checked={opts.allowFarms} onChange={(v) => setOpts({ ...opts, allowFarms: v })} label="Allow farms" />
         {error && <div className="text-sm text-bad">{error}</div>}
         <div className="text-xs text-ink-3">
-          {mode === 'ai' ? 'Sends one request to the Claude API with your key (a few cents). Reference photos stay as links.' : 'Combines bundled archetypes, biomes and lore hooks. No network needed.'}
+          {mode === 'ai' ? 'Uses your API key: up to 4 web searches plus the write-up, roughly 10–30¢ (the editor shows the real cost). Reference photos stay as links.' : 'Combines bundled archetypes, biomes and lore hooks. No network needed.'}
           {ideas.length > 0 && ` Avoids ${ideas.length} existing title${ideas.length === 1 ? '' : 's'}.`}
         </div>
         <div className="flex justify-end gap-2 pt-2">
