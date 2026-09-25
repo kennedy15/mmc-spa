@@ -21,6 +21,26 @@ export interface Idea {
   updatedAt: string;
   generated: boolean;
   allowFarms?: boolean;
+  /** The idea this one follows up on, e.g. a perimeter for a witch farm. */
+  parentId?: string;
+  /** Where it goes in the world. The generator fills it from the seed scan; edit it to where it was actually built. */
+  coords?: IdeaCoords;
+}
+
+export interface IdeaCoords {
+  x: number;
+  z: number;
+  /** The scanned place the coordinates came from, e.g. structure:swamp_hut, for /locate. */
+  place?: string;
+}
+
+/** The Minecraft Java world ideas are placed in. */
+export interface WorldSettings {
+  /** As typed in level-seed: a number, or text that Java hashes. */
+  seed: string;
+  version: string;
+  baseX: number;
+  baseZ: number;
 }
 
 /** Boards saved before the rename used idle and done; read them as new and complete. */
@@ -122,6 +142,8 @@ export interface Settings {
   hiddenCharacters: string[];
   /** Friend's main to overlay on the dashboard chart. */
   compareWith: string | null;
+  /** Minecraft world for placing build ideas; null until a seed is saved. */
+  world: WorldSettings | null;
 }
 
 export const DEFAULT_SETTINGS: Settings = {
@@ -131,6 +153,7 @@ export const DEFAULT_SETTINGS: Settings = {
   extraCharacters: [],
   hiddenCharacters: [],
   compareWith: null,
+  world: null,
 };
 
 export function uid(): string {

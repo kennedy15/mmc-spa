@@ -1,15 +1,17 @@
-import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import { useEffect, useEffectEvent, useMemo, useRef, useState, type ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import { useStore } from '../../store';
 import { Empty, PageHeader, Modal, Field, Badge } from '../../app/ui';
 import { fmtDate, fmtInt } from '../../app/format';
-import { uid, type Idea, type IdeaStatus } from '../../lib/types';
+import { uid, type Idea, type IdeaCoords, type IdeaStatus } from '../../lib/types';
 import { CardEditor } from './CardEditor';
 import { usePhotoUrl } from './photos';
 import { generateOffline } from './generator/offline';
 import { toPromptImage } from './promptImages';
 import { apiKey as apiKeyStore } from '../../lib/storage/persist';
-import type { AiUsage, Draft, IdeaKind, IdeaSize, PromptImage } from './generator/types';
+import type { AiUsage, BuildRef, Draft, IdeaKind, IdeaSize, PromptImage } from './generator/types';
+import { getWorldScan } from './world/world';
+import { describeWorld } from './world/places';
 
 const COLUMNS: { key: IdeaStatus; label: string }[] = [
   { key: 'new', label: 'New' },
@@ -30,6 +32,8 @@ const SIZES: { key: IdeaSize; label: string; example: Record<IdeaKind, string> }
 
 const MAX_PROMPT_IMAGES = 4;
 
+const pickOne = <T,>(list: readonly T[]): T => list[Math.floor(Math.random() * list.length)];
+
 /** "This idea cost about $0.17 (3 web searches, 21,300 tokens in, 1,450 out)" */
 function usageNote(u: AiUsage): string {
   const cost = u.usd < 0.005 ? 'under $0.01' : `about $${u.usd.toFixed(2)}`;
@@ -43,7 +47,9 @@ export function Board() {
   const [editing, setEditing] = useState<Idea | null | 'new'>(null);
   // What the AI draft now in the editor cost; cleared when the editor closes.
   const [draftUsage, setDraftUsage] = useState<AiUsage | null>(null);
-  const [generating, setGenerating] = useState(false);
+  // Open Generate dialog: from a card's Follow-up button, or Surprise me with every choice rolled.
+  const [generating, setGenerating] = useState<{ followUpOf?: Idea; surprise?: boolean } | null>(null);
+  const titles = useMemo(() => new Map(ideas.map((i) => [i.id, i.title])), [ideas]);
   const [dragId, setDragId] = useState<string | null>(null);
   const [filterType, setFilterType] = useState<string | null>(null);
   const [filterBiome, setFilterBiome] = useState<string | null>(null);
@@ -68,7 +74,10 @@ export function Board() {
             <button className="btn" onClick={() => setEditing('new')}>
               + New idea
             </button>
-            <button className="btn-accent" onClick={() => setGenerating(true)}>
+            <button className="btn" onClick={() => setGenerating({ surprise: true })} title="Rolls the kind, the size and whether it builds on something, then generates">
+              Surprise me
+            </button>
+            <button className="btn-accent" onClick={() => setGenerating({})}>
               ✦ Generate
             </button>
           </div>
@@ -118,7 +127,16 @@ export function Board() {
                 </div>
                 <div className="space-y-2">
                   {cards.map((idea) => (
-                    <IdeaCard key={idea.id} idea={idea} dragging={dragId === idea.id} onDragStart={() => setDragId(idea.id)} onDragEnd={() => setDragId(null)} onOpen={() => setEditing(idea)} />
+                    <IdeaCard
+                      key={idea.id}
+                      idea={idea}
+                      parentTitle={idea.parentId ? titles.get(idea.parentId) : undefined}
+                      dragging={dragId === idea.id}
+                      onDragStart={() => setDragId(idea.id)}
+                      onDragEnd={() => setDragId(null)}
+                      onOpen={() => setEditing(idea)}
+                      onFollowUp={col.key === 'complete' ? () => setGenerating({ followUpOf: idea }) : undefined}
+                    />
                   ))}
                 </div>
               </div>
@@ -138,12 +156,14 @@ export function Board() {
       )}
       {generating && (
         <GenerateDialog
-          onClose={() => setGenerating(false)}
+          followUpOf={generating.followUpOf}
+          surprise={generating.surprise}
+          onClose={() => setGenerating(null)}
           onDraft={(d, info) => {
             const now = new Date().toISOString();
-            setGenerating(false);
+            setGenerating(null);
             setDraftUsage(info.usage ?? null);
-            setEditing({ id: uid(), ...d, photoIds: info.photoIds, status: 'new', createdAt: now, updatedAt: now, generated: true, allowFarms: info.kind === 'farm' });
+            setEditing({ id: uid(), ...cardFields(d), photoIds: info.photoIds, status: 'new', createdAt: now, updatedAt: now, generated: true, allowFarms: info.kind === 'farm', parentId: info.parentId, coords: info.coords });
           }}
         />
       )}
@@ -151,7 +171,26 @@ export function Board() {
   );
 }
 
-function IdeaCard({ idea, dragging, onDragStart, onDragEnd, onOpen }: { idea: Idea; dragging: boolean; onDragStart: () => void; onDragEnd: () => void; onOpen: () => void }) {
+/** The generator's draft minus its bookkeeping (buildsOn, coords, the offline seed). */
+const cardFields = (d: Draft) => ({ title: d.title, concept: d.concept, buildType: d.buildType, biome: d.biome, placement: d.placement, lore: d.lore, palette: d.palette, scale: d.scale, sourceLinks: d.sourceLinks, imageUrls: d.imageUrls });
+
+function IdeaCard({
+  idea,
+  parentTitle,
+  dragging,
+  onDragStart,
+  onDragEnd,
+  onOpen,
+  onFollowUp,
+}: {
+  idea: Idea;
+  parentTitle?: string;
+  dragging: boolean;
+  onDragStart: () => void;
+  onDragEnd: () => void;
+  onOpen: () => void;
+  onFollowUp?: () => void;
+}) {
   const firstPhoto = usePhotoUrl(idea.photoIds[0] ?? null);
   const thumb = firstPhoto ?? idea.imageUrls[0] ?? null;
   const images = idea.photoIds.length + idea.imageUrls.length;
@@ -164,7 +203,9 @@ function IdeaCard({ idea, dragging, onDragStart, onDragEnd, onOpen }: { idea: Id
         {idea.buildType}
         {idea.biome && ` · ${idea.biome}`}
         {idea.scale && ` · ${idea.scale}`}
+        {idea.coords && ` · ${idea.coords.x}, ${idea.coords.z}`}
       </div>
+      {parentTitle && <div className="text-xs text-ink-3 mt-0.5">↳ builds on {parentTitle}</div>}
       {(idea.concept || idea.lore) && <p className="text-xs text-ink-2 mt-2 line-clamp-3">{idea.concept || idea.lore}</p>}
       {idea.palette.length > 0 && (
         <div className="flex flex-wrap gap-1 mt-2">
@@ -177,7 +218,20 @@ function IdeaCard({ idea, dragging, onDragStart, onDragEnd, onOpen }: { idea: Id
         <span>
           {idea.generated ? '✦ generated' : 'manual'} · {fmtDate(idea.updatedAt)}
         </span>
-        <span>{[images > 0 && `${images} img`, links > 0 && `${links} link${links === 1 ? '' : 's'}`].filter(Boolean).join(' · ')}</span>
+        <span className="flex items-center gap-2">
+          {[images > 0 && `${images} img`, links > 0 && `${links} link${links === 1 ? '' : 's'}`].filter(Boolean).join(' · ')}
+          {onFollowUp && (
+            <button
+              className="text-accent hover:underline"
+              onClick={(e) => {
+                e.stopPropagation();
+                onFollowUp();
+              }}
+            >
+              ✦ Follow-up
+            </button>
+          )}
+        </span>
       </div>
     </article>
   );
@@ -188,7 +242,14 @@ interface DraftInfo {
   usage?: AiUsage;
   /** Images sent with the prompt, now stored as the card's photos. */
   photoIds: string[];
+  parentId?: string;
+  coords?: IdeaCoords;
 }
+
+const STATUS_NAMES: Record<IdeaStatus, string> = { new: 'not started', progress: 'being built', complete: 'built' };
+const toBuildRef = (i: Idea): BuildRef => ({ title: i.title, status: STATUS_NAMES[i.status], concept: i.concept, lore: i.lore, coords: i.coords });
+// "Surprise me" asks for a follow-up about one time in three, so most ideas stay fresh.
+const SURPRISE_FOLLOW_UP = 1 / 3;
 
 function OptionButton({ on, onClick, title, children }: { on: boolean; onClick: () => void; title: string; children: ReactNode }) {
   return (
@@ -199,17 +260,22 @@ function OptionButton({ on, onClick, title, children }: { on: boolean; onClick: 
   );
 }
 
-function GenerateDialog({ onClose, onDraft }: { onClose: () => void; onDraft: (d: Draft, info: DraftInfo) => void }) {
+function GenerateDialog({ followUpOf, surprise, onClose, onDraft }: { followUpOf?: Idea; surprise?: boolean; onClose: () => void; onDraft: (d: Draft, info: DraftInfo) => void }) {
   const ideas = useStore((s) => s.ideas);
   const hasApiKey = useStore((s) => s.hasApiKey);
+  const world = useStore((s) => s.settings.world);
   const addPhoto = useStore((s) => s.addPhoto);
   const [mode, setMode] = useState<'ai' | 'offline'>(hasApiKey ? 'ai' : 'offline');
-  const [kind, setKind] = useState<IdeaKind | null>(null);
-  const [size, setSize] = useState<IdeaSize | null>(null);
+  // Surprise me rolls the kind and size here; whether it follows up on a build is rolled when it runs.
+  const [kind, setKind] = useState<IdeaKind | null>(() => (surprise ? pickOne(KINDS).key : null));
+  const [size, setSize] = useState<IdeaSize | null>(() => (surprise ? pickOne(SIZES).key : null));
   const [note, setNote] = useState('');
+  // 'surprise', 'none', or the id of the build to follow up on.
+  const [buildOn, setBuildOn] = useState(followUpOf?.id ?? 'surprise');
   // Downscaled when picked, so the thumbnail and the request share one encoding.
   const [images, setImages] = useState<{ file: File; prompt: PromptImage }[]>([]);
   const [busy, setBusy] = useState(false);
+  const [phase, setPhase] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   // Closing the dialog aborts a run still in flight, so a late reply can't open the editor.
   const inFlight = useRef<AbortController | null>(null);
@@ -235,15 +301,24 @@ function GenerateDialog({ onClose, onDraft }: { onClose: () => void; onDraft: (d
     try {
       if (mode === 'ai') {
         const key = await apiKeyStore.get();
+        if (ctrl.signal.aborted) return;
         if (!key) throw new Error('No API key stored.');
+        const picked = buildOn === 'none' ? [] : buildOn === 'surprise' ? ideas.filter((i) => i.status !== 'new').slice(0, 12) : ideas.filter((i) => i.id === buildOn);
+        const followUp = buildOn === 'surprise' && Math.random() >= SURPRISE_FOLLOW_UP ? [] : picked;
+        // A failed scan (offline, say) costs the idea its coordinates, not the idea itself.
+        const scan = world ? await getWorldScan(world, setPhase).catch(() => undefined) : undefined;
+        setPhase(null);
         // The Claude SDK is a large module, so it only loads when AI mode runs.
         const { generateAI } = await import('./generator/ai');
-        const { draft, usage } = await generateAI(key, { kind, size, note, images: images.map((i) => i.prompt), exclude }, ctrl.signal);
+        const { draft, usage } = await generateAI(key, { kind, size, note, images: images.map((i) => i.prompt), exclude, followUp: followUp.map(toBuildRef), world: scan && describeWorld(scan) }, ctrl.signal);
         if (ctrl.signal.aborted) return;
         // The images go on the card too; the editor drops them again if the draft is cancelled.
         const photoIds: string[] = [];
         for (const { file } of images) photoIds.push((await addPhoto(file, file.name)).id);
-        onDraft(draft, { kind, usage, photoIds });
+        // A chosen build stays the parent even if Claude forgot to say so.
+        const parentId = draft.buildsOn ? followUp[draft.buildsOn - 1]?.id : buildOn !== 'surprise' && buildOn !== 'none' ? buildOn : undefined;
+        const place = draft.coords && scan?.places.find((p) => p.x === draft.coords!.x && p.z === draft.coords!.z);
+        onDraft(draft, { kind, usage, photoIds, parentId, coords: draft.coords && { ...draft.coords, place: place ? `${place.kind}:${place.id}` : undefined } });
       } else {
         const d = await generateOffline({ kind, size, exclude });
         if (!ctrl.signal.aborted) onDraft(d, { kind, photoIds: [] });
@@ -254,8 +329,19 @@ function GenerateDialog({ onClose, onDraft }: { onClose: () => void; onDraft: (d
       setError(describe ? describe(e) : e instanceof Error ? e.message : String(e));
     } finally {
       setBusy(false);
+      setPhase(null);
     }
   };
+
+  // Surprise me skips the choices and generates as soon as the dialog opens.
+  const startSurprise = useEffectEvent(() => {
+    if (surprise) void run();
+  });
+  // A timer rather than a direct call: StrictMode's second mount in dev clears the first one, so only one run starts.
+  useEffect(() => {
+    const t = setTimeout(startSurprise, 0);
+    return () => clearTimeout(t);
+  }, []);
 
   return (
     <Modal open onClose={onClose} title="Generate a build idea">
@@ -292,6 +378,26 @@ function GenerateDialog({ onClose, onDraft }: { onClose: () => void; onDraft: (d
         )}
         {kind && size && mode === 'ai' && (
           <>
+            {ideas.length > 0 && (
+              <Field label="Build on" hint={buildOn === 'surprise' ? 'About one idea in three follows up on something you are building or have built.' : buildOn === 'none' ? undefined : 'The idea extends this build and carries its story on.'}>
+                <select className="input" value={buildOn} onChange={(e) => setBuildOn(e.target.value)}>
+                  <option value="surprise">Surprise me</option>
+                  <option value="none">Nothing: a fresh idea</option>
+                  {(['complete', 'progress', 'new'] as const).map((status) => {
+                    const list = ideas.filter((i) => i.status === status);
+                    return list.length ? (
+                      <optgroup key={status} label={COLUMNS.find((c) => c.key === status)!.label}>
+                        {list.map((i) => (
+                          <option key={i.id} value={i.id}>
+                            {i.title}
+                          </option>
+                        ))}
+                      </optgroup>
+                    ) : null;
+                  })}
+                </select>
+              </Field>
+            )}
             <Field label={`Images for Claude (optional, ${images.length}/${MAX_PROMPT_IMAGES})`} hint="Screenshots of the spot, or builds you like. About 1¢ each; they're added to the card too.">
               <div className="flex flex-wrap gap-2">
                 {images.map((im, i) => (
@@ -328,13 +434,14 @@ function GenerateDialog({ onClose, onDraft }: { onClose: () => void; onDraft: (d
         <div className="text-xs text-ink-3">
           {mode === 'ai' ? 'Uses your API key: a few web searches plus the write-up, roughly 10–30¢ (the editor shows the real cost).' : 'Combines bundled archetypes, biomes and lore hooks. No network needed.'}
           {ideas.length > 0 && ` Avoids ${ideas.length} existing title${ideas.length === 1 ? '' : 's'}.`}
+          {mode === 'ai' && (world ? ` Places it in your world (seed ${world.seed}, Java ${world.version}).` : ' Add your seed under Settings → Minecraft world for real coordinates.')}
         </div>
         <div className="flex justify-end gap-2 pt-2">
           <button className="btn" onClick={onClose}>
             Cancel
           </button>
           <button className="btn-accent" onClick={() => void run()} disabled={busy || !kind || !size}>
-            {busy ? (mode === 'ai' ? 'Searching & writing…' : 'Rolling…') : 'Generate'}
+            {busy ? (phase ?? (mode === 'ai' ? 'Searching & writing…' : 'Rolling…')) : 'Generate'}
           </button>
         </div>
       </div>

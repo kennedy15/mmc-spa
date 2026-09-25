@@ -9,6 +9,15 @@ export interface PromptImage {
   data: string;
 }
 
+/** An existing build the new idea can follow up on. */
+export interface BuildRef {
+  title: string;
+  status: string;
+  concept?: string;
+  lore: string;
+  coords?: { x: number; z: number };
+}
+
 export interface GenerateOptions {
   kind: IdeaKind;
   size: IdeaSize;
@@ -17,6 +26,10 @@ export interface GenerateOptions {
   images?: PromptImage[];
   /** Titles already on the board, to avoid repeats. */
   exclude: string[];
+  /** The idea must follow up on one of these (numbered from 1 in the prompt). */
+  followUp?: BuildRef[];
+  /** Real places from the seed scan, as prompt text. */
+  world?: string;
   /** Offline only: the same seed rolls the same idea. */
   seed?: number;
 }
@@ -42,4 +55,8 @@ export interface Draft {
   scale: string;
   sourceLinks: { title: string; url: string }[];
   imageUrls: string[];
+  /** Which of `followUp` it builds on, from 1; 0 for none. */
+  buildsOn: number;
+  /** Coordinates of the real place Claude chose from the seed scan. */
+  coords?: { x: number; z: number };
 }

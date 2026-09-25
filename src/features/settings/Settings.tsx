@@ -6,6 +6,7 @@ import { fmtMeso, relTime, fmtDateLong } from '../../app/format';
 import { buildExportZip, readImportZip } from '../../lib/storage/exportImport';
 import { priceKey } from '../bossing/lib';
 import { AddCharacter } from './AddCharacter';
+import { MinecraftWorld } from './MinecraftWorld';
 
 export function Settings() {
   const s = useStore();
@@ -201,6 +202,8 @@ export function Settings() {
             )}
           </div>
         </Card>
+
+        <MinecraftWorld />
 
         <Card title={`Crystal values · ${s.bosses?.version ?? ''} as of ${s.bosses ? fmtDateLong(s.bosses.asOf) : '—'}`} className="lg:col-span-2" action={<input className="input w-48 py-0.5 text-xs" placeholder="Filter…" value={priceFilter} onChange={(e) => setPriceFilter(e.target.value)} />}>
           <p className="text-xs text-ink-3 mb-2">Base values for one party member from the MapleStory Wiki. Override any value; the override is stored in bossing/prices.json and only affects future clears. Heroic ×5 is applied on top.</p>

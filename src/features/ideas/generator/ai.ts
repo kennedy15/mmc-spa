@@ -20,7 +20,7 @@ const PRICE = { input: 5, cacheWrite5m: 6.25, cacheWrite1h: 10, cacheRead: 0.5, 
 const SCHEMA: Record<string, unknown> = {
   type: 'object',
   additionalProperties: false,
-  required: ['title', 'concept', 'buildType', 'biome', 'placement', 'lore', 'palette', 'scale', 'sourceLinks'],
+  required: ['title', 'concept', 'buildType', 'biome', 'placement', 'lore', 'palette', 'scale', 'sourceLinks', 'buildsOn', 'location'],
   properties: {
     title: { type: 'string', description: 'Evocative name, 2–5 words' },
     concept: { type: 'string', description: 'One sentence saying what to build; for a farm + build, the farm and the build around it' },
@@ -31,10 +31,15 @@ const SCHEMA: Record<string, unknown> = {
     palette: { type: 'array', items: { type: 'string' }, description: 'Exactly 6 Minecraft block IDs, main block first, e.g. stripped_mangrove_log' },
     scale: { type: 'string', description: 'Rough footprint, e.g. 40×40, 30 tall' },
     sourceLinks: { type: 'array', items: { type: 'object', additionalProperties: false, required: ['title', 'url'], properties: { title: { type: 'string' }, url: { type: 'string' } } } },
+    buildsOn: { type: 'integer', description: 'Number of the listed build this follows up on, or 0' },
+    location: {
+      anyOf: [{ type: 'object', additionalProperties: false, required: ['x', 'z'], properties: { x: { type: 'integer' }, z: { type: 'integer' } } }, { type: 'null' }],
+      description: 'x and z of the real place chosen from their world, or null when none were listed',
+    },
   },
 };
 
-const SYSTEM = `You come up with Minecraft survival build ideas for a small private server where two friends play. Each idea should make them want to build it and feel like part of their world.
+const SYSTEM = `You come up with Minecraft survival build ideas for a small private Java Edition server where two friends play, so farm designs and tutorials must work on Java. Each idea should make them want to build it and feel like part of their world.
 
 An idea is one of two kinds:
 - Farm + build: a working farm they will use, plus a build that houses, hides or decorates it, e.g. a mangrove tree farm covered by pixel art of a stripped mangrove log. Choose a proven farm design and link a tutorial for it.
@@ -42,7 +47,9 @@ An idea is one of two kinds:
 
 Size sets the scope. Small is an evening or two (a witch farm; a wayside shrine), medium a weekend (a mangrove tree farm with its pixel-art cover; a watermill), large a long project (draining an ocean monument, a perimeter witch farm; a castle town).
 
-Write lore that gives the place a history and ties it to the world around it, ending on a hook for a future build. Suggest where to build it. Give a palette of exactly 6 blocks as Minecraft block IDs, main block first, in the spirit of blockpalettes.com. Use web search (1–3 searches) for real reference pages, such as a tutorial for the farm or similar builds on Planet Minecraft or r/Minecraftbuilds, and cite their real URLs. Never invent URLs. If the player attached images or a note, build the idea around them.`;
+Write lore that gives the place a history and ties it to the world around it, ending on a hook for a future build. Suggest where to build it. Give a palette of exactly 6 blocks as Minecraft block IDs, main block first, in the spirit of blockpalettes.com. Use web search (1–3 searches) for real reference pages, such as a tutorial for the farm or similar builds on Planet Minecraft or r/Minecraftbuilds, and cite their real URLs. Never invent URLs. If the player attached images or a note, build the idea around them.
+
+When the request lists their builds and asks for a follow-up, make the idea extend, protect, supply or connect one of them (a witch farm gets a perimeter; a castle gets a village and walls), carry its story on in the lore, place it close by, and set buildsOn to that build's number; otherwise set buildsOn to 0. When the request lists real places in their world, pick the one that suits the idea, set location to its x and z, and mention them in placement. Never make up coordinates; use null when no places are listed.`;
 
 type Params = Anthropic.Beta.Messages.MessageCreateParamsNonStreaming;
 
@@ -84,11 +91,15 @@ export async function generateAI(apiKey: string, opts: GenerateOptions, signal?:
   const client = new Anthropic({ apiKey, dangerouslyAllowBrowser: true });
   const usage: AiUsage = { inputTokens: 0, outputTokens: 0, searches: 0, usd: 0 };
   const images = opts.images ?? [];
+  const followUp = opts.followUp ?? [];
+  const builds = followUp.map((b, i) => `${i + 1}. ${b.title} (${b.status}${b.coords ? `, at ${b.coords.x}, ${b.coords.z}` : ''}): ${[b.concept, b.lore.slice(0, 400)].filter(Boolean).join(' ')}`).join('\n');
   const brief = [
     `Kind: ${opts.kind === 'farm' ? 'farm + build' : 'build (no farm)'}.`,
     `Size: ${opts.size}.`,
     images.length ? `The ${images.length === 1 ? 'image above is' : `${images.length} images above are`} from the player: their world or builds they like.` : '',
     opts.note?.trim() ? `Player's note: ${opts.note.trim()}` : '',
+    followUp.length ? `Make it a follow-up to ${followUp.length === 1 ? 'this build of theirs' : 'whichever of these builds of theirs it fits best'}:\n${builds}` : '',
+    opts.world ?? '',
     opts.exclude.length ? `Avoid anything close to these existing ideas: ${opts.exclude.slice(0, 40).join('; ')}.` : '',
   ]
     .filter(Boolean)
@@ -119,8 +130,10 @@ export async function generateAI(apiKey: string, opts: GenerateOptions, signal?:
   const start = text.indexOf('{');
   const end = text.lastIndexOf('}');
   if (start < 0 || end < start) throw new Error('Claude did not return an idea. Try again.');
-  const parsed = JSON.parse(text.slice(start, end + 1)) as Partial<Draft>;
+  const parsed = JSON.parse(text.slice(start, end + 1)) as Partial<Omit<Draft, 'coords'>> & { location?: { x?: unknown; z?: unknown } | null };
   const isHttp = (u: unknown): u is string => typeof u === 'string' && /^https?:\/\//.test(u);
+  const loc = parsed.location;
+  const buildsOn = parsed.buildsOn;
   // Block IDs (stripped_mangrove_log) are shown as names (stripped mangrove log); the card turns them back into IDs for links.
   const blockName = (id: string) => id.replace(/^minecraft:/, '').replace(/_/g, ' ').trim();
   const draft: Draft = {
@@ -134,6 +147,9 @@ export async function generateAI(apiKey: string, opts: GenerateOptions, signal?:
     scale: parsed.scale ?? '',
     sourceLinks: Array.isArray(parsed.sourceLinks) ? parsed.sourceLinks.filter((l) => l && isHttp(l.url)).slice(0, 4) : [],
     imageUrls: [],
+    buildsOn: Number.isInteger(buildsOn) && buildsOn! >= 1 && buildsOn! <= followUp.length ? buildsOn! : 0,
+    // Only coordinates the player's world actually listed; without a scan there is nothing real to point at.
+    coords: opts.world && loc && Number.isInteger(loc.x) && Number.isInteger(loc.z) ? { x: loc.x as number, z: loc.z as number } : undefined,
   };
   return { draft, usage };
 }

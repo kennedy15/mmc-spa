@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
 import { useStore } from '../../store';
 import { Field, Modal, Toggle } from '../../app/ui';
-import { uid, type Idea, type IdeaStatus } from '../../lib/types';
+import { uid, type Idea, type IdeaCoords, type IdeaStatus } from '../../lib/types';
 import { usePhotoUrl, forgetPhotoUrl } from './photos';
+import { chunkbaseUrl, locateCommand } from './world/places';
 
 export function emptyIdea(): Idea {
   const now = new Date().toISOString();
@@ -18,6 +19,14 @@ const blockPalettesUrl = (block: string) => `https://www.blockpalettes.com/palet
 // half-typed line or a trailing comma survives until the next keystroke.
 const parsePalette = (text: string) => text.split(',').map((s) => s.trim()).filter(Boolean);
 const parseUrls = (text: string) => text.split('\n').map((s) => s.trim()).filter(isHttp);
+/** Both numbers or nothing; the scanned place sticks only while the coordinates are unchanged. */
+function parseCoords(xText: string, zText: string, before: IdeaCoords | undefined): IdeaCoords | undefined {
+  if (!/^-?\d+$/.test(xText.trim()) || !/^-?\d+$/.test(zText.trim())) return undefined;
+  const x = Number(xText);
+  const z = Number(zText);
+  return { x, z, place: before && before.x === x && before.z === z ? before.place : undefined };
+}
+
 /** One link per line: "title | url" or a bare url. */
 function parseLinks(text: string): { title: string; url: string }[] {
   return text.split('\n').flatMap((line) => {
@@ -34,7 +43,11 @@ export function CardEditor({ idea, note, onClose }: { idea: Idea | null; note?: 
   const del = useStore((s) => s.deleteIdea);
   const addPhoto = useStore((s) => s.addPhoto);
   const removePhoto = useStore((s) => s.removePhoto);
+  const ideas = useStore((s) => s.ideas);
+  const world = useStore((s) => s.settings.world);
   const [draft, setDraft] = useState<Idea>(() => idea ?? emptyIdea());
+  const [xText, setXText] = useState(() => (draft.coords ? String(draft.coords.x) : ''));
+  const [zText, setZText] = useState(() => (draft.coords ? String(draft.coords.z) : ''));
   const [paletteText, setPaletteText] = useState(() => draft.palette.join(', '));
   const [linksText, setLinksText] = useState(() => draft.sourceLinks.map((l) => (l.title && l.title !== l.url ? `${l.title} | ${l.url}` : l.url)).join('\n'));
   const [imagesText, setImagesText] = useState(() => draft.imageUrls.join('\n'));
@@ -54,6 +67,9 @@ export function CardEditor({ idea, note, onClose }: { idea: Idea | null; note?: 
   const set = (patch: Partial<Idea>) => setDraft((d) => ({ ...d, ...patch }));
   const links = parseLinks(linksText);
   const mainBlock = parsePalette(paletteText)[0];
+  const coords = parseCoords(xText, zText, draft.coords);
+  const [placeKind, placeId] = (coords?.place?.split(':') ?? []) as ['biome' | 'structure' | undefined, string | undefined];
+  const followUps = ideas.filter((i) => i.parentId === draft.id);
   const imageUrls = parseUrls(imagesText);
   const previewUrls = parseUrls(previewText);
 
@@ -65,7 +81,7 @@ export function CardEditor({ idea, note, onClose }: { idea: Idea | null; note?: 
   };
   const save = async () => {
     if (!draft.title.trim()) return;
-    await upsert({ ...draft, title: draft.title.trim(), palette: parsePalette(paletteText), sourceLinks: links, imageUrls, updatedAt: new Date().toISOString() });
+    await upsert({ ...draft, title: draft.title.trim(), palette: parsePalette(paletteText), sourceLinks: links, imageUrls, coords, updatedAt: new Date().toISOString() });
     await drop(detached.current);
     attached.current = [];
     detached.current = [];
@@ -129,6 +145,45 @@ export function CardEditor({ idea, note, onClose }: { idea: Idea | null; note?: 
           <Field label="Placement">
             <input className="input" value={draft.placement} onChange={(e) => set({ placement: e.target.value })} placeholder="Where a river meets a birch forest, one chunk from spawn" />
           </Field>
+          <div className="grid grid-cols-2 gap-3">
+            <Field
+              label="Coordinates (X, Z)"
+              hint={
+                coords && world ? (
+                  <>
+                    <a className="underline hover:text-ink" href={chunkbaseUrl(world, coords.x, coords.z)} target="_blank" rel="noreferrer">
+                      Seed map ↗
+                    </a>
+                    {placeKind && placeId && (
+                      <>
+                        {' · '}
+                        <code className="text-ink-2">{locateCommand(placeKind, placeId)}</code>
+                      </>
+                    )}
+                  </>
+                ) : (
+                  'Where it goes; change it to where you built it'
+                )
+              }
+            >
+              <div className="flex gap-2">
+                <input className="input tabular" inputMode="numeric" value={xText} onChange={(e) => setXText(e.target.value.replace(/[^\d-]/g, ''))} placeholder="X" aria-label="X" />
+                <input className="input tabular" inputMode="numeric" value={zText} onChange={(e) => setZText(e.target.value.replace(/[^\d-]/g, ''))} placeholder="Z" aria-label="Z" />
+              </div>
+            </Field>
+            <Field label="Builds on" hint={followUps.length ? `Follow-ups: ${followUps.map((i) => i.title).join(', ')}` : undefined}>
+              <select className="input" value={ideas.some((i) => i.id === draft.parentId) ? draft.parentId : ''} onChange={(e) => set({ parentId: e.target.value || undefined })}>
+                <option value="">Nothing</option>
+                {ideas
+                  .filter((i) => i.id !== draft.id)
+                  .map((i) => (
+                    <option key={i.id} value={i.id}>
+                      {i.title}
+                    </option>
+                  ))}
+              </select>
+            </Field>
+          </div>
           <Field label="Lore">
             <textarea className="input min-h-32" value={draft.lore} onChange={(e) => set({ lore: e.target.value })} placeholder="Who built it, why it was abandoned, one hook for a future build…" />
           </Field>

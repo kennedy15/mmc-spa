@@ -74,5 +74,6 @@ export async function generateOffline(opts: GenerateOptions): Promise<Draft & { 
       { title: `r/Minecraftbuilds: ${arche.name}`, url: `https://www.reddit.com/r/Minecraftbuilds/search/?q=${encodeURIComponent(arche.name + ' ' + biome.name)}` },
     ],
     imageUrls: [],
+    buildsOn: 0,
   };
 }
