@@ -2,14 +2,15 @@ import { useEffect, useEffectEvent, useMemo, useRef, useState, type ReactNode } 
 import { Link } from 'react-router-dom';
 import { useStore } from '../../store';
 import { Empty, PageHeader, Modal, Field, Badge } from '../../app/ui';
-import { fmtDate, fmtInt } from '../../app/format';
-import { uid, type Idea, type IdeaCoords, type IdeaStatus } from '../../lib/types';
+import { fmtDate } from '../../app/format';
+import { uid, type AiUsage, type Idea, type IdeaCoords, type IdeaStatus } from '../../lib/types';
 import { CardEditor } from './CardEditor';
 import { usePhotoUrl } from './photos';
 import { generateOffline } from './generator/offline';
+import { costHint, emptyUsage, fmtUsd, imageHint, recentUsage } from './generator/usage';
 import { toPromptImage } from './promptImages';
 import { apiKey as apiKeyStore } from '../../lib/storage/persist';
-import type { AiUsage, BuildRef, Draft, IdeaKind, IdeaSize, PromptImage } from './generator/types';
+import type { BuildRef, Draft, IdeaKind, IdeaSize, PromptImage } from './generator/types';
 import { getWorldScan } from './world/world';
 import { describeWorld } from './world/places';
 
@@ -34,19 +35,11 @@ const MAX_PROMPT_IMAGES = 4;
 
 const pickOne = <T,>(list: readonly T[]): T => list[Math.floor(Math.random() * list.length)];
 
-/** "This idea cost about $0.17 (3 web searches, 21,300 tokens in, 1,450 out)" */
-function usageNote(u: AiUsage): string {
-  const cost = u.usd < 0.005 ? 'under $0.01' : `about $${u.usd.toFixed(2)}`;
-  return `This idea cost ${cost} (${u.searches} web search${u.searches === 1 ? '' : 'es'}, ${fmtInt(u.inputTokens)} tokens in, ${fmtInt(u.outputTokens)} out)`;
-}
-
 export function Board() {
   const ideas = useStore((s) => s.ideas);
   const upsert = useStore((s) => s.upsertIdea);
   const hasApiKey = useStore((s) => s.hasApiKey);
   const [editing, setEditing] = useState<Idea | null | 'new'>(null);
-  // What the AI draft now in the editor cost; cleared when the editor closes.
-  const [draftUsage, setDraftUsage] = useState<AiUsage | null>(null);
   // Open Generate dialog: from a card's Follow-up button, or Surprise me with every choice rolled.
   const [generating, setGenerating] = useState<{ followUpOf?: Idea; surprise?: boolean } | null>(null);
   const titles = useMemo(() => new Map(ideas.map((i) => [i.id, i.title])), [ideas]);
@@ -145,14 +138,7 @@ export function Board() {
         </div>
       )}
       {editing && (
-        <CardEditor
-          idea={editing === 'new' ? null : editing}
-          note={draftUsage ? usageNote(draftUsage) : undefined}
-          onClose={() => {
-            setEditing(null);
-            setDraftUsage(null);
-          }}
-        />
+        <CardEditor idea={editing === 'new' ? null : editing} onClose={() => setEditing(null)} />
       )}
       {generating && (
         <GenerateDialog
@@ -162,8 +148,7 @@ export function Board() {
           onDraft={(d, info) => {
             const now = new Date().toISOString();
             setGenerating(null);
-            setDraftUsage(info.usage ?? null);
-            setEditing({ id: uid(), ...cardFields(d), photoIds: info.photoIds, status: 'new', createdAt: now, updatedAt: now, generated: true, allowFarms: info.kind === 'farm', parentId: info.parentId, coords: info.coords });
+            setEditing({ id: uid(), ...cardFields(d), photoIds: info.photoIds, status: 'new', createdAt: now, updatedAt: now, generated: true, allowFarms: info.kind === 'farm', parentId: info.parentId, coords: info.coords, aiUsage: info.usage });
           }}
         />
       )}
@@ -277,6 +262,7 @@ function GenerateDialog({ followUpOf, surprise, onClose, onDraft }: { followUpOf
   const [busy, setBusy] = useState(false);
   const [phase, setPhase] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const recent = useMemo(() => recentUsage(ideas), [ideas]);
   // Closing the dialog aborts a run still in flight, so a late reply can't open the editor.
   const inFlight = useRef<AbortController | null>(null);
   useEffect(() => () => inFlight.current?.abort(), []);
@@ -298,6 +284,8 @@ function GenerateDialog({ followUpOf, surprise, onClose, onDraft }: { followUpOf
     setBusy(true);
     setError(null);
     const exclude = ideas.map((i) => i.title);
+    // Filled in as replies arrive, so a run that fails after one can still say what it cost.
+    const usage = emptyUsage();
     try {
       if (mode === 'ai') {
         const key = await apiKeyStore.get();
@@ -310,7 +298,7 @@ function GenerateDialog({ followUpOf, surprise, onClose, onDraft }: { followUpOf
         setPhase(null);
         // The Claude SDK is a large module, so it only loads when AI mode runs.
         const { generateAI } = await import('./generator/ai');
-        const { draft, usage } = await generateAI(key, { kind, size, note, images: images.map((i) => i.prompt), exclude, followUp: followUp.map(toBuildRef), world: scan && describeWorld(scan) }, ctrl.signal);
+        const draft = await generateAI(key, { kind, size, note, images: images.map((i) => i.prompt), exclude, followUp: followUp.map(toBuildRef), world: scan && describeWorld(scan) }, usage, ctrl.signal);
         if (ctrl.signal.aborted) return;
         // The images go on the card too; the editor drops them again if the draft is cancelled.
         const photoIds: string[] = [];
@@ -326,7 +314,8 @@ function GenerateDialog({ followUpOf, surprise, onClose, onDraft }: { followUpOf
     } catch (e) {
       if (ctrl.signal.aborted) return;
       const describe = mode === 'ai' ? await import('./generator/ai').then((m) => m.describeAiError, () => null) : null;
-      setError(describe ? describe(e) : e instanceof Error ? e.message : String(e));
+      const message = describe ? describe(e) : e instanceof Error ? e.message : String(e);
+      setError(usage.requests ? `${message} This attempt still cost about ${fmtUsd(usage.usd)}.` : message);
     } finally {
       setBusy(false);
       setPhase(null);
@@ -398,7 +387,7 @@ function GenerateDialog({ followUpOf, surprise, onClose, onDraft }: { followUpOf
                 </select>
               </Field>
             )}
-            <Field label={`Images for Claude (optional, ${images.length}/${MAX_PROMPT_IMAGES})`} hint="Screenshots of the spot, or builds you like. About 1¢ each; they're added to the card too.">
+            <Field label={`Images for Claude (optional, ${images.length}/${MAX_PROMPT_IMAGES})`} hint={imageHint(images.map((i) => i.prompt), recent)}>
               <div className="flex flex-wrap gap-2">
                 {images.map((im, i) => (
                   <div key={`${i}-${im.file.name}`} className="relative group">
@@ -432,7 +421,7 @@ function GenerateDialog({ followUpOf, surprise, onClose, onDraft }: { followUpOf
         )}
         {error && <div className="text-sm text-bad">{error}</div>}
         <div className="text-xs text-ink-3">
-          {mode === 'ai' ? 'Uses your API key: a few web searches plus the write-up, roughly 10–30¢ (the editor shows the real cost).' : 'Combines bundled archetypes, biomes and lore hooks. No network needed.'}
+          {mode === 'ai' ? costHint(recent) : 'Combines bundled archetypes, biomes and lore hooks. No network needed.'}
           {ideas.length > 0 && ` Avoids ${ideas.length} existing title${ideas.length === 1 ? '' : 's'}.`}
           {mode === 'ai' && (world ? ` Places it in your world (seed ${world.seed}, Java ${world.version}).` : ' Add your seed under Settings → Minecraft world for real coordinates.')}
         </div>

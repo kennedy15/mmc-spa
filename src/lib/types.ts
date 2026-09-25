@@ -25,6 +25,34 @@ export interface Idea {
   parentId?: string;
   /** Where it goes in the world. The generator fills it from the seed scan; edit it to where it was actually built. */
   coords?: IdeaCoords;
+  /** What the AI generator spent writing it. */
+  aiUsage?: AiUsage;
+}
+
+/** What one AI generation cost, summed over its requests and every model pass within them. */
+export interface AiUsage {
+  /** Estimated at list prices, each pass at its own model's rates. */
+  usd: number;
+  /** The model asked, and the effort it was asked to run at. */
+  model: string;
+  effort: string;
+  /** The models that ran, in order; a second one means a refusal fell back to it. */
+  models: string[];
+  /** All input, cache writes and reads included. */
+  inputTokens: number;
+  cacheWriteTokens: number;
+  cacheReadTokens: number;
+  /** All output, thinking included. */
+  outputTokens: number;
+  /** Output spent thinking: billed, though its text isn't returned. */
+  thinkingTokens: number;
+  searches: number;
+  /** Model passes; each step of the web search loop is one. */
+  steps: number;
+  /** Requests sent: the first, plus one per resume after the API paused the turn. */
+  requests: number;
+  /** How the answer was held to the JSON schema: by the API (structured output), or by the prompt alone. */
+  output?: 'structured' | 'prompt';
 }
 
 export interface IdeaCoords {

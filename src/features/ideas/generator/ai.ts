@@ -5,17 +5,21 @@
  * pages, and the answer is constrained to JSON.
  */
 import Anthropic, { type APIError } from '@anthropic-ai/sdk';
-import type { AiUsage, Draft, GenerateOptions } from './types';
+import { kv } from '../../../lib/storage/idb';
+import type { AiUsage } from '../../../lib/types';
+import type { Draft, GenerateOptions } from './types';
+import { AI_EFFORT, AI_MODEL, SEARCH_USD, ratesFor } from './usage';
 
-const MODEL = 'claude-opus-5';
-// Claude Opus 5 thinks by default and max_tokens caps thinking plus the answer,
+// Claude Opus 5.5 always thinks and max_tokens caps thinking plus the answer,
 // so leave room; only tokens actually generated are billed.
 const MAX_TOKENS = 16000;
 // Server-side web search can pause a long turn; resume it this many times at most.
 const MAX_CONTINUATIONS = 3;
-// List prices for the cost shown after a run: USD per million tokens, and per
-// search. Claude Opus 4.8, the usual refusal fallback, is priced the same.
-const PRICE = { input: 5, cacheWrite5m: 6.25, cacheWrite1h: 10, cacheRead: 0.5, output: 25, search: 0.01 };
+const WEB_SEARCH = 'web_search_20260209';
+// Anthropic's docs don't say whether structured output works alongside web search.
+// The first run that gets through settles it for this model and tool, and is remembered.
+const JSON_MODE_KEY = `aiJsonMode:${AI_MODEL}:${WEB_SEARCH}`;
+type JsonMode = NonNullable<AiUsage['output']>;
 
 const SCHEMA: Record<string, unknown> = {
   type: 'object',
@@ -53,25 +57,42 @@ When the request lists their builds and asks for a follow-up, make the idea exte
 
 type Params = Anthropic.Beta.Messages.MessageCreateParamsNonStreaming;
 
-/** Adds one response's billed usage to the running total for this generation. */
-function addUsage(total: AiUsage, u: Anthropic.Beta.Messages.BetaUsage) {
-  const write5m = u.cache_creation?.ephemeral_5m_input_tokens ?? u.cache_creation_input_tokens ?? 0;
-  const write1h = u.cache_creation?.ephemeral_1h_input_tokens ?? 0;
-  const read = u.cache_read_input_tokens ?? 0;
+/**
+ * Adds one reply's billed usage to the generation's total. `usage.iterations` has an
+ * entry per model pass (each step of the search loop, and an attempt a model declined
+ * before a refusal fallback took over), so each pass is priced at its own model's rates;
+ * one that doesn't name its model is priced as `model`, the model that answered.
+ */
+function addUsage(total: AiUsage, u: Anthropic.Beta.Messages.BetaUsage, model: string) {
+  const passes = u.iterations?.length ? u.iterations : [{ ...u, model }];
+  for (const p of passes) {
+    const ran = ('model' in p && p.model) || model;
+    const r = ratesFor(ran);
+    const write5m = p.cache_creation?.ephemeral_5m_input_tokens ?? p.cache_creation_input_tokens ?? 0;
+    const write1h = p.cache_creation?.ephemeral_1h_input_tokens ?? 0;
+    const read = p.cache_read_input_tokens ?? 0;
+    total.inputTokens += p.input_tokens + write5m + write1h + read;
+    total.cacheWriteTokens += write5m + write1h;
+    total.cacheReadTokens += read;
+    total.outputTokens += p.output_tokens;
+    total.usd += (p.input_tokens * r.input + write5m * r.cacheWrite5m + write1h * r.cacheWrite1h + read * r.cacheRead + p.output_tokens * r.output) / 1e6;
+    if (total.models.at(-1) !== ran) total.models.push(ran);
+  }
   const searches = u.server_tool_use?.web_search_requests ?? 0;
-  total.inputTokens += u.input_tokens + write5m + write1h + read;
-  total.outputTokens += u.output_tokens;
   total.searches += searches;
-  total.usd += (u.input_tokens * PRICE.input + write5m * PRICE.cacheWrite5m + write1h * PRICE.cacheWrite1h + read * PRICE.cacheRead + u.output_tokens * PRICE.output) / 1e6 + searches * PRICE.search;
+  total.usd += searches * SEARCH_USD;
+  total.thinkingTokens += u.output_tokens_details?.thinking_tokens ?? 0;
+  total.steps += passes.length;
+  total.requests += 1;
 }
 
 /** Runs one request, resuming if server-side web search pauses the turn; returns the final message. */
 async function complete(client: Anthropic, params: Params, used: AiUsage, signal?: AbortSignal): Promise<Anthropic.Beta.Messages.BetaMessage> {
   let res = await client.beta.messages.create(params, { signal });
-  addUsage(used, res.usage);
+  addUsage(used, res.usage, res.model);
   for (let i = 0; res.stop_reason === 'pause_turn' && i < MAX_CONTINUATIONS; i++) {
     res = await client.beta.messages.create({ ...params, messages: [...params.messages, { role: 'assistant', content: res.content as Anthropic.Beta.Messages.BetaContentBlockParam[] }] }, { signal });
-    addUsage(used, res.usage);
+    addUsage(used, res.usage, res.model);
   }
   if (res.stop_reason === 'refusal') throw new Error('Claude declined this request. Try different options.');
   if (res.stop_reason === 'max_tokens') throw new Error('The answer was cut off before it finished. Try again.');
@@ -86,10 +107,12 @@ function answerText(content: Anthropic.Beta.Messages.BetaContentBlock[]): string
   return text(content.slice(lastStep + 1)) || text(content);
 }
 
-/** Aborting `signal` cancels the request in flight; the promise then rejects with APIUserAbortError. */
-export async function generateAI(apiKey: string, opts: GenerateOptions, signal?: AbortSignal): Promise<{ draft: Draft; usage: AiUsage }> {
+/**
+ * Adds to `usage` as each reply arrives, so a run that fails after one still shows what it cost.
+ * Aborting `signal` cancels the request in flight; the promise then rejects with APIUserAbortError.
+ */
+export async function generateAI(apiKey: string, opts: GenerateOptions, usage: AiUsage, signal?: AbortSignal): Promise<Draft> {
   const client = new Anthropic({ apiKey, dangerouslyAllowBrowser: true });
-  const usage: AiUsage = { inputTokens: 0, outputTokens: 0, searches: 0, usd: 0 };
   const images = opts.images ?? [];
   const followUp = opts.followUp ?? [];
   const builds = followUp.map((b, i) => `${i + 1}. ${b.title} (${b.status}${b.coords ? `, at ${b.coords.x}, ${b.coords.z}` : ''}): ${[b.concept, b.lore.slice(0, 400)].filter(Boolean).join(' ')}`).join('\n');
@@ -109,23 +132,42 @@ export async function generateAI(apiKey: string, opts: GenerateOptions, signal?:
     { type: 'text', text: `Generate one new build idea.\n${brief}` },
   ];
 
-  const base: Params = {
-    model: MODEL,
+  const params = (json: JsonMode): Params => ({
+    model: AI_MODEL,
     max_tokens: MAX_TOKENS,
-    system: SYSTEM,
-    tools: [{ type: 'web_search_20260209', name: 'web_search', max_uses: 4 }],
+    // If a safety classifier declines, the API re-runs the request on the model it recommends for that kind of refusal.
+    betas: ['server-side-fallback-2026-07-01'],
+    fallbacks: 'default',
+    system: json === 'structured' ? SYSTEM : `${SYSTEM}\n\nReply with a single JSON object matching this JSON schema and nothing else: ${JSON.stringify(SCHEMA)}`,
+    tools: [{ type: WEB_SEARCH, name: 'web_search', max_uses: 4 }],
+    output_config: json === 'structured' ? { effort: AI_EFFORT, format: { type: 'json_schema', schema: SCHEMA } } : { effort: AI_EFFORT },
     messages: [{ role: 'user', content }],
-  };
+  });
 
+  const known = await kv.get<JsonMode>(JSON_MODE_KEY).catch(() => undefined);
+  let json: JsonMode = known ?? 'structured';
   let res: Anthropic.Beta.Messages.BetaMessage;
   try {
-    // If a safety classifier declines, the API re-runs the request on its recommended fallback model.
-    res = await complete(client, { ...base, betas: ['server-side-fallback-2026-07-01'], fallbacks: 'default', output_config: { format: { type: 'json_schema', schema: SCHEMA } } }, usage, signal);
+    res = await complete(client, params(json), usage, signal);
   } catch (e) {
     if (!(e instanceof Anthropic.BadRequestError)) throw e;
-    // Structured output may not combine with server tools everywhere; fall back to plain JSON in text.
-    res = await complete(client, { ...base, system: `${SYSTEM}\n\nReply with a single JSON object matching this JSON schema and nothing else: ${JSON.stringify(SCHEMA)}` }, usage, signal);
+    if (known) {
+      // Something else is wrong (a low credit balance, an unreadable image). Check structured output again next time, in case the API changed.
+      if (known === 'structured') await kv.del(JSON_MODE_KEY).catch(() => {});
+      throw e;
+    }
+    // Structured output may not combine with web search, or something else is wrong with the
+    // request. The same request with the schema in the prompt tells them apart: if it goes
+    // through, structured output was the problem; if it fails too, the first error is the one to show.
+    json = 'prompt';
+    try {
+      res = await complete(client, params(json), usage, signal);
+    } catch (e2) {
+      throw e2 instanceof Anthropic.BadRequestError ? e : e2;
+    }
   }
+  usage.output = json;
+  if (!known) await kv.set(JSON_MODE_KEY, json).catch(() => {});
   const text = answerText(res.content);
   const start = text.indexOf('{');
   const end = text.lastIndexOf('}');
@@ -151,7 +193,7 @@ export async function generateAI(apiKey: string, opts: GenerateOptions, signal?:
     // Only coordinates the player's world actually listed; without a scan there is nothing real to point at.
     coords: opts.world && loc && Number.isInteger(loc.x) && Number.isInteger(loc.z) ? { x: loc.x as number, z: loc.z as number } : undefined,
   };
-  return { draft, usage };
+  return draft;
 }
 
 export function describeAiError(e: unknown): string {

@@ -3,6 +3,7 @@ import { useStore } from '../../store';
 import { Field, Modal, Toggle } from '../../app/ui';
 import { uid, type Idea, type IdeaCoords, type IdeaStatus } from '../../lib/types';
 import { usePhotoUrl, forgetPhotoUrl } from './photos';
+import { describeUsage } from './generator/usage';
 import { chunkbaseUrl, locateCommand } from './world/places';
 
 export function emptyIdea(): Idea {
@@ -37,8 +38,7 @@ function parseLinks(text: string): { title: string; url: string }[] {
   });
 }
 
-/** `note` is shown in the footer of a new card, e.g. what a generated draft cost. */
-export function CardEditor({ idea, note, onClose }: { idea: Idea | null; note?: string; onClose: () => void }) {
+export function CardEditor({ idea, onClose }: { idea: Idea | null; onClose: () => void }) {
   const upsert = useStore((s) => s.upsertIdea);
   const del = useStore((s) => s.deleteIdea);
   const addPhoto = useStore((s) => s.addPhoto);
@@ -72,6 +72,7 @@ export function CardEditor({ idea, note, onClose }: { idea: Idea | null; note?: 
   const followUps = ideas.filter((i) => i.parentId === draft.id);
   const imageUrls = parseUrls(imagesText);
   const previewUrls = parseUrls(previewText);
+  const usage = draft.aiUsage && describeUsage(draft.aiUsage);
 
   const drop = async (ids: string[]) => {
     for (const id of ids) {
@@ -260,15 +261,20 @@ export function CardEditor({ idea, note, onClose }: { idea: Idea | null; note?: 
           )}
         </div>
       </div>
-      <div className="flex items-center justify-between mt-5 pt-4 border-t border-border">
-        {!isNew ? (
-          <button className="btn-ghost text-bad" onClick={() => void remove()}>
+      <div className="flex flex-wrap items-center gap-3 mt-5 pt-4 border-t border-border">
+        {!isNew && (
+          <button className="btn-ghost text-bad shrink-0" onClick={() => void remove()}>
             Delete
           </button>
-        ) : (
-          <span className="text-xs text-ink-3">{note}</span>
         )}
-        <div className="flex gap-2">
+        {usage && (
+          // Its own row above the buttons on narrow screens; between them on wide ones.
+          <div className="order-first w-full md:order-none md:w-auto md:flex-1 min-w-0 text-xs text-ink-3 leading-snug">
+            <div className="text-ink-2">This idea cost {usage.cost}</div>
+            <div>{usage.detail}</div>
+          </div>
+        )}
+        <div className="flex gap-2 shrink-0 ml-auto">
           <button className="btn" onClick={cancel}>
             Cancel
           </button>

@@ -1,6 +1,7 @@
 import type { PromptImage } from './generator/types';
 
-// Claude scales anything larger down itself, so a longer edge only adds upload time.
+// Claude reads images up to 2576px at full size and bills by area (one token per
+// 28×28 patch), so this cap is what holds a 16:9 screenshot to about 1,800 tokens.
 const MAX_EDGE = 1568;
 
 /** Downscales an image attached to the prompt and encodes it as base64 JPEG for Claude. */
@@ -23,5 +24,5 @@ export async function toPromptImage(file: Blob): Promise<PromptImage> {
     reader.onerror = () => rej(reader.error);
     reader.readAsDataURL(blob);
   });
-  return { mediaType: 'image/jpeg', data: dataUrl.slice(dataUrl.indexOf(',') + 1) };
+  return { mediaType: 'image/jpeg', data: dataUrl.slice(dataUrl.indexOf(',') + 1), width: canvas.width, height: canvas.height };
 }

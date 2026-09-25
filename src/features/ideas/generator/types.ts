@@ -7,6 +7,9 @@ export interface PromptImage {
   mediaType: 'image/jpeg';
   /** Base64 without the data: prefix. */
   data: string;
+  /** Pixel size as sent, which sets what Claude bills to read it. */
+  width: number;
+  height: number;
 }
 
 /** An existing build the new idea can follow up on. */
@@ -32,16 +35,6 @@ export interface GenerateOptions {
   world?: string;
   /** Offline only: the same seed rolls the same idea. */
   seed?: number;
-}
-
-/** What one AI generation used, summed over all of its requests. */
-export interface AiUsage {
-  /** All input, cache reads and writes included. */
-  inputTokens: number;
-  outputTokens: number;
-  searches: number;
-  /** Estimated at list prices. */
-  usd: number;
 }
 
 export interface Draft {
