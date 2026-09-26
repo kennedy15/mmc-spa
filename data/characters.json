@@ -76,6 +76,11 @@
       "name": "Hippaa",
       "role": "mule",
       "owner": "me"
+    },
+    {
+      "name": "Pika1us",
+      "role": "bossing",
+      "owner": "me"
     }
   ]
 }
