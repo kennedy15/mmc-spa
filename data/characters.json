@@ -73,9 +73,15 @@
       "owner": "me"
     },
     {
-      "name": "Hippaa",
+      "name": "Feuerr",
       "role": "mule",
-      "owner": "me"
+      "owner": "me",
+      "formerNames": [
+        {
+          "name": "Hippaa",
+          "renamedOn": "2026-09-28"
+        }
+      ]
     },
     {
       "name": "Pika1us",
