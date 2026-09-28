@@ -105,15 +105,17 @@ async function lookupLegion(name, worldId) {
 }
 
 // Attach legion data to the reporting row of each account/world group. The
-// previous snapshot's reporter keeps the row on a level tie (see legion.mjs).
-async function collectLegions(rows, previous) {
+// previous snapshot's reporter keeps the row on a level tie (see legion.mjs);
+// `renamed` maps former names to current ones, in case it was renamed since.
+async function collectLegions(rows, previous, renamed) {
   const groups = new Map();
   for (const r of rows) {
     const key = `${r.owner}|${r.worldId}`;
     groups.set(key, [...(groups.get(key) ?? []), r]);
   }
   for (const [key, members] of groups) {
-    const incumbent = previous?.rows?.find((r) => r.legionLevel != null && `${r.owner ?? 'me'}|${r.worldId}` === key)?.name ?? null;
+    const reporter = previous?.rows?.find((r) => r.legionLevel != null && `${r.owner ?? 'me'}|${r.worldId}` === key)?.name ?? null;
+    const incumbent = renamed.get(reporter) ?? reporter;
     let found = false;
     for (const name of legionCandidates(members, incumbent)) {
       const legion = await lookupLegion(name, members[0].worldId);
@@ -200,7 +202,8 @@ async function run() {
     rows.push(row);
     await sleep(GAP);
   }
-  await collectLegions(rows, await latestSnapshot(date));
+  const renamed = new Map(characters.flatMap((c) => (c.formerNames ?? []).map((f) => [f.name, c.name])));
+  await collectLegions(rows, await latestSnapshot(date), renamed);
 
   const snapshotPath = path.join(DATA_DIR, 'snapshots', `${date}.json`);
   const previous = await readJson(snapshotPath, null);

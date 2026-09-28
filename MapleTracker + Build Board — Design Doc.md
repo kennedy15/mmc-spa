@@ -97,6 +97,8 @@ All files are plain JSON; `exp` is always a string.
 }
 ```
 
+A character renamed in game keeps its one entry: `name` becomes the new name and `formerNames` lists the old ones with the date the tracker switched, e.g. `"formerNames": [{ "name": "Mule01", "renamedOn": "2026-09-28" }]`. Snapshots dated before `renamedOn` keep the old name, and the app files them (and local boss clears, assignments and goals) under the current one. The `Rename character` workflow writes this and moves the look archive to the new name.
+
 `data/snapshots/YYYY-MM-DD.json` (one per day, written by the Action)
 
 ```json

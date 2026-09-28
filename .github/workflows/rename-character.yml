@@ -1,20 +1,18 @@
-name: Add character
+name: Rename character
 
 on:
   workflow_dispatch:
     inputs:
-      name:
-        description: Character name (IGN), exactly as in game
+      from:
+        description: Current name, as tracked
         required: true
-      role:
-        description: main, mule, legion, friend-main…
-        default: mule
-      owner:
-        description: me or friend
-        default: me
-      world:
-        description: World name or id; blank = the world in characters.json
-        default: ''
+      to:
+        description: New name, exactly as in game
+        required: true
+      force:
+        description: Skip the same-character checks (job, level, old name gone from the rankings)
+        type: boolean
+        default: false
 
 concurrency:
   group: snapshot
@@ -23,7 +21,7 @@ concurrency:
   queue: max
 
 jobs:
-  add:
+  rename:
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -32,29 +30,31 @@ jobs:
     steps:
       - uses: actions/checkout@v7
         with:
-          # The branch as it is when the run starts: a run queued ahead of this
-          # one (a rename, say) may have pushed since it was triggered.
+          # The branch as it is when the run starts: a snapshot run queued
+          # ahead of this one may have pushed since it was dispatched.
           ref: ${{ github.ref_name }}
       - uses: actions/setup-node@v7
         with:
           node-version: 24
-      - name: Look up and add
+      - name: Check and rename
         # Inputs go through env vars rather than ${{ }} in the script, so a quote
         # or $ in a typed name can't change the shell command.
         env:
-          NAME: ${{ inputs.name }}
-          ROLE: ${{ inputs.role }}
-          OWNER: ${{ inputs.owner }}
-          WORLD: ${{ inputs.world }}
-        run: node scripts/add-character.mjs "$NAME" --role "$ROLE" --owner "$OWNER" --world "$WORLD"
-      - name: Snapshot the updated roster
+          FROM: ${{ inputs.from }}
+          TO: ${{ inputs.to }}
+          FORCE: ${{ inputs.force }}
+        run: |
+          if [ "$FORCE" = "true" ]; then set -- --force; fi
+          node scripts/rename-character.mjs "$FROM" "$TO" "$@"
+      - name: Snapshot under the new name
         run: node scripts/snapshot.mjs
         env:
           RETRY_DELAY_MS: '120000'
       - name: Commit
         id: commit
         env:
-          NAME: ${{ inputs.name }}
+          FROM: ${{ inputs.from }}
+          TO: ${{ inputs.to }}
         run: |
           git config user.name "maple-tracker-bot"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
@@ -62,14 +62,14 @@ jobs:
           if git diff --cached --quiet; then
             echo "changed=false" >> "$GITHUB_OUTPUT"
           else
-            git commit -m "add character: $NAME"
+            git commit -m "rename character: $FROM -> $TO"
             git push
             echo "changed=true" >> "$GITHUB_OUTPUT"
           fi
 
   deploy:
-    needs: add
-    if: needs.add.outputs.changed == 'true'
+    needs: rename
+    if: needs.rename.outputs.changed == 'true'
     uses: ./.github/workflows/deploy.yml
     permissions:
       contents: read

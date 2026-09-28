@@ -8,6 +8,7 @@ import * as persist from './lib/storage/persist';
 import { mergeById, type ImportResult } from './lib/storage/exportImport';
 import { DEFAULT_SETTINGS, normalizeIdea, uid, type Assignment, type BossesDoc, type Clear, type Goal, type Idea, type PhotoMeta, type PriceOverrides, type Settings } from './lib/types';
 import { periodKey, type Cadence } from './lib/reset/period';
+import { nameResolver, renameAssignments, renameClears, renameGoals, renameSettings, renameSnapshots } from './lib/renames';
 
 export interface FolderState {
   supported: boolean;
@@ -121,6 +122,31 @@ async function loadLocal(fallback: Pick<State, 'ideas' | 'photos' | 'assignments
   return { ideas: ideas.map(normalizeIdea), photos, assignments, clears, prices, goals, settings };
 }
 
+/** Snapshots as the repo serves them, for the data folder's mirror; the store's copies are filed under current names. */
+let fetchedSnapshots: Snapshot[] = [];
+
+/** Every snapshot in the index, oldest first: mirrored to the data folder as fetched, then filed under current names. */
+async function loadSnapshots(index: SnapshotIndex | null, characters: CharactersConfig | null): Promise<Snapshot[]> {
+  fetchedSnapshots = (await Promise.all((index?.dates ?? []).map(loadSnapshot))).filter((s): s is Snapshot => !!s).sort((a, b) => a.date.localeCompare(b.date));
+  for (const s of fetchedSnapshots) void persist.mirrorSnapshot(s.date, s);
+  return renameSnapshots(fetchedSnapshots, nameResolver(characters));
+}
+
+type NamedRecords = Pick<State, 'assignments' | 'clears' | 'goals' | 'settings'>;
+
+/** Moves local records kept under a renamed character's former name to its current one, saving what moved. */
+async function renameLocal(local: NamedRecords, characters: CharactersConfig | null): Promise<NamedRecords> {
+  const resolve = nameResolver(characters, local.settings.extraCharacters);
+  const next = { assignments: renameAssignments(local.assignments, resolve), clears: renameClears(local.clears, resolve), goals: renameGoals(local.goals, resolve), settings: renameSettings(local.settings, resolve) };
+  await Promise.all([
+    next.assignments !== local.assignments && persist.saveDoc('bossing/assignments.json', next.assignments),
+    next.clears !== local.clears && persist.saveDoc('bossing/clears.json', next.clears),
+    next.goals !== local.goals && persist.saveDoc('goals.json', next.goals),
+    next.settings !== local.settings && persist.saveDoc('settings.json', next.settings),
+  ]);
+  return next;
+}
+
 export const useStore = create<State>()((set, get) => ({
   ready: false,
   loading: false,
@@ -165,9 +191,7 @@ export const useStore = create<State>()((set, get) => ({
         loadWorlds(),
         fetch(dataUrl('bosses.json', 'public')).then((r) => (r.ok ? (r.json() as Promise<BossesDoc>) : null)).catch(() => null),
       ]);
-      const dates = index?.dates ?? [];
-      const snapshots = (await Promise.all(dates.map(loadSnapshot))).filter((s): s is Snapshot => !!s).sort((a, b) => a.date.localeCompare(b.date));
-      for (const s of snapshots) void persist.mirrorSnapshot(s.date, s);
+      const snapshots = await loadSnapshots(index, characters);
 
       const names = new Set<string>();
       for (const c of characters?.characters ?? []) names.add(c.name);
@@ -197,8 +221,9 @@ export const useStore = create<State>()((set, get) => ({
       };
       const clears = bosses ? realignClears(local.clears, cadenceOf) : local.clears;
       if (clears.length !== local.clears.length || clears.some((c, i) => c !== local.clears[i])) await persist.saveDoc('bossing/clears.json', clears);
+      const named = await renameLocal({ assignments, clears, goals: local.goals, settings }, characters);
 
-      set({ ready: true, index, characters, snapshots, looks, worlds, bosses, ...local, assignments, clears, settings, hasApiKey: !!key, hasGithubToken: !!ghTok });
+      set({ ready: true, index, characters, snapshots, looks, worlds, bosses, ...local, ...named, hasApiKey: !!key, hasGithubToken: !!ghTok });
     } catch (e) {
       set({ error: e instanceof Error ? e.message : String(e) });
     } finally {
@@ -208,15 +233,16 @@ export const useStore = create<State>()((set, get) => ({
 
   async reloadRepoData() {
     const [index, characters] = await Promise.all([loadIndex(), loadCharacters()]);
-    const dates = index?.dates ?? [];
-    const snapshots = (await Promise.all(dates.map(loadSnapshot))).filter((s): s is Snapshot => !!s).sort((a, b) => a.date.localeCompare(b.date));
+    const snapshots = await loadSnapshots(index, characters);
     const names = new Set<string>();
     for (const c of characters?.characters ?? []) names.add(c.name);
     for (const s of snapshots) for (const r of s.rows) names.add(r.name);
     const looks: Record<string, LookEntry[]> = {};
     await Promise.all([...names].map(async (n) => { const l = await loadLooks(n); if (l && l.length) looks[n] = l; }));
-    for (const s of snapshots) void persist.mirrorSnapshot(s.date, s);
-    set({ index, characters, snapshots, looks });
+    // After a rename, boss clears and goals follow the character to its new name.
+    const s = get();
+    const named = await renameLocal({ assignments: s.assignments, clears: s.clears, goals: s.goals, settings: s.settings }, characters);
+    set({ index, characters, snapshots, looks, ...named });
   },
 
   async setGithubToken(token) {
@@ -230,8 +256,9 @@ export const useStore = create<State>()((set, get) => ({
     persist.setFolder(handle);
     const s = get();
     const local = await loadLocal({ ideas: s.ideas, photos: s.photos, assignments: s.assignments, clears: s.clears, prices: s.prices, goals: s.goals, settings: s.settings });
-    for (const snap of s.snapshots) void persist.mirrorSnapshot(snap.date, snap);
-    set({ ...local, settings: local.settings ?? s.settings, folder: { supported: true, connected: true, needsPermission: false, name: handle.name } });
+    for (const snap of fetchedSnapshots) void persist.mirrorSnapshot(snap.date, snap);
+    const named = await renameLocal({ assignments: local.assignments, clears: local.clears, goals: local.goals, settings: local.settings ?? s.settings }, s.characters);
+    set({ ...local, ...named, folder: { supported: true, connected: true, needsPermission: false, name: handle.name } });
     await persist.saveDoc('settings.json', get().settings);
   },
 
@@ -243,8 +270,9 @@ export const useStore = create<State>()((set, get) => ({
     persist.setFolder(handle);
     const s = get();
     const local = await loadLocal({ ideas: s.ideas, photos: s.photos, assignments: s.assignments, clears: s.clears, prices: s.prices, goals: s.goals, settings: s.settings });
-    for (const snap of s.snapshots) void persist.mirrorSnapshot(snap.date, snap);
-    set({ ...local, settings: local.settings ?? s.settings, folder: { supported: true, connected: true, needsPermission: false, name: handle.name } });
+    for (const snap of fetchedSnapshots) void persist.mirrorSnapshot(snap.date, snap);
+    const named = await renameLocal({ assignments: local.assignments, clears: local.clears, goals: local.goals, settings: local.settings ?? s.settings }, s.characters);
+    set({ ...local, ...named, folder: { supported: true, connected: true, needsPermission: false, name: handle.name } });
   },
 
   async disconnectFolder() {
@@ -348,12 +376,14 @@ export const useStore = create<State>()((set, get) => ({
 
   async importBundle(r) {
     const s = get();
+    // A bundle exported before a rename still uses the old name.
+    const resolve = nameResolver(s.characters, s.settings.extraCharacters);
     const ideas = mergeById(s.ideas, r.bundle.ideas?.map(normalizeIdea));
-    const clears = mergeById(s.clears, r.bundle.clears);
-    const goals = mergeById(s.goals, r.bundle.goals);
+    const clears = mergeById(s.clears, r.bundle.clears && renameClears(r.bundle.clears, resolve));
+    const goals = mergeById(s.goals, r.bundle.goals && renameGoals(r.bundle.goals, resolve));
     const assignKey = (a: Assignment) => `${a.character}|${a.bossId}|${a.difficulty}`;
     const have = new Set(s.assignments.map(assignKey));
-    const assignments = [...s.assignments, ...(r.bundle.assignments ?? []).filter((a) => !have.has(assignKey(a)))];
+    const assignments = [...s.assignments, ...renameAssignments(r.bundle.assignments ?? [], resolve).filter((a) => !have.has(assignKey(a)))];
     const photoIds = new Set(s.photos.map((p) => p.id));
     const photos = [...s.photos];
     let added = 0;

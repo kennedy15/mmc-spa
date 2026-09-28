@@ -20,6 +20,14 @@ Settings → *Add a character by name* looks the IGN up in the rankings, appends
 node scripts/add-character.mjs SomeName --role mule
 ```
 
+## Renaming a character
+
+Changed a name in game? Open the character from *Characters* and click **Update name**. It runs the `Rename character` workflow with the same token. The workflow checks that the new name is in the rankings and looks like the same character (same world and job, no lower level, old name gone from the rankings), then records the old name under the entry's `formerNames` in `data/characters.json`, moves `data/looks/<old>/` to `data/looks/<new>/`, snapshots and redeploys. Snapshots taken before the rename keep the old name; the app files them under the new one, along with the boss clears, assignments and goals kept in the browser. Nexon's rankings update about once a day, so a name changed in game today may not be found until tomorrow. Without a token, run the workflow from the Actions tab, or locally:
+
+```bash
+node scripts/rename-character.mjs OldName NewName   # --force skips the same-character checks
+```
+
 ## Local development
 
 ```bash

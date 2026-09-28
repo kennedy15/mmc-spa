@@ -1,10 +1,10 @@
-import { useEffect, useRef, useState } from 'react';
+import { Fragment, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { useStore } from '../../store';
 import { Card, Field, Badge } from '../../app/ui';
-import { githubToken as tokenStore } from '../../lib/storage/persist';
-import { actionsUrl, dispatchAddCharacter, findRun, getRun, tokenUrl, type RunInfo } from '../../lib/github';
-
-type Phase = { kind: 'idle' } | { kind: 'dispatching' } | { kind: 'waiting'; since: string } | { kind: 'running'; run: RunInfo } | { kind: 'done'; run: RunInfo; name: string } | { kind: 'failed'; run: RunInfo | null; message: string };
+import { useWorkflowRun } from '../../app/useWorkflowRun';
+import { tokenUrl, workflowUrl, WORKFLOWS } from '../../lib/github';
+import { useTrackedNames } from '../tracker/hooks';
 
 export function AddCharacter() {
   const hasToken = useStore((s) => s.hasGithubToken);
@@ -12,50 +12,32 @@ export function AddCharacter() {
   const reload = useStore((s) => s.reloadRepoData);
   const characters = useStore((s) => s.characters);
   const worlds = useStore((s) => s.worlds);
+  const snapshots = useStore((s) => s.snapshots);
   const [name, setName] = useState('');
   const [role, setRole] = useState('mule');
   const [owner, setOwner] = useState('me');
   const [world, setWorld] = useState('');
   const [token, setToken] = useState('');
-  const [phase, setPhase] = useState<Phase>({ kind: 'idle' });
-  const timer = useRef<number | null>(null);
+  const { phase, busy, start } = useWorkflowRun(WORKFLOWS.add);
+  const tracked = useTrackedNames();
 
-  useEffect(() => () => { if (timer.current) window.clearTimeout(timer.current); }, []);
-
-  const busy = phase.kind === 'dispatching' || phase.kind === 'waiting' || phase.kind === 'running';
   const already = characters?.characters.some((c) => c.name.toLowerCase() === name.trim().toLowerCase());
+  // A character renamed in game drops out of the rankings under its old name.
+  const unranked = (snapshots[snapshots.length - 1]?.missing ?? []).filter((n) => tracked.includes(n));
 
-  const poll = async (tok: string, since: string, runId: number | null, submitted: string, tries = 0) => {
-    const run = runId ? await getRun(tok, runId) : await findRun(tok, since);
-    if (!run) {
-      if (tries > 20) return setPhase({ kind: 'failed', run: null, message: 'The workflow did not start. Check the Actions tab.' });
-      timer.current = window.setTimeout(() => void poll(tok, since, runId, submitted, tries + 1), 3000);
-      return;
-    }
-    if (run.status !== 'completed') {
-      setPhase({ kind: 'running', run });
-      timer.current = window.setTimeout(() => void poll(tok, since, run.id, submitted, tries + 1), 5000);
-      return;
-    }
-    if (run.conclusion === 'success') {
-      await reload();
-      setPhase({ kind: 'done', run, name: submitted });
-      setName('');
-    } else {
-      setPhase({ kind: 'failed', run, message: 'Lookup failed. Usually the name is misspelled or not in the rankings; the run log has the details.' });
-    }
-  };
-
-  const submit = async () => {
-    const tok = (await tokenStore.get()) ?? '';
+  const submit = () => {
     const submitted = name.trim();
-    if (!tok || !submitted) return;
-    setPhase({ kind: 'dispatching' });
-    const since = new Date(Date.now() - 5000).toISOString();
-    const res = await dispatchAddCharacter(tok, { name: submitted, role, owner, world });
-    if (!res.ok) return setPhase({ kind: 'failed', run: null, message: res.error });
-    setPhase({ kind: 'waiting', since });
-    timer.current = window.setTimeout(() => void poll(tok, since, res.runId, submitted), 4000);
+    if (!submitted) return;
+    void start(
+      { name: submitted, role, owner, world },
+      {
+        onSuccess: async () => {
+          await reload();
+          setName('');
+        },
+        failed: 'Lookup failed. Usually the name is misspelled or not in the rankings; the run log has the details.',
+      },
+    );
   };
 
   return (
@@ -77,14 +59,14 @@ export function AddCharacter() {
             Save token
           </button>
           <span className="text-xs text-ink-3 basis-full">
-            Create a <a className="underline hover:text-ink" href={tokenUrl} target="_blank" rel="noreferrer">fine-grained token</a> for the <span className="text-ink">mmc-spa</span> repo only, with <span className="text-ink">Actions: read and write</span> (and the default Metadata: read). Stored in this browser only. Without a token you can still run the <a className="underline hover:text-ink" href={actionsUrl} target="_blank" rel="noreferrer">Add character workflow</a> from the Actions tab.
+            Create a <a className="underline hover:text-ink" href={tokenUrl} target="_blank" rel="noreferrer">fine-grained token</a> for the <span className="text-ink">mmc-spa</span> repo only, with <span className="text-ink">Actions: read and write</span> (and the default Metadata: read). Stored in this browser only. Without a token you can still run the <a className="underline hover:text-ink" href={workflowUrl(WORKFLOWS.add)} target="_blank" rel="noreferrer">Add character workflow</a> from the Actions tab.
           </span>
         </div>
       ) : (
         <div className="space-y-3">
           <div className="grid gap-3 sm:grid-cols-[minmax(0,2fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)]">
             <Field label="Character name">
-              <input className="input" value={name} onChange={(e) => setName(e.target.value)} placeholder="Exactly as in game" disabled={busy} onKeyDown={(e) => e.key === 'Enter' && !busy && !already && void submit()} />
+              <input className="input" value={name} onChange={(e) => setName(e.target.value)} placeholder="Exactly as in game" disabled={busy} onKeyDown={(e) => e.key === 'Enter' && !busy && !already && submit()} />
             </Field>
             <Field label="Role">
               <select className="input" value={role} onChange={(e) => setRole(e.target.value)} disabled={busy}>
@@ -112,8 +94,22 @@ export function AddCharacter() {
               </select>
             </Field>
           </div>
+          {unranked.length > 0 && (
+            <p className="text-xs text-ink-3">
+              Not in the latest rankings:{' '}
+              {unranked.map((n, i) => (
+                <Fragment key={n}>
+                  {i > 0 && ', '}
+                  <Link className="underline hover:text-ink" to={`/character/${encodeURIComponent(n)}`}>
+                    {n}
+                  </Link>
+                </Fragment>
+              ))}
+              . If one was renamed in game, use Update name on its page rather than adding the new name, so its history carries over.
+            </p>
+          )}
           <div className="flex flex-wrap items-center gap-3">
-            <button className="btn-accent" onClick={() => void submit()} disabled={busy || !name.trim() || already}>
+            <button className="btn-accent" onClick={submit} disabled={busy || !name.trim() || already}>
               {busy ? 'Working…' : 'Look up and add'}
             </button>
             {already && <Badge tone="warn">already tracked</Badge>}
@@ -126,7 +122,7 @@ export function AddCharacter() {
             )}
             {phase.kind === 'done' && (
               <span className="text-sm text-good">
-                {phase.name} added and snapshotted. The site redeploys in a minute; the roster here is already updated.
+                {phase.inputs.name} added and snapshotted. The site redeploys in a minute; the roster here is already updated.
               </span>
             )}
             {phase.kind === 'failed' && (

@@ -169,7 +169,7 @@ export function Settings() {
             <div>
               Characters configured: <span className="text-ink">{s.characters?.characters.map((c) => c.name).join(', ') || 'none'}</span> on {s.characters?.world ?? '—'}
             </div>
-            <div className="text-xs text-ink-3">Add characters with the lookup below; remove one by editing data/characters.json in the repo.</div>
+            <div className="text-xs text-ink-3">Add characters with the lookup below and rename one with Update name on its page; remove one by editing data/characters.json in the repo.</div>
           </div>
         </Card>
 

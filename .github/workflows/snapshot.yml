@@ -22,6 +22,10 @@ jobs:
       changed: ${{ steps.commit.outputs.changed }}
     steps:
       - uses: actions/checkout@v7
+        with:
+          # The branch as it is when the run starts: a run queued ahead of this
+          # one (a rename, say) may have pushed since it was triggered.
+          ref: ${{ github.ref_name }}
       - uses: actions/setup-node@v7
         with:
           node-version: 24

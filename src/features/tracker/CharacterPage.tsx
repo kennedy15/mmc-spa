@@ -1,5 +1,5 @@
-import { useMemo } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { useEffect, useMemo } from 'react';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import { Bar, BarChart, Cell, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis, ReferenceLine } from 'recharts';
 import { useStore } from '../../store';
 import { useCharacterStats, useTrackedNames } from './hooks';
@@ -9,14 +9,18 @@ import { ACCENT, SERIES, MAX_BAR, ChartTip, axisProps, shortDate, dateLabel, fmt
 import { pctToNext, toBillions, expRemaining } from '../../lib/nexon/exp';
 import { cumulativeGain, latestRow } from '../../lib/nexon/snapshots';
 import { legionRank } from '../../lib/nexon/legion';
+import { formerNamesOf, nameResolver, nameSpans } from '../../lib/renames';
 import { GoalCard } from './Goals';
 import { LevelLadder } from './LevelLadder';
 import { ResetCalendar } from './ResetCalendar';
+import { RenameCharacter } from './RenameCharacter';
 
 export function CharacterList() {
   const names = useTrackedNames();
   const snapshots = useStore((s) => s.snapshots);
   const looks = useStore((s) => s.looks);
+  const characters = useStore((s) => s.characters);
+  const unranked = snapshots[snapshots.length - 1]?.missing ?? [];
   if (!names.length) return <Empty title="No characters tracked yet">Snapshots will list every character from data/characters.json that appears in the rankings.</Empty>;
   return (
     <>
@@ -29,15 +33,20 @@ export function CharacterList() {
           const row = latestRow(snapshots, name);
           const hash = row?.lookHash ?? looks[name]?.[looks[name].length - 1]?.hash;
           const src = hash ? `${import.meta.env.BASE_URL}data/looks/${encodeURIComponent(name)}/${hash}.png` : (row?.imgUrl ?? null);
+          const former = formerNamesOf(characters?.characters.find((c) => c.name === name));
           return (
             <Link key={name} to={`/character/${encodeURIComponent(name)}`} className="card p-4 flex gap-4 hover:border-ink-3 transition-colors">
               <CharacterAvatar src={src} size={64} alt={name} />
               <div className="min-w-0">
                 <div className="font-semibold truncate">{name}</div>
-                <div className="text-xs text-ink-2">{row?.job ?? '—'}</div>
+                <div className="text-xs text-ink-2 truncate">
+                  {row?.job ?? '—'}
+                  {former.length > 0 && <span className="text-ink-3"> · formerly {former[0]}</span>}
+                </div>
                 <div className="mt-2 flex items-center gap-2 text-sm">
                   <Badge tone="accent">Lv. {row?.level ?? '—'}</Badge>
                   {row && <span className="text-xs text-ink-3 tabular">{pct(pctToNext(row.level, row.exp))}</span>}
+                  {unranked.includes(name) && <Badge tone="warn">not in rankings</Badge>}
                 </div>
               </div>
             </Link>
@@ -49,9 +58,20 @@ export function CharacterList() {
 }
 
 export function CharacterPage() {
-  const { name = '' } = useParams();
+  const { name: param = '' } = useParams();
+  const characters = useStore((s) => s.characters);
+  const snapshots = useStore((s) => s.snapshots);
+  const navigate = useNavigate();
+  // Links and bookmarks from before a rename open the character under its current name.
+  const name = useMemo(() => nameResolver(characters)(param), [characters, param]);
+  useEffect(() => {
+    if (name !== param) navigate(`/character/${encodeURIComponent(name)}`, { replace: true });
+  }, [name, param, navigate]);
   const stats = useCharacterStats(name);
   const looks = useStore((s) => s.looks)[name] ?? [];
+  const entry = characters?.characters.find((c) => c.name === name);
+  const spans = useMemo(() => (stats ? nameSpans(stats.series) : []), [stats]);
+  const latestSnapshot = snapshots[snapshots.length - 1];
 
   const expData = useMemo(() => {
     if (!stats) return [];
@@ -73,13 +93,17 @@ export function CharacterPage() {
   const L = stats.latest;
   const remaining = expRemaining(L.level, L.exp);
   const rank = legionRank(L.level, L.job);
+  const former = formerNamesOf(entry);
+  const unranked = !!latestSnapshot?.missing.includes(name);
 
   return (
     <>
-      <div className="mb-5">
+      <div className="mb-5 flex items-center justify-between gap-3">
         <Link to="/characters" className="text-xs text-ink-3 hover:text-ink">
           ← Characters
         </Link>
+        {/* Keyed by the name it was first tracked under, so the dialog's result survives the switch to the new name. */}
+        {entry && <RenameCharacter key={entry.formerNames?.[0]?.name ?? entry.name} name={name} spans={spans} />}
       </div>
       <Card>
         <div className="flex flex-col sm:flex-row gap-4 sm:gap-5">
@@ -96,6 +120,12 @@ export function CharacterPage() {
                 {L.legionRank ? ` · #${fmtInt(L.legionRank)} legion` : ''}
               </span>
             </div>
+            {former.length > 0 && <div className="text-xs text-ink-3 mt-1">formerly {former.join(', ')}</div>}
+            {unranked && (
+              <div className="text-xs text-warn mt-1">
+                Not in the rankings on {fmtDate(latestSnapshot.date)}; these figures are from {fmtDate(stats.today)}. If {name} was renamed in game, use Update name.
+              </div>
+            )}
             <div className="mt-3">
               <div className="flex justify-between text-xs text-ink-2 mb-1">
                 <span>{pct(pctToNext(L.level, L.exp), 2)} to {L.level + 1}</span>
@@ -227,7 +257,10 @@ export function CharacterPage() {
                 const g = stats.gains.find((x) => x.date === p.date);
                 return (
                   <tr key={p.date} className="border-t border-border">
-                    <td className="py-1.5 px-2 first:pl-0 last:pr-0 whitespace-nowrap">{fmtDateLong(p.date)}</td>
+                    <td className="py-1.5 px-2 first:pl-0 last:pr-0 whitespace-nowrap">
+                      {fmtDateLong(p.date)}
+                      {p.row.recordedName && <span className="text-xs text-ink-3"> · as {p.row.recordedName}</span>}
+                    </td>
                     <td className="py-1.5 px-2 first:pl-0 last:pr-0 text-right tabular">{p.level}</td>
                     <td className="py-1.5 px-2 first:pl-0 last:pr-0 text-right tabular text-ink-2" title={formatFull(p.exp)}>
                       {formatBig(p.exp)}

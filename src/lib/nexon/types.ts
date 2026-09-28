@@ -15,6 +15,8 @@ export interface SnapshotRow {
   lookHash: string | null;
   role: string;
   owner: string;
+  /** Set by the app, never stored: the name the rankings listed that day, when the character has been renamed since. */
+  recordedName?: string;
 }
 
 export interface Snapshot {
@@ -35,6 +37,14 @@ export interface CharacterConfig {
   owner?: string;
   worldId?: number;
   world?: string;
+  /** Names the character had before a name change in game, oldest first. */
+  formerNames?: FormerName[];
+}
+
+export interface FormerName {
+  name: string;
+  /** UTC date the tracker switched to the next name; snapshots dated before it were taken under this one. */
+  renamedOn?: string;
 }
 
 export interface CharactersConfig {
