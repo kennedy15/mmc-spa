@@ -1,16 +1,8 @@
 import type { ReactNode } from 'react';
+import type { Palette } from './theme';
 
-/** Validated dark categorical palette (fixed order, never cycled). */
-export const SERIES = ['#3987e5', '#d95926', '#199e70', '#c98500', '#d55181', '#008300', '#9085e9', '#e66767'];
-export const ACCENT = '#ff7a1a';
-export const GRID = '#262a32';
-export const AXIS = '#6b717d';
-
-export const axisProps = { tick: { fill: AXIS, fontSize: 11 }, axisLine: false, tickLine: false } as const;
-
-export function seriesColor(i: number): string {
-  return SERIES[i % SERIES.length];
-}
+// Chart colors come from the active theme: const P = usePalette() (src/app/theme.ts).
+export const axisProps = (p: Palette) => ({ tick: { fill: p.axis, fontSize: 11 }, axisLine: false, tickLine: false }) as const;
 
 interface TipProps {
   active?: boolean;
@@ -27,7 +19,7 @@ export function ChartTip({ active, label, payload, format, labelFormat }: TipPro
       <div className="text-ink-2 mb-1">{labelFormat ? labelFormat(label) : String(label ?? '')}</div>
       {payload.map((p, i) => (
         <div key={i} className="flex items-center gap-2 tabular">
-          <span className="inline-block size-2 rounded-full" style={{ background: p.color ?? ACCENT }} />
+          <span className="inline-block size-2 rounded-full" style={{ background: p.color ?? 'var(--color-accent)' }} />
           <span className="text-ink-2">{String(p.name ?? p.dataKey ?? '')}</span>
           <span className="ml-auto text-ink font-medium">{format ? format(p.value, String(p.name ?? p.dataKey ?? ''), p.payload) : String(p.value)}</span>
         </div>

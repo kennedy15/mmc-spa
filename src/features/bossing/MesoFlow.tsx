@@ -6,10 +6,9 @@ import { HoverTip } from '../../app/HoverTip';
 import { pointerIn, type Tip } from '../../app/tip';
 import { useMeasure } from '../../app/useMeasure';
 import { fmtMeso } from '../../app/format';
-import { SERIES } from '../../app/charts';
+import { usePalette } from '../../app/theme';
 import { periodKey, periodLabel } from '../../lib/reset/period';
 import { useCharacterNames } from '../tracker/hooks';
-import { OTHERS } from '../tracker/heat';
 import { bossLabel, clearsIn, mesoByPeriod } from './lib';
 
 interface FlowNode {
@@ -25,6 +24,7 @@ const OTHER_CHARS = 'Other characters';
 
 /** One reset week of weekly-boss clears as a flow from boss to character; band width is meso. Monthly bosses stay out of it. */
 export function MesoFlow() {
+  const P = usePalette();
   const clears = useStore((s) => s.clears);
   const bosses = useStore((s) => s.bosses);
   const names = useCharacterNames();
@@ -48,8 +48,8 @@ export function MesoFlow() {
     const charOf = (c: string) => (keep.has(c) ? c : OTHER_CHARS);
     // Colors follow characters.json order, so a character keeps its color from week to week.
     const order = [...names.filter((n) => keep.has(n)), ...[...keep].filter((n) => !names.includes(n))];
-    const colors = new Map<string, string>(order.map((c, i) => [c, SERIES[i]]));
-    colors.set(OTHER_CHARS, OTHERS);
+    const colors = new Map<string, string>(order.map((c, i) => [c, P.series[i]]));
+    colors.set(OTHER_CHARS, P.others);
 
     const links = new Map<string, { source: string; target: string; value: number }>();
     for (const c of inWeek) {
@@ -79,7 +79,7 @@ export function MesoFlow() {
     });
     const total = inWeek.reduce((n, c) => n + c.meso, 0);
     return { graph, W, H, total, colors, count: inWeek.length };
-  }, [week, width, clears, bosses, names]);
+  }, [week, width, clears, bosses, names, P]);
 
   if (!weeks.length) {
     return (

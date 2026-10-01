@@ -6,9 +6,11 @@ import { anchorOf, type Tip } from '../../app/tip';
 import { formatBig, fmtDate, fmtLevels } from '../../app/format';
 import { shortDate } from '../../app/charts';
 import { useMediaQuery } from '../../app/useMediaQuery';
+import { bigDesc } from '../../lib/nexon/exp';
 import { addDays, coveredDays, type GainPoint } from '../../lib/nexon/snapshots';
 import { useActivity } from './hooks';
-import { HEAT, HEAT_LABEL, heatColor } from './heat';
+import { HEAT_LABEL, heatScale } from './heat';
+import { usePalette } from '../../app/theme';
 import { PlayStreams } from './PlayStreams';
 
 const WINDOWS: { value: number; label: string }[] = [
@@ -20,8 +22,8 @@ const WINDOWS: { value: number; label: string }[] = [
 const charLink = (name: string) => `/character/${encodeURIComponent(name)}`;
 
 /**
- * EXP gained as a share of each character's current level, so a 292 main and
- * a 262 mule compare fairly: 5T at 292 and 35B at 262 are both about 1.5–2%.
+ * Raw EXP gained per character over the window, most first. The share of a
+ * level sits beside it: 5T at 292 and 35B at 262 are both about 1.5–2%.
  */
 export function LevelProgress() {
   const { names, today, prevDate, firstDate, gains } = useActivity();
@@ -42,9 +44,9 @@ export function LevelProgress() {
   }, [names, gains, today, days]);
 
   if (!today) return null;
-  const active = rows.filter((r) => r.levels > 0).sort((a, b) => b.levels - a.levels);
-  const idle = rows.filter((r) => r.levels <= 0).map((r) => r.name);
-  const max = active[0]?.levels ?? 0;
+  const active = rows.filter((r) => r.exp > 0n).sort((a, b) => bigDesc(a.exp, b.exp));
+  const idle = rows.filter((r) => r.exp <= 0n).map((r) => r.name);
+  const max = active[0]?.exp ?? 1n;
   const span = firstDate ? coveredDays(days, firstDate, today) : 0;
   const caption =
     days === 1
@@ -56,7 +58,7 @@ export function LevelProgress() {
         : `${fmtDate(addDays(today, -days + 1))} → ${fmtDate(today)}`;
 
   return (
-    <Card title="Progress · share of a level" action={<Segmented value={days} options={WINDOWS} onChange={setDays} label="Window" />}>
+    <Card title="Progress · EXP gained" action={<Segmented value={days} options={WINDOWS} onChange={setDays} label="Window" />}>
       <p className="text-xs text-ink-3 mb-3">{caption}</p>
       {active.length === 0 ? (
         <div className="text-sm text-ink-3 py-6 text-center">No EXP gained in this window.</div>
@@ -66,16 +68,16 @@ export function LevelProgress() {
             <li
               key={r.name}
               className="grid grid-cols-[minmax(0,7rem)_1fr_auto] items-center gap-3 rounded-md px-1 -mx-1 hover:bg-surface-2/70"
-              title={`${r.name}: ${fmtLevels(r.levels)} of a level, +${formatBig(r.exp)} EXP${r.levelUps ? `, ${r.levelUps} level-up${r.levelUps === 1 ? '' : 's'}` : ''}`}
+              title={`${r.name}: +${formatBig(r.exp)} EXP, ${fmtLevels(r.levels)} of a level${r.levelUps ? `, ${r.levelUps} level-up${r.levelUps === 1 ? '' : 's'}` : ''}`}
             >
               <Link to={charLink(r.name)} className="truncate text-sm py-1 hover:text-accent">
                 {r.name}
               </Link>
               <div className="h-5 flex items-center" aria-hidden>
-                <div className="h-3 rounded-r bg-accent" style={{ width: `${Math.max(1.5, (r.levels / max) * 100)}%` }} />
+                <div className="h-3 rounded-r bg-accent" style={{ width: `${Math.max(1.5, Number((r.exp * 1000n) / max) / 10)}%` }} />
               </div>
               <span className="text-xs tabular text-ink-2 text-right whitespace-nowrap">
-                <span className="text-ink font-medium">{fmtLevels(r.levels)}</span> · +{formatBig(r.exp)}
+                <span className="text-ink font-medium">+{formatBig(r.exp)}</span> · {fmtLevels(r.levels)}
               </span>
             </li>
           ))}
@@ -94,6 +96,7 @@ function cellText(g: GainPoint | null): string {
 
 /** Key for the share-of-a-level colors, shared by the activity grid and the reset-week calendar. */
 export function HeatLegend({ className = '' }: { className?: string }) {
+  const P = usePalette();
   return (
     <div className={`flex flex-wrap items-center gap-x-4 gap-y-1.5 text-[11px] text-ink-3 ${className}`}>
       <span className="inline-flex items-center gap-1.5">
@@ -102,7 +105,7 @@ export function HeatLegend({ className = '' }: { className?: string }) {
       <span className="inline-flex items-center gap-1.5">
         <span className="size-3 rounded-[3px] bg-surface-3" /> no EXP
       </span>
-      {HEAT.map((c, i) => (
+      {P.heat.map((c, i) => (
         <span key={c} className="inline-flex items-center gap-1.5">
           <span className="size-3 rounded-[3px]" style={{ background: c }} /> {HEAT_LABEL[i]}
         </span>
@@ -161,9 +164,10 @@ export function ActivityCard({ days: fullDays = 30 }: { days?: number }) {
   );
 }
 
-/** Character × day grid; rows sorted most active first, hollow cells are days without a snapshot. */
+/** Character × day grid; rows sorted by raw EXP gained, most first; hollow cells are days without a snapshot. */
 function ActivityGrid({ days }: { days: number }) {
   const { names, today, gains } = useActivity();
+  const heatColor = heatScale(usePalette().heat);
   const wrap = useRef<HTMLDivElement>(null);
   const scroller = useRef<HTMLDivElement>(null);
   const [tip, setTip] = useState<Tip | null>(null);
@@ -180,10 +184,14 @@ function ActivityGrid({ days }: { days: number }) {
       .map((name, order) => {
         const byDate = new Map((gains[name] ?? []).filter((g) => g.date >= since).map((g) => [g.date, g]));
         let total = 0;
-        for (const g of byDate.values()) total += g.levels ?? 0;
-        return { name, order, byDate, total };
+        let exp = 0n;
+        for (const g of byDate.values()) {
+          total += g.levels ?? 0;
+          exp += g.gain;
+        }
+        return { name, order, byDate, total, exp };
       })
-      .sort((a, b) => b.total - a.total || a.order - b.order);
+      .sort((a, b) => bigDesc(a.exp, b.exp) || a.order - b.order);
   }, [names, gains, dates]);
 
   if (!today) return null;
@@ -220,8 +228,8 @@ function ActivityGrid({ days }: { days: number }) {
                   />
                 );
               })}
-              <div role="cell" className="text-[11px] text-ink-3 tabular pl-2 self-center whitespace-nowrap">
-                {r.total > 0 ? fmtLevels(r.total) : ''}
+              <div role="cell" className="text-[11px] text-ink-3 tabular pl-2 self-center whitespace-nowrap" title={r.total > 0 ? `${fmtLevels(r.total)} of a level` : undefined}>
+                {r.exp > 0n ? `+${formatBig(r.exp)}` : ''}
               </div>
             </div>
           ))}

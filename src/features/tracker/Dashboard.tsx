@@ -5,8 +5,9 @@ import { useStore, mainCharacterName } from '../../store';
 import { useActivity, useCharacterStats } from './hooks';
 import { Card, Stat, Empty, PageHeader, Progress, CharacterAvatar, Badge } from '../../app/ui';
 import { formatBig, fmtInt, fmtDate, relTime, pct, fmtLevels, fmtRankDelta } from '../../app/format';
-import { ACCENT, SERIES, ChartTip, axisProps, shortDate, Legend, dateLabel, fmtBillions } from '../../app/charts';
-import { pctToNext, toBillions } from '../../lib/nexon/exp';
+import { ChartTip, axisProps, shortDate, Legend, dateLabel, fmtBillions } from '../../app/charts';
+import { usePalette } from '../../app/theme';
+import { bigDesc, pctToNext, toBillions } from '../../lib/nexon/exp';
 import { addDays, cumulativeGain, legionOf, lookImageUrl, rankDelta } from '../../lib/nexon/snapshots';
 import { LevelProgress, ActivityCard } from './Activity';
 import { ResetCalendar } from './ResetCalendar';
@@ -27,9 +28,8 @@ function useLookChanges(days: number) {
   }, [looks, snapshots, days]);
 }
 
-const bigDesc = (a: bigint, b: bigint) => (b > a ? 1 : b < a ? -1 : 0);
-
 export function Dashboard() {
+  const P = usePalette();
   const snapshots = useStore((s) => s.snapshots);
   const characters = useStore((s) => s.characters);
   const index = useStore((s) => s.index);
@@ -164,19 +164,19 @@ export function Dashboard() {
                   <AreaChart data={gained} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
                     <defs>
                       <linearGradient id="mainFill" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stopColor={ACCENT} stopOpacity={0.16} />
-                        <stop offset="100%" stopColor={ACCENT} stopOpacity={0} />
+                        <stop offset="0%" stopColor={P.accent} stopOpacity={0.16} />
+                        <stop offset="100%" stopColor={P.accent} stopOpacity={0} />
                       </linearGradient>
                     </defs>
-                    <XAxis dataKey="date" {...axisProps} tickFormatter={shortDate} minTickGap={40} />
-                    <YAxis {...axisProps} width={56} tickFormatter={(v: number) => fmtBillions(v)} />
-                    <Tooltip content={<ChartTip format={(v) => `+${fmtBillions(v, 2)}`} labelFormat={dateLabel} />} cursor={{ stroke: '#343945' }} />
-                    <Area type="monotone" dataKey={main!.name} stroke={ACCENT} strokeWidth={2} fill="url(#mainFill)" dot={false} activeDot={{ r: 4 }} isAnimationActive={false} />
-                    {compare && <Area type="monotone" dataKey={compare.name} stroke={SERIES[0]} strokeWidth={2} fill="none" dot={false} activeDot={{ r: 4 }} isAnimationActive={false} />}
+                    <XAxis dataKey="date" {...axisProps(P)} tickFormatter={shortDate} minTickGap={40} />
+                    <YAxis {...axisProps(P)} width={56} tickFormatter={(v: number) => fmtBillions(v)} />
+                    <Tooltip content={<ChartTip format={(v) => `+${fmtBillions(v, 2)}`} labelFormat={dateLabel} />} cursor={{ stroke: P.cursor }} />
+                    <Area type="monotone" dataKey={main!.name} stroke={P.accent} strokeWidth={2} fill="url(#mainFill)" dot={false} activeDot={{ r: 4 }} isAnimationActive={false} />
+                    {compare && <Area type="monotone" dataKey={compare.name} stroke={P.series[0]} strokeWidth={2} fill="none" dot={false} activeDot={{ r: 4 }} isAnimationActive={false} />}
                   </AreaChart>
                 </ResponsiveContainer>
               </div>
-              {compare && <Legend items={[{ name: main!.name, color: ACCENT }, { name: compare.name, color: SERIES[0] }]} />}
+              {compare && <Legend items={[{ name: main!.name, color: P.accent }, { name: compare.name, color: P.series[0] }]} />}
             </>
           )}
         </Card>
@@ -261,6 +261,7 @@ export function Dashboard() {
 
 /** Daily EXP of the three characters that gained the most over the last 14 days. */
 function MiniGainChart() {
+  const P = usePalette();
   const { names, today, gains } = useActivity();
   const picked = useMemo(() => {
     if (!today) return [];
@@ -296,16 +297,16 @@ function MiniGainChart() {
       <div className="h-44">
         <ResponsiveContainer>
           <LineChart data={data} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
-            <XAxis dataKey="date" {...axisProps} tickFormatter={shortDate} minTickGap={40} />
-            <YAxis {...axisProps} width={56} tickFormatter={(v: number) => fmtBillions(v)} />
-            <Tooltip content={<ChartTip format={(v) => fmtBillions(v, 2)} labelFormat={dateLabel} />} cursor={{ stroke: '#343945' }} />
+            <XAxis dataKey="date" {...axisProps(P)} tickFormatter={shortDate} minTickGap={40} />
+            <YAxis {...axisProps(P)} width={56} tickFormatter={(v: number) => fmtBillions(v)} />
+            <Tooltip content={<ChartTip format={(v) => fmtBillions(v, 2)} labelFormat={dateLabel} />} cursor={{ stroke: P.cursor }} />
             {picked.map((n, i) => (
-              <Line key={n} type="monotone" dataKey={n} stroke={SERIES[i]} strokeWidth={2} dot={false} activeDot={{ r: 4 }} isAnimationActive={false} connectNulls />
+              <Line key={n} type="monotone" dataKey={n} stroke={P.series[i]} strokeWidth={2} dot={false} activeDot={{ r: 4 }} isAnimationActive={false} connectNulls />
             ))}
           </LineChart>
         </ResponsiveContainer>
       </div>
-      <Legend items={picked.map((n, i) => ({ name: n, color: SERIES[i] }))} />
+      <Legend items={picked.map((n, i) => ({ name: n, color: P.series[i] }))} />
     </Card>
   );
 }

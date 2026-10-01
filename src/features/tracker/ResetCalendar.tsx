@@ -4,8 +4,10 @@ import { Card } from '../../app/ui';
 import { HoverTip } from '../../app/HoverTip';
 import { anchorOf, type Tip } from '../../app/tip';
 import { useMeasure } from '../../app/useMeasure';
-import { fmtDate, fmtLevels } from '../../app/format';
-import { heatColor } from './heat';
+import { fmtDate, fmtLevels, formatBig } from '../../app/format';
+import { bigDesc } from '../../lib/nexon/exp';
+import { heatScale } from './heat';
+import { usePalette } from '../../app/theme';
 import { HeatLegend } from './Activity';
 import { useActivity } from './hooks';
 
@@ -23,7 +25,8 @@ interface Day {
   col: number;
   row: number;
   levels: number;
-  parts: [string, number][];
+  /** [name, share of a level, raw EXP] for each character that gained that day. */
+  parts: [string, number, bigint][];
   observed: boolean;
 }
 
@@ -34,6 +37,7 @@ interface Day {
  */
 export function ResetCalendar({ character }: { character?: string }) {
   const { names, today, firstDate, gains } = useActivity();
+  const heatColor = heatScale(usePalette().heat);
   const [who, setWho] = useState(ACCOUNT);
   const target = character ?? who;
   const [boxRef, boxWidth, boxEl] = useMeasure<HTMLDivElement>();
@@ -48,13 +52,13 @@ export function ResetCalendar({ character }: { character?: string }) {
     const fits = Math.floor((boxWidth - LEFT) / STEP);
     const weeks = Math.min(53, Math.max(16, fits, tracked));
     const first = utcThursday.offset(utcThursday.floor(end), -(weeks - 1));
-    const byDate = new Map<string, { levels: number; parts: [string, number][] }>();
+    const byDate = new Map<string, { levels: number; parts: [string, number, bigint][] }>();
     for (const n of target ? [target] : names) {
       for (const g of gains[n] ?? []) {
         const e = byDate.get(g.date) ?? { levels: 0, parts: [] };
         const lv = Math.max(0, g.levels ?? 0);
         e.levels += lv;
-        if (lv > 0) e.parts.push([n, lv]);
+        if (g.gain > 0n) e.parts.push([n, lv, g.gain]);
         byDate.set(g.date, e);
       }
     }
@@ -92,7 +96,8 @@ export function ResetCalendar({ character }: { character?: string }) {
   const show = (e: MouseEvent<SVGRectElement>, d: Day) => {
     if (!boxEl) return;
     const value = d.levels > 0 ? `${fmtLevels(d.levels)} of a level` : d.observed ? 'No EXP' : 'No snapshot';
-    const parts = target ? [] : [...d.parts].sort((a, b) => b[1] - a[1]).slice(0, 3).map(([n, v]) => ({ value: fmtLevels(v), label: n }));
+    // The day's top three by raw EXP gained.
+    const parts = target ? [] : [...d.parts].sort((a, b) => bigDesc(a[2], b[2])).slice(0, 3).map(([n, lv, exp]) => ({ value: `+${formatBig(exp)} · ${fmtLevels(lv)}`, label: n }));
     setTip({ ...anchorOf(e.currentTarget, boxEl), rows: [{ value, label: `${weekday(d.date)}, ${fmtDate(d.key)}` }, ...parts] });
   };
 

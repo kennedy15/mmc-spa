@@ -4,7 +4,8 @@ import { useStore } from '../../store';
 import { useCharacterNames } from '../tracker/hooks';
 import { Card, Empty, PageHeader, Badge } from '../../app/ui';
 import { fmtMeso, fmtDate } from '../../app/format';
-import { SERIES, MAX_BAR, ChartTip, axisProps, shortDate, Legend } from '../../app/charts';
+import { MAX_BAR, ChartTip, axisProps, shortDate, Legend } from '../../app/charts';
+import { usePalette } from '../../app/theme';
 import { periodLabel, type Cadence } from '../../lib/reset/period';
 import { bossLabel, clearsIn, mesoByPeriod, streak, type PeriodMeso } from './lib';
 
@@ -21,6 +22,7 @@ function monthTick(key: unknown): string {
 }
 
 export function History() {
+  const P = usePalette();
   const bosses = useStore((s) => s.bosses);
   const clears = useStore((s) => s.clears);
   const assignments = useStore((s) => s.assignments);
@@ -43,7 +45,7 @@ export function History() {
   const other = useMemo(() => new Set([...new Set(clears.map((c) => c.character))].filter((n) => !chars.includes(n))), [clears, chars]);
   // One color per character across both charts.
   const keys = useMemo(() => [...chars, ...(other.size ? ['Other'] : [])], [chars, other]);
-  const color = (k: string) => SERIES[keys.indexOf(k) % SERIES.length];
+  const color = (k: string) => P.series[keys.indexOf(k) % P.series.length];
 
   const { weekData, monthData } = useMemo(() => {
     const toRows = (rows: PeriodMeso[]): ChartRow[] =>
@@ -181,16 +183,17 @@ export function History() {
 
 /** Stacked bars of meso per period and character; clicking a bar shows that period's clears. */
 function MesoChart({ title, hint, data, keys, color, tick, label, onPick }: { title: string; hint?: string; data: ChartRow[]; keys: string[]; color: (k: string) => string; tick: (v: unknown) => string; label: (l: unknown) => string; onPick: (period: string) => void }) {
+  const P = usePalette();
   return (
     <Card title={title} action={hint && <span className="text-xs text-ink-3">{hint}</span>}>
       <div className="h-64">
         <ResponsiveContainer>
           <BarChart data={data} margin={{ top: 8, right: 8, left: 0, bottom: 0 }} barCategoryGap={3} maxBarSize={MAX_BAR} onClick={(e) => e && e.activeLabel != null && onPick(String(e.activeLabel))}>
-            <XAxis dataKey="period" {...axisProps} tickFormatter={tick} minTickGap={30} />
-            <YAxis {...axisProps} width={56} tickFormatter={(v: number) => fmtMeso(v)} />
-            <Tooltip content={<ChartTip format={(v) => fmtMeso(Number(v))} labelFormat={label} />} cursor={{ fill: '#1b1e24' }} />
+            <XAxis dataKey="period" {...axisProps(P)} tickFormatter={tick} minTickGap={30} />
+            <YAxis {...axisProps(P)} width={56} tickFormatter={(v: number) => fmtMeso(v)} />
+            <Tooltip content={<ChartTip format={(v) => fmtMeso(Number(v))} labelFormat={label} />} cursor={{ fill: P.cursorFill }} />
             {keys.map((k, i) => (
-              <Bar key={k} dataKey={k} stackId="m" fill={color(k)} stroke="#131519" strokeWidth={1} isAnimationActive={false} radius={i === keys.length - 1 ? [4, 4, 0, 0] : 0} className="cursor-pointer" />
+              <Bar key={k} dataKey={k} stackId="m" fill={color(k)} stroke={P.surface} strokeWidth={1} isAnimationActive={false} radius={i === keys.length - 1 ? [4, 4, 0, 0] : 0} className="cursor-pointer" />
             ))}
           </BarChart>
         </ResponsiveContainer>

@@ -92,6 +92,9 @@ export function gainBetween(prevLevel: number, prevExp: string | bigint, nextLev
 }
 
 /** BigInt EXP -> Number of billions, safe for charts. */
+/** Sort comparator for raw EXP (bigint), most first. */
+export const bigDesc = (a: bigint, b: bigint) => (b > a ? 1 : b < a ? -1 : 0);
+
 export function toBillions(v: bigint): number {
   return Number(v / 1_000_000n) / 1000;
 }

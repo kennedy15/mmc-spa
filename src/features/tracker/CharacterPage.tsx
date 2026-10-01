@@ -5,7 +5,8 @@ import { useStore } from '../../store';
 import { useCharacterStats, useTrackedNames } from './hooks';
 import { Card, Stat, Empty, PageHeader, Progress, CharacterAvatar, Badge } from '../../app/ui';
 import { formatBig, formatFull, fmtInt, fmtDate, fmtDateLong, pct, fmtLevels, fmtRankDelta } from '../../app/format';
-import { ACCENT, SERIES, MAX_BAR, ChartTip, axisProps, shortDate, dateLabel, fmtBillions } from '../../app/charts';
+import { MAX_BAR, ChartTip, axisProps, shortDate, dateLabel, fmtBillions } from '../../app/charts';
+import { usePalette } from '../../app/theme';
 import { pctToNext, toBillions, expRemaining } from '../../lib/nexon/exp';
 import { cumulativeGain, latestRow } from '../../lib/nexon/snapshots';
 import { legionRank } from '../../lib/nexon/legion';
@@ -58,6 +59,7 @@ export function CharacterList() {
 }
 
 export function CharacterPage() {
+  const P = usePalette();
   const { name: param = '' } = useParams();
   const characters = useStore((s) => s.characters);
   const snapshots = useStore((s) => s.snapshots);
@@ -154,13 +156,13 @@ export function CharacterPage() {
             <div className="h-60">
               <ResponsiveContainer>
                 <LineChart data={expData} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
-                  <XAxis dataKey="date" {...axisProps} tickFormatter={shortDate} minTickGap={40} />
-                  <YAxis {...axisProps} width={60} tickFormatter={(v: number) => fmtBillions(v)} />
-                  <Tooltip content={<ChartTip format={(v, _n, row) => `+${fmtBillions(v, 2)} · Lv. ${(row as { level: number }).level} ${pct((row as { pct: number }).pct)}`} labelFormat={dateLabel} />} cursor={{ stroke: '#343945' }} />
+                  <XAxis dataKey="date" {...axisProps(P)} tickFormatter={shortDate} minTickGap={40} />
+                  <YAxis {...axisProps(P)} width={60} tickFormatter={(v: number) => fmtBillions(v)} />
+                  <Tooltip content={<ChartTip format={(v, _n, row) => `+${fmtBillions(v, 2)} · Lv. ${(row as { level: number }).level} ${pct((row as { pct: number }).pct)}`} labelFormat={dateLabel} />} cursor={{ stroke: P.cursor }} />
                   {levelUps.map((p) => (
-                    <ReferenceLine key={p.date} x={p.date} stroke={SERIES[0]} strokeDasharray="3 3" label={{ value: `${p.level}`, fill: SERIES[0], fontSize: 10, position: 'top' }} />
+                    <ReferenceLine key={p.date} x={p.date} stroke={P.series[0]} strokeDasharray="3 3" label={{ value: `${p.level}`, fill: P.series[0], fontSize: 10, position: 'top' }} />
                   ))}
-                  <Line type="monotone" dataKey="gained" name="Gained" stroke={ACCENT} strokeWidth={2} dot={false} activeDot={{ r: 4 }} isAnimationActive={false} />
+                  <Line type="monotone" dataKey="gained" name="Gained" stroke={P.accent} strokeWidth={2} dot={false} activeDot={{ r: 4 }} isAnimationActive={false} />
                 </LineChart>
               </ResponsiveContainer>
             </div>
@@ -174,8 +176,8 @@ export function CharacterPage() {
             <div className="h-60">
               <ResponsiveContainer>
                 <BarChart data={gainData} margin={{ top: 8, right: 8, left: 0, bottom: 0 }} barCategoryGap={2} maxBarSize={MAX_BAR}>
-                  <XAxis dataKey="date" {...axisProps} tickFormatter={shortDate} minTickGap={40} />
-                  <YAxis {...axisProps} width={60} tickFormatter={(v: number) => fmtBillions(v)} />
+                  <XAxis dataKey="date" {...axisProps(P)} tickFormatter={shortDate} minTickGap={40} />
+                  <YAxis {...axisProps(P)} width={60} tickFormatter={(v: number) => fmtBillions(v)} />
                   <Tooltip
                     content={
                       <ChartTip
@@ -186,11 +188,11 @@ export function CharacterPage() {
                         labelFormat={dateLabel}
                       />
                     }
-                    cursor={{ fill: '#1b1e24' }}
+                    cursor={{ fill: P.cursorFill }}
                   />
                   <Bar dataKey="gain" name="Gain" radius={[4, 4, 0, 0]} isAnimationActive={false}>
                     {gainData.map((g) => (
-                      <Cell key={g.date} fill={g.levelUp ? SERIES[0] : ACCENT} />
+                      <Cell key={g.date} fill={g.levelUp ? P.series[0] : P.accent} />
                     ))}
                   </Bar>
                 </BarChart>
@@ -206,10 +208,10 @@ export function CharacterPage() {
             <div className="h-48">
               <ResponsiveContainer>
                 <LineChart data={expData} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
-                  <XAxis dataKey="date" {...axisProps} tickFormatter={shortDate} minTickGap={40} />
-                  <YAxis {...axisProps} width={64} reversed tickFormatter={(v: number) => `#${fmtInt(v)}`} domain={['auto', 'auto']} />
-                  <Tooltip content={<ChartTip format={(v) => `#${fmtInt(Number(v))}`} labelFormat={dateLabel} />} cursor={{ stroke: '#343945' }} />
-                  <Line type="monotone" dataKey="rank" name="Rank" stroke={SERIES[2]} strokeWidth={2} dot={false} activeDot={{ r: 4 }} isAnimationActive={false} />
+                  <XAxis dataKey="date" {...axisProps(P)} tickFormatter={shortDate} minTickGap={40} />
+                  <YAxis {...axisProps(P)} width={64} reversed tickFormatter={(v: number) => `#${fmtInt(v)}`} domain={['auto', 'auto']} />
+                  <Tooltip content={<ChartTip format={(v) => `#${fmtInt(Number(v))}`} labelFormat={dateLabel} />} cursor={{ stroke: P.cursor }} />
+                  <Line type="monotone" dataKey="rank" name="Rank" stroke={P.series[2]} strokeWidth={2} dot={false} activeDot={{ r: 4 }} isAnimationActive={false} />
                 </LineChart>
               </ResponsiveContainer>
             </div>

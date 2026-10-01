@@ -1,6 +1,7 @@
 import { NavLink, Outlet } from 'react-router-dom';
 import { useStore } from '../store';
 import { relTime } from './format';
+import { setTheme, THEMES, useTheme } from './theme';
 
 const NAV: { to: string; label: string; end?: boolean }[][] = [
   [
@@ -32,9 +33,9 @@ export function Layout() {
       <aside className="border-b lg:border-b-0 lg:border-r border-border bg-surface/60 lg:sticky lg:top-0 lg:h-screen flex flex-col">
         <div className="flex items-center gap-2.5 px-5 py-4">
           <svg viewBox="0 0 32 32" className="size-7" aria-hidden>
-            <rect width="32" height="32" rx="7" fill="#1b1e24" />
-            <path d="M16 5l2.6 5.4 5.9.8-4.3 4.1 1 5.9L16 18.4l-5.2 2.8 1-5.9-4.3-4.1 5.9-.8z" fill="#ff7a1a" />
-            <rect x="15" y="20" width="2" height="7" rx="1" fill="#ff7a1a" />
+            <rect width="32" height="32" rx="7" className="fill-surface-2" />
+            <path d="M16 5l2.6 5.4 5.9.8-4.3 4.1 1 5.9L16 18.4l-5.2 2.8 1-5.9-4.3-4.1 5.9-.8z" className="fill-accent" />
+            <rect x="15" y="20" width="2" height="7" rx="1" className="fill-accent-alt" />
           </svg>
           <div className="leading-tight">
             <div className="font-semibold tracking-tight">MapleTracker</div>
@@ -55,6 +56,7 @@ export function Layout() {
                   {item.label}
                 </NavLink>
               ))}
+              {gi === NAV.length - 1 && <ThemeToggle />}
             </div>
           ))}
         </nav>
@@ -79,5 +81,24 @@ export function Layout() {
         <Outlet />
       </main>
     </div>
+  );
+}
+
+/** Sits under Settings: flips between the Ember and Aurora color themes (kept per browser). */
+function ThemeToggle() {
+  const theme = useTheme();
+  const name = THEMES.find((t) => t.id === theme)!.name;
+  const next = THEMES.find((t) => t.id !== theme)!;
+  // The unlayered `button { font: inherit; color: inherit }` in index.css beats utility classes on the button itself, so type and color sit on the inner span.
+  return (
+    <button type="button" onClick={() => setTheme(next.id)} className="group rounded-lg px-3 py-1.5 whitespace-nowrap text-left transition-colors hover:bg-surface-2 cursor-pointer" aria-label={`Color theme: ${name}. Switch to ${next.name}`} title={`Switch to ${next.name}`}>
+      <span className="flex items-center gap-2 text-sm text-ink-2 group-hover:text-ink">
+        <span className="flex" aria-hidden>
+          <span className="size-2.5 rounded-full bg-accent" />
+          <span className="-ml-1 size-2.5 rounded-full bg-accent-alt ring-1 ring-surface" />
+        </span>
+        Theme · {name}
+      </span>
+    </button>
   );
 }

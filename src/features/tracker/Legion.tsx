@@ -5,7 +5,8 @@ import { useStore } from '../../store';
 import { useActivity, useLegionHistory } from './hooks';
 import { Card, Empty, PageHeader, Stat, Badge, Progress } from '../../app/ui';
 import { fmtInt, formatBig, fmtDate, fmtRankDelta, pct } from '../../app/format';
-import { ACCENT, SERIES, ChartTip, axisProps, shortDate, dateLabel } from '../../app/charts';
+import { ChartTip, axisProps, shortDate, dateLabel } from '../../app/charts';
+import { usePalette } from '../../app/theme';
 import { averageGain, projectDate, type LegionPoint } from '../../lib/nexon/snapshots';
 import { expRemaining, pctToNext, MAX_LEVEL } from '../../lib/nexon/exp';
 import { legionRank, nextLegionTier } from '../../lib/nexon/legion';
@@ -15,6 +16,7 @@ function delta(now: number | null | undefined, before: number | null | undefined
 }
 
 export function Legion() {
+  const P = usePalette();
   const snapshots = useStore((s) => s.snapshots);
   const { names, series, gains, today } = useActivity();
   const history = useLegionHistory();
@@ -158,9 +160,9 @@ export function Legion() {
       </Card>
 
       <div className="grid gap-4 lg:grid-cols-3 mt-4">
-        <LegionChart title="Legion level" data={history} pick={(p) => p.legionLevel} format={(v) => fmtInt(v)} color={ACCENT} step />
-        <LegionChart title="Raid power" data={history} pick={(p) => (p.raidPower == null ? null : p.raidPower / 1e6)} format={(v) => `${v.toFixed(0)}M`} tipFormat={(v) => `${v.toFixed(1)}M`} color={SERIES[0]} />
-        <LegionChart title="Legion rank in world" data={history} pick={(p) => p.legionRank} format={(v) => `#${fmtInt(v)}`} color={SERIES[2]} reversed />
+        <LegionChart title="Legion level" data={history} pick={(p) => p.legionLevel} format={(v) => fmtInt(v)} color={P.accent} step />
+        <LegionChart title="Raid power" data={history} pick={(p) => (p.raidPower == null ? null : p.raidPower / 1e6)} format={(v) => `${v.toFixed(0)}M`} tipFormat={(v) => `${v.toFixed(1)}M`} color={P.series[0]} />
+        <LegionChart title="Legion rank in world" data={history} pick={(p) => p.legionRank} format={(v) => `#${fmtInt(v)}`} color={P.series[2]} reversed />
       </div>
       {snapshots.length > 0 && history.length === 0 && <p className="text-xs text-ink-3 mt-3">No snapshot carries legion data yet. The collector finds it under your highest-level character.</p>}
     </>
@@ -168,6 +170,7 @@ export function Legion() {
 }
 
 function LegionChart({ title, data, pick, format, tipFormat, color, step, reversed }: { title: string; data: LegionPoint[]; pick: (p: LegionPoint) => number | null; format: (v: number) => string; tipFormat?: (v: number) => string; color: string; step?: boolean; reversed?: boolean }) {
+  const P = usePalette();
   const rows = data.map((p) => ({ date: p.date, value: pick(p), reporter: p.reporter })).filter((r) => r.value != null);
   return (
     <Card title={`${title} over time`}>
@@ -177,9 +180,9 @@ function LegionChart({ title, data, pick, format, tipFormat, color, step, revers
         <div className="h-48">
           <ResponsiveContainer>
             <LineChart data={rows} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
-              <XAxis dataKey="date" {...axisProps} tickFormatter={shortDate} minTickGap={40} />
-              <YAxis {...axisProps} width={64} reversed={reversed} domain={['auto', 'auto']} allowDecimals={false} tickFormatter={(v: number) => format(v)} />
-              <Tooltip content={<ChartTip format={(v, _n, row) => `${(tipFormat ?? format)(Number(v))} · via ${(row as { reporter: string }).reporter}`} labelFormat={dateLabel} />} cursor={{ stroke: '#343945' }} />
+              <XAxis dataKey="date" {...axisProps(P)} tickFormatter={shortDate} minTickGap={40} />
+              <YAxis {...axisProps(P)} width={64} reversed={reversed} domain={['auto', 'auto']} allowDecimals={false} tickFormatter={(v: number) => format(v)} />
+              <Tooltip content={<ChartTip format={(v, _n, row) => `${(tipFormat ?? format)(Number(v))} · via ${(row as { reporter: string }).reporter}`} labelFormat={dateLabel} />} cursor={{ stroke: P.cursor }} />
               <Line type={step ? 'stepAfter' : 'monotone'} dataKey="value" name={title} stroke={color} strokeWidth={2} dot={false} activeDot={{ r: 4 }} isAnimationActive={false} />
             </LineChart>
           </ResponsiveContainer>

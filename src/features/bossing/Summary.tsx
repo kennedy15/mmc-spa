@@ -3,7 +3,8 @@ import { Bar, BarChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recha
 import { useStore } from '../../store';
 import { Card, Empty, PageHeader, Stat } from '../../app/ui';
 import { fmtMeso, fmtDate } from '../../app/format';
-import { SERIES, ACCENT, MAX_BAR, ChartTip, axisProps, shortDate, Legend } from '../../app/charts';
+import { MAX_BAR, ChartTip, axisProps, shortDate, Legend } from '../../app/charts';
+import { usePalette } from '../../app/theme';
 import { useNow } from '../../app/useNow';
 import { nextReset, periodKey, previousPeriod } from '../../lib/reset/period';
 import { assignmentMeso, clearsIn, expectedPer, mesoByPeriod } from './lib';
@@ -12,6 +13,7 @@ import { usePeriodMeso } from './usePeriodMeso';
 import { MesoFlow } from './MesoFlow';
 
 export function Summary() {
+  const P = usePalette();
   const bosses = useStore((s) => s.bosses);
   const clears = useStore((s) => s.clears);
   const assignments = useStore((s) => s.assignments);
@@ -89,15 +91,15 @@ export function Summary() {
           <div className="h-56">
             <ResponsiveContainer>
               <BarChart data={recent} margin={{ top: 8, right: 8, left: 0, bottom: 0 }} barCategoryGap={12} barGap={2} maxBarSize={MAX_BAR}>
-                <XAxis dataKey="period" {...axisProps} tickFormatter={(p: string) => (p === current ? 'This week' : shortDate(p))} />
-                <YAxis {...axisProps} width={56} tickFormatter={(v: number) => fmtMeso(v)} />
-                <Tooltip content={<ChartTip format={(v) => fmtMeso(Number(v))} labelFormat={(l) => `Week of ${shortDate(l)}${l === current ? ' · in progress' : ''}`} />} cursor={{ fill: '#1b1e24' }} />
-                <Bar dataKey="expected" name="Expected" fill={SERIES[0]} radius={[4, 4, 0, 0]} isAnimationActive={false} />
-                <Bar dataKey="actual" name="Actual" fill={ACCENT} radius={[4, 4, 0, 0]} isAnimationActive={false} />
+                <XAxis dataKey="period" {...axisProps(P)} tickFormatter={(p: string) => (p === current ? 'This week' : shortDate(p))} />
+                <YAxis {...axisProps(P)} width={56} tickFormatter={(v: number) => fmtMeso(v)} />
+                <Tooltip content={<ChartTip format={(v) => fmtMeso(Number(v))} labelFormat={(l) => `Week of ${shortDate(l)}${l === current ? ' · in progress' : ''}`} />} cursor={{ fill: P.cursorFill }} />
+                <Bar dataKey="expected" name="Expected" fill={P.series[0]} radius={[4, 4, 0, 0]} isAnimationActive={false} />
+                <Bar dataKey="actual" name="Actual" fill={P.accent} radius={[4, 4, 0, 0]} isAnimationActive={false} />
               </BarChart>
             </ResponsiveContainer>
           </div>
-          <Legend items={[{ name: 'Expected', color: SERIES[0] }, { name: 'Actual', color: ACCENT }]} />
+          <Legend items={[{ name: 'Expected', color: P.series[0] }, { name: 'Actual', color: P.accent }]} />
         </Card>
         <Card title="This week by character">
           <table className="w-full text-sm">

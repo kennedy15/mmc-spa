@@ -1,13 +1,14 @@
 import { useMemo, useState, type MouseEvent } from 'react';
 import { scaleLinear, scaleUtc } from 'd3-scale';
-import { area, curveBasis, stack, stackOffsetSilhouette, stackOrderInsideOut, type SeriesPoint } from 'd3-shape';
+import { area, curveBasis, stack, stackOffsetSilhouette, type SeriesPoint } from 'd3-shape';
 import { HoverTip } from '../../app/HoverTip';
 import { pointerIn, type Tip } from '../../app/tip';
 import { useMeasure } from '../../app/useMeasure';
-import { SERIES, shortDate } from '../../app/charts';
-import { fmtDate, fmtLevels } from '../../app/format';
+import { shortDate } from '../../app/charts';
+import { usePalette } from '../../app/theme';
+import { fmtDate, fmtLevels, formatBig } from '../../app/format';
+import { bigDesc } from '../../lib/nexon/exp';
 import { addDays } from '../../lib/nexon/snapshots';
-import { OTHERS } from './heat';
 import { useActivity } from './hooks';
 
 type Row = Record<string, number> & { date: number };
@@ -18,11 +19,35 @@ const OTHERS_KEY = 'Others';
 const toTime = (d: string) => Date.parse(d + 'T00:00:00Z');
 
 /**
- * Share of a level per day as a streamgraph: the five most active characters
- * plus everyone else. Centered (silhouette) offset: D3's wiggle offset lets
- * bursty play drift the whole stream downhill.
+ * Indices of `keys` for d3's stack: d3's inside-out, but ranked by raw EXP gained
+ * (most in the middle) rather than by when each band peaks. Each band then goes
+ * to whichever side is thinner so far, measured in drawn size (share of a level).
+ */
+function insideOutByExp(keys: string[], exp: Map<string, bigint>, size: Map<string, number>): number[] {
+  const tops: number[] = [];
+  const bottoms: number[] = [];
+  let top = 0;
+  let bottom = 0;
+  for (const i of keys.map((_, i) => i).sort((a, b) => bigDesc(exp.get(keys[a]) ?? 0n, exp.get(keys[b]) ?? 0n))) {
+    const v = size.get(keys[i]) ?? 0;
+    if (top < bottom) {
+      tops.push(i);
+      top += v;
+    } else {
+      bottoms.push(i);
+      bottom += v;
+    }
+  }
+  return bottoms.reverse().concat(tops);
+}
+
+/**
+ * Share of a level per day as a streamgraph: the five characters with the most
+ * raw EXP gained plus everyone else. Centered (silhouette) offset: D3's wiggle
+ * offset lets bursty play drift the whole stream downhill.
  */
 export function PlayStreams({ days }: { days: number }) {
+  const P = usePalette();
   const { names, today, gains } = useActivity();
   const [boxRef, width, boxEl] = useMeasure<HTMLDivElement>();
   const [tip, setTip] = useState<Tip | null>(null);
@@ -31,34 +56,48 @@ export function PlayStreams({ days }: { days: number }) {
   const model = useMemo(() => {
     if (!today) return null;
     const since = addDays(today, -days);
+    // Band values are shares of a level; every ordering uses raw EXP (a same-level gain can dip below 0, so both clamp at 0).
     const byName = new Map<string, Map<string, number>>();
+    const expByName = new Map<string, Map<string, bigint>>();
     const observed = new Set<string>();
     for (const n of names) {
       const m = new Map<string, number>();
+      const e = new Map<string, bigint>();
       for (const g of gains[n] ?? []) {
         if (g.date <= since) continue;
         m.set(g.date, Math.max(0, g.levels ?? 0));
+        e.set(g.date, g.gain > 0n ? g.gain : 0n);
         observed.add(g.date);
       }
       byName.set(n, m);
+      expByName.set(n, e);
     }
-    const total = (n: string) => [...(byName.get(n)?.values() ?? [])].reduce((a, b) => a + b, 0);
-    const ranked = names.filter((n) => total(n) > 0).sort((a, b) => total(b) - total(a));
+    const expTotal = new Map(names.map((n) => [n, [...(expByName.get(n)?.values() ?? [])].reduce((a, b) => a + b, 0n)]));
+    const ranked = names.filter((n) => expTotal.get(n)! > 0n).sort((a, b) => bigDesc(expTotal.get(a)!, expTotal.get(b)!));
     // Up to five named bands; fold the rest into Others only when that joins two or more.
     const shown = ranked.length > 6 ? ranked.slice(0, 5) : ranked;
     // Colors follow characters.json order among those shown, so they don't swap as rankings shift.
     const top = names.filter((n) => shown.includes(n));
     const rest = ranked.filter((n) => !shown.includes(n));
     const keys = rest.length ? [...top, OTHERS_KEY] : top;
-    const rows: Row[] = [...observed].sort().map((date) => {
+    const dates = [...observed].sort();
+    const rows: Row[] = dates.map((date) => {
       const r = { date: toTime(date) } as Row;
       for (const n of top) r[n] = byName.get(n)?.get(date) ?? 0;
       if (rest.length) r[OTHERS_KEY] = rest.reduce((s, n) => s + (byName.get(n)?.get(date) ?? 0), 0);
       return r;
     });
-    const colors = new Map(keys.map((k, i) => [k, k === OTHERS_KEY ? OTHERS : SERIES[i]]));
-    return { rows, keys, colors };
-  }, [names, gains, today, days]);
+    // Raw EXP per row (same index as rows) and per key over the window, for the stack order and the tooltip.
+    const rowExp = dates.map((date) => {
+      const e = new Map<string, bigint>(top.map((n) => [n, expByName.get(n)?.get(date) ?? 0n]));
+      if (rest.length) e.set(OTHERS_KEY, rest.reduce((s, n) => s + (expByName.get(n)?.get(date) ?? 0n), 0n));
+      return e;
+    });
+    const keyExp = new Map(keys.map((k) => [k, k === OTHERS_KEY ? rest.reduce((s, n) => s + expTotal.get(n)!, 0n) : expTotal.get(k)!]));
+    const keySize = new Map(keys.map((k) => [k, rows.reduce((s, r) => s + (r[k] ?? 0), 0)]));
+    const colors = new Map(keys.map((k, i) => [k, k === OTHERS_KEY ? P.others : P.series[i]]));
+    return { rows, rowExp, keys, keyExp, keySize, colors };
+  }, [names, gains, today, days, P]);
 
   const geo = useMemo(() => {
     if (!model || model.rows.length < 2 || !model.keys.length || !width) return null;
@@ -66,7 +105,7 @@ export function PlayStreams({ days }: { days: number }) {
       .keys(model.keys)
       .value((d, k) => d[k] ?? 0)
       .offset(stackOffsetSilhouette)
-      .order(stackOrderInsideOut)(model.rows);
+      .order(() => insideOutByExp(model.keys, model.keyExp, model.keySize))(model.rows);
     const x = scaleUtc([model.rows[0].date, model.rows[model.rows.length - 1].date], [M.l, width - M.r]);
     const lo = Math.min(...layers.map((l) => Math.min(...l.map((p) => p[0]))));
     const hi = Math.max(...layers.map((l) => Math.max(...l.map((p) => p[1]))));
@@ -90,6 +129,7 @@ export function PlayStreams({ days }: { days: number }) {
     let i = 0;
     for (let k = 1; k < rows.length; k++) if (Math.abs(rows[k].date - t) < Math.abs(rows[i].date - t)) i = k;
     const r = rows[i];
+    const exp = model.rowExp[i];
     setAt(i);
     setTip({
       x: geo.x(r.date),
@@ -97,9 +137,9 @@ export function PlayStreams({ days }: { days: number }) {
       rows: [
         { value: fmtDate(new Date(r.date).toISOString().slice(0, 10)) },
         ...model.keys
-          .filter((k) => r[k] > 0)
-          .sort((a, b) => r[b] - r[a])
-          .map((k) => ({ value: fmtLevels(r[k]), label: k, color: model.colors.get(k) })),
+          .filter((k) => exp.get(k)! > 0n)
+          .sort((a, b) => bigDesc(exp.get(a)!, exp.get(b)!))
+          .map((k) => ({ value: `+${formatBig(exp.get(k)!)} · ${fmtLevels(r[k])}`, label: k, color: model.colors.get(k) })),
       ],
     });
   };

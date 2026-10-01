@@ -42,6 +42,8 @@ export function Checklist() {
   const totalCrystals = weekClears.length;
   const charsAtCap = [...crystalsByChar.entries()].filter(([, n]) => n >= settings.crystalCap).map(([c]) => c);
   const worldAtCap = totalCrystals >= settings.worldCrystalCap;
+  const worldLeft = Math.max(0, settings.worldCrystalCap - totalCrystals);
+  const charLeft = (character: string) => Math.max(0, settings.crystalCap - (crystalsByChar.get(character) ?? 0));
   const mesoOf = (list: Clear[], character: string) => list.reduce((n, c) => n + (c.character === character ? c.meso : 0), 0);
 
   if (!assignments.length) {
@@ -67,13 +69,40 @@ export function Checklist() {
   };
   const weeklyOf = (list: Assignment[]) => list.filter((a) => a.cadence === 'weekly');
   const allDone = (list: Assignment[]) => weeklyOf(list).length > 0 && weeklyOf(list).every((a) => clearFor(clears, a, periods.weekly));
-  /** Check every unticked weekly boss in the list, or untick them all when all are checked. Monthly bosses are ticked on their own. */
+  /**
+   * Why an unticked weekly boss can't be ticked: the world has sold its 180 crystals this week, or the character its 14.
+   * Ticked bosses can always be unticked, and monthly bosses (Black Mage) don't count toward either cap.
+   */
+  const lockReason = (a: Assignment): string | null => {
+    if (a.cadence !== 'weekly' || clearFor(clears, a, periods.weekly)) return null;
+    if (worldAtCap) return `World cap reached: ${totalCrystals}/${settings.worldCrystalCap} crystals this week`;
+    if (!charLeft(a.character)) return `${a.character} has sold ${settings.crystalCap} crystals this week`;
+    return null;
+  };
+  /** Unticked weekly bosses in the list that still fit under the world and per-character caps, in list order. */
+  const tickable = (list: Assignment[]) => {
+    let world = worldLeft;
+    const left = new Map<string, number>();
+    const out: Assignment[] = [];
+    for (const a of weeklyOf(list)) {
+      if (clearFor(clears, a, periods.weekly)) continue;
+      const mine = left.get(a.character) ?? charLeft(a.character);
+      if (world <= 0 || mine <= 0) continue;
+      out.push(a);
+      world--;
+      left.set(a.character, mine - 1);
+    }
+    return out;
+  };
+  /** Nothing left to tick in the list, but not everything is ticked: the caps block the rest. */
+  const bulkBlocked = (list: Assignment[]) => !allDone(list) && tickable(list).length === 0;
+  /** Check every unticked weekly boss that fits under the caps, or untick them all when all are checked. Monthly bosses are ticked on their own. */
   const toggleAll = (list: Assignment[]) => {
     const weekly = weeklyOf(list);
     if (allDone(list)) {
       void bulkClears({ add: [], remove: weekly.map((a) => clearFor(clears, a, periods.weekly)!.id) });
     } else {
-      void bulkClears({ add: weekly.filter((a) => !clearFor(clears, a, periods.weekly)).map(newClear), remove: [] });
+      void bulkClears({ add: tickable(list).map(newClear), remove: [] });
     }
   };
   const visibleAssignments = byChar.filter(([c]) => !focus || c === focus).flatMap(([, list]) => list);
@@ -85,17 +114,18 @@ export function Checklist() {
     const party = clear?.partySize ?? a.defaultPartySize;
     const crystal = crystalValue(bosses, prices, settings, a.bossId, a.difficulty);
     const meso = clear?.meso ?? mesoPerClear(crystal, party);
+    const locked = lockReason(a);
     const toggle = () => {
       if (clear) void removeClear(clear.id);
-      else {
+      else if (!locked) {
         const c: Clear = { id: uid(), character: a.character, bossId: a.bossId, difficulty: a.difficulty, cadence: a.cadence, period, clearedAt: new Date().toISOString(), partySize: party, meso: mesoPerClear(crystal, party) };
         void addClear(c);
       }
     };
     return (
-      <li key={a.id} className={`flex items-center gap-3 px-4 py-1.5 ${clear ? 'bg-good/5' : ''}`}>
-        <input type="checkbox" checked={!!clear} onChange={toggle} className="size-4 accent-[#ff7a1a] cursor-pointer" aria-label={`Cleared ${bossLabel(bosses, a.bossId, a.difficulty)}`} />
-        <button className={`flex-1 text-left text-sm ${clear ? 'text-ink-2 line-through decoration-ink-3' : ''}`} onClick={toggle}>
+      <li key={a.id} className={`flex items-center gap-3 px-4 py-1.5 ${clear ? 'bg-good/5' : ''} ${locked ? 'ring-1 ring-inset ring-bad text-ink-3' : ''}`} title={locked ?? undefined}>
+        <input type="checkbox" checked={!!clear} disabled={!!locked} onChange={toggle} className={`size-4 accent-accent ${locked ? 'cursor-not-allowed' : 'cursor-pointer'}`} aria-label={`Cleared ${bossLabel(bosses, a.bossId, a.difficulty)}`} />
+        <button className={`flex-1 text-left text-sm ${clear ? 'text-ink-2 line-through decoration-ink-3' : locked ? 'cursor-not-allowed' : ''}`} onClick={toggle} disabled={!!locked}>
           {bossLabel(bosses, a.bossId, a.difficulty)}
           {missedLast && (
             <span className="ml-2">
@@ -127,7 +157,7 @@ export function Checklist() {
         }
         action={
           <div className="flex gap-2">
-            <button className="btn" onClick={() => toggleAll(visibleAssignments)} disabled={!weeklyOf(visibleAssignments).length}>
+            <button className="btn" onClick={() => toggleAll(visibleAssignments)} disabled={!weeklyOf(visibleAssignments).length || bulkBlocked(visibleAssignments)}>
               {allDone(visibleAssignments) ? 'Uncheck all weekly' : 'Check all weekly'}
               {focus ? ` · ${focus}` : ''}
             </button>
@@ -144,7 +174,7 @@ export function Checklist() {
             label="Crystals this week"
             value={`${totalCrystals} / ${settings.worldCrystalCap}`}
             tone={worldAtCap ? 'bad' : charsAtCap.length ? 'warn' : undefined}
-            sub={worldAtCap ? 'world cap reached: extra crystals cannot be sold' : charsAtCap.length ? `${charsAtCap.join(', ')} at the ${settings.crystalCap}/character cap` : `weekly bosses · ${settings.crystalCap} per character`}
+            sub={worldAtCap ? <span className="text-bad">world cap reached: weekly bosses locked</span> : charsAtCap.length ? `${charsAtCap.join(', ')} at the ${settings.crystalCap}/character cap` : `weekly bosses · ${settings.crystalCap} per character`}
           />
         </Card>
         <Card><Stat label="Monthly reset" value={formatCountdown(nextReset('monthly', now), now)} sub="1st 00:00 UTC" /></Card>
@@ -175,7 +205,7 @@ export function Checklist() {
               title={
                 <span className="flex items-center gap-2">
                   {character}
-                  <Badge tone={used >= settings.crystalCap ? 'warn' : 'muted'}>
+                  <Badge tone={used >= settings.crystalCap ? 'bad' : 'muted'}>
                     {used}/{settings.crystalCap} crystals
                   </Badge>
                 </span>
@@ -195,7 +225,7 @@ export function Checklist() {
                       {weeklyDone}/{weekly.length}
                     </span>
                     {weekly.length > 0 && (
-                      <button className="btn btn-sm py-0.5" onClick={() => toggleAll(list)}>
+                      <button className="btn btn-sm py-0.5" onClick={() => toggleAll(list)} disabled={bulkBlocked(list)}>
                         {allDone(list) ? 'Uncheck all' : 'Check all'}
                       </button>
                     )}

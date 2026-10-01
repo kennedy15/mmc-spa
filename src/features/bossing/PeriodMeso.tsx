@@ -22,7 +22,7 @@ export function PeriodMeso({ cadence, compact = false }: { cadence: Cadence; com
       title={weekly ? 'Meso this week' : 'Meso this month'}
       action={
         <span className="text-xs text-ink-3">
-          {data.done}/{data.total} {weekly ? 'weekly' : 'monthly'} clears · {weekly ? `${data.crystals}/${settings.worldCrystalCap} crystals` : periodLabel('monthly', data.period)}
+          {data.done}/{data.total} {weekly ? 'weekly' : 'monthly'} clears · {weekly ? <span className={data.crystals >= settings.worldCrystalCap ? 'text-bad' : ''}>{data.crystals}/{settings.worldCrystalCap} crystals</span> : periodLabel('monthly', data.period)}
         </span>
       }
     >
@@ -48,7 +48,7 @@ export function PeriodMeso({ cadence, compact = false }: { cadence: Cadence; com
               <li key={name} className="grid grid-cols-[minmax(0,1fr)_auto] sm:grid-cols-[minmax(0,9rem)_1fr_auto] items-center gap-3 text-sm">
                 <span className="truncate flex items-center gap-1.5">
                   {name}
-                  {weekly && r.crystals >= settings.crystalCap && <Badge tone="warn">cap</Badge>}
+                  {weekly && r.crystals >= settings.crystalCap && <Badge tone="bad">cap</Badge>}
                 </span>
                 <div className="hidden sm:block h-1.5 rounded-full bg-surface-3 overflow-hidden">
                   <div className="h-full rounded-full bg-good" style={{ width: `${p * 100}%` }} />

@@ -6,6 +6,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="color-scheme" content="dark" />
     <title>MapleTracker</title>
+    <!-- Apply the saved color theme before first paint (src/app/theme.ts owns it after load). -->
+    <script>try { if (localStorage.getItem('mt.theme') === 'aurora') document.documentElement.dataset.theme = 'aurora'; } catch (e) {}</script>
     <!-- Inter from its official CDN: the Google Fonts build strips the character
          variants, including cv08 (serifed capital I) that tells PikaIus from Pikalus. -->
     <link rel="preconnect" href="https://rsms.me/" />

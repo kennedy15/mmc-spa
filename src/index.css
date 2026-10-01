@@ -13,6 +13,8 @@
   --color-accent: #ff7a1a;
   --color-accent-2: #ffa25c;
   --color-accent-dim: #4a2a14;
+  /* Second accent: the same orange in Ember, green in Aurora. */
+  --color-accent-alt: #ff7a1a;
   --color-good: #3ddc97;
   --color-warn: #f9c74f;
   --color-bad: #ff5c8a;
@@ -22,6 +24,23 @@
 }
 
 html { color-scheme: dark; }
+/* Aurora theme (Theme button in the sidebar, src/app/theme.ts): true black, purple accent, greens for gains and activity. */
+html[data-theme="aurora"] {
+  --color-bg: #000000;
+  --color-surface: #0b0b0c;
+  --color-surface-2: #141416;
+  --color-surface-3: #1d1d21;
+  --color-border: #1e1e22;
+  --color-border-2: #2e2e34;
+  --color-ink: #ededf0;
+  --color-ink-2: #a3a3ad;
+  --color-ink-3: #6e6e7a;
+  --color-accent: #a970ff;
+  --color-accent-2: #c29bff;
+  --color-accent-dim: #2e1a4d;
+  --color-accent-alt: #42d77d;
+  --color-good: #42d77d;
+}
 body {
   margin: 0;
   background: var(--color-bg);
