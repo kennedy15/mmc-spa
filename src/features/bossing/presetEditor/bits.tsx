@@ -22,11 +22,7 @@ export function Icon({ name, size = 14, className = '' }: { name: keyof typeof P
   );
 }
 
-/**
- * A .btn / .btn-accent / .btn-ghost button whose text size and colour apply: the
- * unlayered `button { font: inherit; color: inherit }` in index.css beats classes on
- * the button itself, so they sit on the inner span.
- */
+/** A .btn / .btn-accent / .btn-ghost button (btn-sm when small), its icon and label kept on one line. */
 export function Action({ kind = 'btn', small, children, className = '', ...rest }: ButtonHTMLAttributes<HTMLButtonElement> & { kind?: 'btn' | 'accent' | 'ghost'; small?: boolean }) {
   const cls = kind === 'accent' ? 'btn-accent' : kind === 'ghost' ? 'btn-ghost' : 'btn';
   const text = kind === 'accent' ? 'text-black' : kind === 'ghost' ? 'text-ink-2 group-hover:text-ink' : 'text-ink';
@@ -37,7 +33,7 @@ export function Action({ kind = 'btn', small, children, className = '', ...rest 
   );
 }
 
-/** An on/off switch named by its label, which toggles it too. Drawn like the kit's Toggle; a button, so the text classes sit on the inner span. */
+/** An on/off switch named by its label, which toggles it too. Drawn like the kit's Toggle. */
 export function Switch({ checked, onChange, label }: { checked: boolean; onChange: (v: boolean) => void; label: string }) {
   return (
     <button type="button" role="switch" aria-checked={checked} onClick={() => onChange(!checked)} className="inline-flex items-center gap-2 rounded-md cursor-pointer select-none">

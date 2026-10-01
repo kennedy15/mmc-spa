@@ -4,7 +4,22 @@
  * allows browser requests; a fine-grained token with Actions read/write on
  * this one repo is enough.
  */
-export const REPO = { owner: 'kennedy15', repo: 'mmc-spa', branch: 'main' };
+
+/** "owner/name" of the repo the site was built from (vite.config.ts: GitHub Actions or the git remote). */
+declare const __GITHUB_REPO__: string | null;
+
+/** The repo this copy of the site belongs to: from the build, else from a <owner>.github.io/<repo>/ address. */
+function thisRepo(): { owner: string; repo: string } | null {
+  const built = typeof __GITHUB_REPO__ === 'string' ? __GITHUB_REPO__.split('/') : [];
+  if (built.length === 2 && built[0] && built[1]) return { owner: built[0], repo: built[1] };
+  const host = location.hostname.match(/^([^.]+)\.github\.io$/i);
+  if (!host) return null;
+  const first = location.pathname.split('/').filter(Boolean)[0];
+  return { owner: host[1], repo: first ?? `${host[1]}.github.io` };
+}
+
+const repo = thisRepo();
+export const REPO = { owner: repo?.owner ?? '', repo: repo?.repo ?? '', branch: 'main' };
 export const WORKFLOWS = { add: 'add-character.yml', rename: 'rename-character.yml' } as const;
 export type Workflow = (typeof WORKFLOWS)[keyof typeof WORKFLOWS];
 const API = 'https://api.github.com';
@@ -43,6 +58,7 @@ async function gh<T>(token: string | null, path: string, init: RequestInit = {})
  * caller finds the run by time instead.
  */
 export async function dispatchWorkflow(token: string, workflow: Workflow, inputs: Record<string, string>): Promise<{ ok: true; runId: number | null } | { ok: false; error: string }> {
+  if (!REPO.owner) return { ok: false, error: "This build doesn't know which GitHub repo it belongs to. Build it from a clone of the repo, or open it at its github.io address." };
   const r = await gh<{ message?: string; workflow_run_id?: number }>(token, `/repos/${REPO.owner}/${REPO.repo}/actions/workflows/${workflow}/dispatches`, {
     method: 'POST',
     body: JSON.stringify({ ref: REPO.branch, inputs, return_run_details: true }),

@@ -12,7 +12,7 @@ Results of the checks the design doc asked for before writing UI code.
 - `reboot_index`: 0 = all worlds, 1 = Heroic worlds only, 2 = regular worlds only.
 - `exp` is 0 for level-300 characters (cap). Largest values seen ≈ 8×10^14, still under 2^53, but the collector and the SPA quote `exp` before `JSON.parse` anyway.
 - World IDs (from maplearchive.org's frontend, matched against `reboot_index` probing): Bera 1, Scania 19, Kronos 45 (Heroic), Hyperion 70 (Heroic), Luna 30, Solis 46 (Heroic). Stored in `public/worlds.json`.
-- Name lookup is global across worlds, so the collector filters the result by `worldID`.
+- Name lookup covers every world of the region in the path, so the collector filters the result by `worldID`. The regions are separate: Luna and Solis are only in `/v2/eu`, the NA worlds only in `/v2/na` (checked 2026-10-01: a Luna character returns no row from `/na`; `/eu` lists only worlds 30 and 46). The scripts pick the path from the world's `region` in `worlds.json`.
 
 ## CORS
 

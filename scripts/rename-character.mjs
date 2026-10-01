@@ -17,10 +17,12 @@
 import { access, copyFile, readdir, readFile, rename, rm, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { dataIsForThisRepo, notSetUpMessage } from './repo-guard.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const DATA_DIR = process.env.DATA_DIR ? path.resolve(process.env.DATA_DIR) : path.join(ROOT, 'data');
-const API = 'https://www.nexon.com/api/maplestory/no-auth/ranking/v2/na';
+// The rankings are split by region: Luna and Solis are only in /eu (worlds.json "region").
+const API = 'https://www.nexon.com/api/maplestory/no-auth/ranking/v2';
 // The app looks for this title to offer "Rename anyway".
 const NOT_SAME = 'Not the same character?';
 
@@ -48,6 +50,7 @@ const readJson = async (p, fallback) => JSON.parse(await readFile(p, 'utf8').cat
 
 const cfgPath = path.join(DATA_DIR, 'characters.json');
 const cfg = await readJson(cfgPath, null);
+if (!dataIsForThisRepo(cfg)) fail('Not set up yet', notSetUpMessage(cfg));
 const worlds = (await readJson(path.join(ROOT, 'public', 'worlds.json'), { worlds: {} })).worlds;
 const worldName = (id) => worlds[id]?.name ?? String(id);
 
@@ -63,7 +66,7 @@ const worldId = entry.worldId != null ? Number(entry.worldId) : cfg.worldId != n
 if (worldId == null) fail('Unknown world', `Cannot tell which world ${entry.name} plays on; set worldId in characters.json.`);
 
 async function ranked(name) {
-  const res = await fetch(`${API}?${new URLSearchParams({ type: 'overall', id: 'legendary', reboot_index: 0, page_index: 1, character_name: name })}`, { headers: { accept: 'application/json' } });
+  const res = await fetch(`${API}/${worlds[worldId]?.region ?? 'na'}?${new URLSearchParams({ type: 'overall', id: 'legendary', reboot_index: 0, page_index: 1, character_name: name })}`, { headers: { accept: 'application/json' } });
   if (!res.ok) fail('Rankings unavailable', `Nexon's rankings returned HTTP ${res.status}. Try again later.`);
   const rows = JSON.parse((await res.text()).replace(/"(exp|gap)":(-?\d+)/g, '"$1":"$2"')).ranks ?? [];
   return rows.filter((r) => same(r.characterName, name));

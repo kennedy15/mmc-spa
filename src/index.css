@@ -58,7 +58,10 @@ body {
   font-optical-sizing: none;
 }
 * { scrollbar-width: thin; scrollbar-color: var(--color-border-2) transparent; }
-input, select, textarea, button { font: inherit; color: inherit; }
+/* In the base layer (as Tailwind's own reset has it) so text-size and colour classes on a button, .btn-accent's black label or .btn-sm's 12px, still apply. */
+@layer base {
+  input, select, textarea, button { font: inherit; color: inherit; }
+}
 input[type="number"]::-webkit-inner-spin-button { opacity: 0.4; }
 
 @layer components {

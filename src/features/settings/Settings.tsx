@@ -187,7 +187,7 @@ export function Settings() {
               </>
             ) : (
               <>
-                <input className="input max-w-md font-mono text-xs" type="password" placeholder="sk-ant-…" value={key} onChange={(e) => setKey(e.target.value)} />
+                <input className="input max-w-md py-1 font-mono text-xs" type="password" placeholder="sk-ant-…" value={key} onChange={(e) => setKey(e.target.value)} />
                 <button
                   className="btn-accent btn-sm"
                   disabled={!key.trim().startsWith('sk-ant-')}

@@ -1,13 +1,15 @@
 #!/usr/bin/env node
 // Look a character up in Nexon's rankings and append it to data/characters.json.
 // Usage: node scripts/add-character.mjs <name> [--role main|mule|...] [--owner me|friend] [--world <id or name>]
-// Exits 1 (with a clear message) when the name is not in the rankings.
+// Exits 1 (with a clear message, an Actions error annotation the app shows) when the name is not in the rankings.
 import { readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { dataIsForThisRepo, fail, notSetUpMessage } from './repo-guard.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const API = 'https://www.nexon.com/api/maplestory/no-auth/ranking/v2/na';
+// The rankings are split by region: Luna and Solis are only in /eu (worlds.json "region").
+const API = 'https://www.nexon.com/api/maplestory/no-auth/ranking/v2';
 
 const args = process.argv.slice(2);
 const name = args.find((a) => !a.startsWith('--'))?.trim();
@@ -22,6 +24,7 @@ if (!name) {
 
 const cfgPath = path.join(ROOT, 'data', 'characters.json');
 const cfg = JSON.parse(await readFile(cfgPath, 'utf8'));
+if (!dataIsForThisRepo(cfg)) fail('Not set up yet', notSetUpMessage(cfg));
 const worlds = JSON.parse(await readFile(path.join(ROOT, 'public', 'worlds.json'), 'utf8')).worlds;
 const worldName = (id) => worlds[id]?.name ?? String(id);
 const resolveWorld = (v) => {
@@ -34,17 +37,19 @@ const wantWorld = resolveWorld(opt('world')) ?? Number(cfg.worldId);
 const role = opt('role', 'mule');
 const owner = opt('owner', 'me');
 
-const res = await fetch(`${API}?${new URLSearchParams({ type: 'overall', id: 'legendary', reboot_index: 0, page_index: 1, character_name: name })}`, { headers: { accept: 'application/json' } });
-if (!res.ok) {
-  console.error(`Nexon rankings returned HTTP ${res.status}; try again later.`);
-  process.exit(1);
+async function ranked(region) {
+  const res = await fetch(`${API}/${region}?${new URLSearchParams({ type: 'overall', id: 'legendary', reboot_index: 0, page_index: 1, character_name: name })}`, { headers: { accept: 'application/json' } });
+  if (!res.ok) fail('Rankings unavailable', `Nexon's rankings returned HTTP ${res.status}. Try again later.`);
+  return JSON.parse((await res.text()).replace(/"(exp|gap)":(-?\d+)/g, '"$1":"$2"')).ranks ?? [];
 }
-const rows = JSON.parse((await res.text()).replace(/"(exp|gap)":(-?\d+)/g, '"$1":"$2"')).ranks ?? [];
-const exact = rows.filter((r) => r.characterName.toLowerCase() === name.toLowerCase());
-if (!exact.length) {
-  console.error(`"${name}" is not in the GMS rankings on any world. Check the spelling (I vs l, 0 vs O); characters under ~level 10 do not appear.`);
-  process.exit(1);
+// The wanted world's region first; the others only to say where else the name is.
+const regions = [...new Set([worlds[wantWorld]?.region ?? 'na', ...Object.values(worlds).map((w) => w.region ?? 'na')])];
+const exact = [];
+for (const region of regions) {
+  exact.push(...(await ranked(region)).filter((r) => r.characterName.toLowerCase() === name.toLowerCase()));
+  if (exact.some((r) => r.worldID === wantWorld)) break;
 }
+if (!exact.length) fail('Not in rankings', `"${name}" is not in the GMS rankings on any world. Check the spelling (capital I vs small l, 0 vs O); characters under about level 10 do not appear.`);
 let row = exact.find((r) => r.worldID === wantWorld);
 if (!row) {
   const where = exact.map((r) => `${r.characterName} on ${worldName(r.worldID)} (Lv.${r.level} ${r.jobName})`).join(', ');
@@ -52,8 +57,7 @@ if (!row) {
     row = exact[0];
     console.log(`Not on ${worldName(wantWorld)}; found ${where}. Adding with that world.`);
   } else {
-    console.error(`"${name}" is not on ${worldName(wantWorld)}. Found: ${where}. Re-run with --world <name> to pick one.`);
-    process.exit(1);
+    fail('Not on this world', `"${name}" is not on ${worldName(wantWorld)}. Found: ${where}. Pick that world (or check the spelling).`);
   }
 }
 

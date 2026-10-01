@@ -48,6 +48,10 @@ export interface FormerName {
 }
 
 export interface CharactersConfig {
+  /** "owner/name" of the repo this data was set up for; a copy that still holds another repo's data skips its scheduled jobs (scripts/repo-guard.mjs). */
+  repo?: string;
+  /** That repo's numeric GitHub id; it survives a rename, so the data still counts as this repo's. */
+  repoId?: number;
   world: string;
   worldId: number;
   characters: CharacterConfig[];

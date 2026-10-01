@@ -1,0 +1,98 @@
+name: Set up my copy
+
+# For a copy of this repo (a friend's own tracker): replaces the characters,
+# snapshots and sprites copied from the original with yours, takes your first
+# snapshot and publishes the site. Never runs in the original repo.
+on:
+  workflow_dispatch:
+    inputs:
+      world:
+        description: Your world (Kronos, Hyperion, Solis, Bera, Scania, Luna)
+        required: true
+        default: Kronos
+      characters:
+        description: Your character names exactly as in game, main first, separated by commas
+        required: true
+      start_over:
+        description: Start over (replaces characters this repo already tracks and deletes their snapshots)
+        type: boolean
+        default: false
+
+concurrency:
+  group: snapshot
+  cancel-in-progress: false
+  # A second run waits its turn instead of replacing the one already waiting.
+  queue: max
+
+jobs:
+  setup:
+    # Belt and braces: scripts/setup-copy.mjs refuses this repo too. The id
+    # still matches if the original repo is ever renamed.
+    if: github.repository != 'kennedy15/mmc-spa' && github.repository_id != '1381722736'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      # Only to check that Pages is turned on before anything is committed.
+      pages: read
+    outputs:
+      changed: ${{ steps.commit.outputs.changed }}
+    steps:
+      - name: Check Pages is turned on
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          err="$RUNNER_TEMP/pages-check.txt"
+          if build_type=$(gh api "repos/$GITHUB_REPOSITORY/pages" --jq .build_type 2>"$err"); then
+            if [ "$build_type" != "workflow" ]; then
+              echo "::error title=Pages is set to deploy from a branch::Settings > Pages > Build and deployment > Source: choose GitHub Actions, then run Set up my copy again."
+              exit 1
+            fi
+          elif grep -q 'HTTP 404' "$err"; then
+            echo "::error title=Pages is not turned on::Settings > Pages > Build and deployment > Source: choose GitHub Actions (on a free account the repo must be public), then run Set up my copy again."
+            exit 1
+          else
+            # Could not tell, so carry on: the deploy job fails later if Pages is off.
+            echo "::warning title=Could not check Pages::$(tr '\n' ' ' < "$err")"
+          fi
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.ref_name }}
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+      - name: Replace the copied characters with yours
+        # Inputs go through env vars rather than ${{ }} in the script, so a quote
+        # or $ in a typed name can't change the shell command.
+        env:
+          WORLD: ${{ inputs.world }}
+          CHARACTERS: ${{ inputs.characters }}
+          START_OVER: ${{ inputs.start_over }}
+        run: |
+          if [ "$START_OVER" = "true" ]; then set -- --start-over; fi
+          node scripts/setup-copy.mjs --world "$WORLD" --characters "$CHARACTERS" "$@"
+      - name: First snapshot
+        run: node scripts/snapshot.mjs
+        env:
+          RETRY_DELAY_MS: '120000'
+      - name: Commit
+        id: commit
+        run: |
+          git config user.name "maple-tracker-bot"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A data
+          if git diff --cached --quiet; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          else
+            git commit -m "set up for ${GITHUB_REPOSITORY}"
+            git push
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+
+  deploy:
+    needs: setup
+    if: needs.setup.outputs.changed == 'true'
+    uses: ./.github/workflows/deploy.yml
+    permissions:
+      contents: read
+      pages: write
+      id-token: write

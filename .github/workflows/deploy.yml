@@ -16,7 +16,26 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  # A fresh copy of this repo (a friend's tracker) still holds the original's
+  # characters: publish nothing until "Set up my copy" has replaced them. This
+  # also keeps a copy's first push from failing before Pages is turned on.
+  check:
+    runs-on: ubuntu-latest
+    outputs:
+      ready: ${{ steps.guard.outputs.ready }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.ref_name }}
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+      - id: guard
+        run: node scripts/repo-guard.mjs
+
   build:
+    needs: check
+    if: needs.check.outputs.ready == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7

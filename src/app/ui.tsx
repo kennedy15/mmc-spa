@@ -70,7 +70,7 @@ export function Modal({ open, onClose, title, children, wide }: { open: boolean;
         {title && (
           <header className="flex items-center justify-between px-5 py-3.5 border-b border-border">
             <h2 className="font-semibold">{title}</h2>
-            <button className="btn-ghost btn-sm" onClick={onClose} aria-label="Close">
+            <button className="btn-ghost btn-sm text-base leading-none" onClick={onClose} aria-label="Close">
               ✕
             </button>
           </header>

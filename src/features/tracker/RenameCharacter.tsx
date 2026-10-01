@@ -42,12 +42,9 @@ export function RenameCharacter({ name, spans }: { name: string; spans: NameSpan
 
   return (
     <>
-      {/* Buttons take their font size from the parent. */}
-      <span className="text-xs">
-        <button className="btn btn-sm" onClick={() => setOpen(true)}>
-          {busy ? 'Renaming…' : 'Update name'}
-        </button>
-      </span>
+      <button className="btn btn-sm" onClick={() => setOpen(true)}>
+        {busy ? 'Renaming…' : 'Update name'}
+      </button>
       <Modal open={open} onClose={() => setOpen(false)} title="Update name">
         <div className="space-y-4 text-sm">
           <p className="text-ink-2">

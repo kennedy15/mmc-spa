@@ -90,16 +90,13 @@ function ThemeToggle() {
   const theme = useTheme();
   const name = THEMES.find((t) => t.id === theme)!.name;
   const next = THEMES.find((t) => t.id !== theme)!;
-  // The unlayered `button { font: inherit; color: inherit }` in index.css beats utility classes on the button itself, so type and color sit on the inner span.
   return (
-    <button type="button" onClick={() => setTheme(next.id)} className="group rounded-lg px-3 py-1.5 whitespace-nowrap text-left transition-colors hover:bg-surface-2 cursor-pointer" aria-label={`Color theme: ${name}. Switch to ${next.name}`} title={`Switch to ${next.name}`}>
-      <span className="flex items-center gap-2 text-sm text-ink-2 group-hover:text-ink">
-        <span className="flex" aria-hidden>
-          <span className="size-2.5 rounded-full bg-accent" />
-          <span className="-ml-1 size-2.5 rounded-full bg-accent-alt ring-1 ring-surface" />
-        </span>
-        Theme · {name}
+    <button type="button" onClick={() => setTheme(next.id)} className="flex items-center gap-2 rounded-lg px-3 py-1.5 text-sm text-ink-2 whitespace-nowrap text-left transition-colors hover:text-ink hover:bg-surface-2 cursor-pointer" aria-label={`Color theme: ${name}. Switch to ${next.name}`} title={`Switch to ${next.name}`}>
+      <span className="flex" aria-hidden>
+        <span className="size-2.5 rounded-full bg-accent" />
+        <span className="-ml-1 size-2.5 rounded-full bg-accent-alt ring-1 ring-surface" />
       </span>
+      Theme · {name}
     </button>
   );
 }

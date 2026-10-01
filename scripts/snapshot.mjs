@@ -23,12 +23,14 @@ import { createHash } from 'node:crypto';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { legionCandidates } from './legion.mjs';
+import { dataIsForThisRepo, notSetUpMessage } from './repo-guard.mjs';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(here, '..');
 const DATA_DIR = process.env.DATA_DIR ? path.resolve(process.env.DATA_DIR) : path.join(ROOT, 'data');
 const PUBLIC_DIR = path.join(ROOT, 'public');
-const API = 'https://www.nexon.com/api/maplestory/no-auth/ranking/v2/na';
+// The rankings are split by region: Luna and Solis are only in /eu (worlds.json "region").
+const API = 'https://www.nexon.com/api/maplestory/no-auth/ranking/v2';
 const GAP = Number(process.env.REQUEST_GAP_MS ?? 400);
 const RETRY_DELAY = Number(process.env.RETRY_DELAY_MS ?? 0);
 const PLACEHOLDER_NAMES = new Set(['YourMain', 'Mule01']);
@@ -62,17 +64,17 @@ function parseRanking(text) {
   return JSON.parse(quoted);
 }
 
-async function fetchRanking(params) {
-  const url = `${API}?${new URLSearchParams(params)}`;
+async function fetchRanking(region, params) {
+  const url = `${API}/${region}?${new URLSearchParams(params)}`;
   const res = await fetch(url, { headers: { accept: 'application/json', 'user-agent': 'maple-tracker/1.0 (+github actions; 1 request per character plus 1 per legion, daily)' } });
   if (!res.ok) throw new HttpError(res.status, url);
   return parseRanking(await res.text());
 }
 
-async function lookupCharacter(name, worldId) {
-  // Overall ranking filtered by name. The list is global, so filter by world
-  // to avoid picking up a same-named character elsewhere.
-  const overall = await fetchRanking({ type: 'overall', id: 'legendary', reboot_index: 0, page_index: 1, character_name: name });
+async function lookupCharacter(name, worldId, region) {
+  // Overall ranking filtered by name. The list covers the whole region, so
+  // filter by world to avoid picking up a same-named character elsewhere.
+  const overall = await fetchRanking(region, { type: 'overall', id: 'legendary', reboot_index: 0, page_index: 1, character_name: name });
   const row = (overall.ranks ?? []).find((r) => r.worldID === worldId && r.characterName.toLowerCase() === name.toLowerCase());
   if (!row) return null;
   return {
@@ -94,9 +96,9 @@ async function lookupCharacter(name, worldId) {
 
 // The legion ranking only lists an account under its reporting character, so
 // asking about any other character returns no row for the world.
-async function lookupLegion(name, worldId) {
+async function lookupLegion(name, worldId, region) {
   try {
-    const l = await fetchRanking({ type: 'legion', id: worldId, reboot_index: 0, page_index: 1, character_name: name });
+    const l = await fetchRanking(region, { type: 'legion', id: worldId, reboot_index: 0, page_index: 1, character_name: name });
     return (l.ranks ?? []).find((r) => r.worldID === worldId && r.characterName.toLowerCase() === name.toLowerCase()) ?? null;
   } catch (e) {
     if (!(e instanceof HttpError) || e.status >= 500 || e.status === 403) throw e;
@@ -107,7 +109,7 @@ async function lookupLegion(name, worldId) {
 // Attach legion data to the reporting row of each account/world group. The
 // previous snapshot's reporter keeps the row on a level tie (see legion.mjs);
 // `renamed` maps former names to current ones, in case it was renamed since.
-async function collectLegions(rows, previous, renamed) {
+async function collectLegions(rows, previous, renamed, regionOf) {
   const groups = new Map();
   for (const r of rows) {
     const key = `${r.owner}|${r.worldId}`;
@@ -118,7 +120,7 @@ async function collectLegions(rows, previous, renamed) {
     const incumbent = renamed.get(reporter) ?? reporter;
     let found = false;
     for (const name of legionCandidates(members, incumbent)) {
-      const legion = await lookupLegion(name, members[0].worldId);
+      const legion = await lookupLegion(name, members[0].worldId, regionOf(members[0].worldId));
       await sleep(GAP);
       if (!legion) continue;
       const row = members.find((r) => r.name === name);
@@ -172,6 +174,11 @@ async function run() {
   const config = await readJson(path.join(DATA_DIR, 'characters.json'), null);
   const worlds = (await readJson(path.join(PUBLIC_DIR, 'worlds.json'), { worlds: {} })).worlds;
   if (!config) throw new Error('data/characters.json is missing or invalid');
+  // A fresh copy of the repo still carries the original's characters: collect nothing until it is set up.
+  if (!dataIsForThisRepo(config)) {
+    console.log(`::notice title=Not set up yet::${notSetUpMessage(config)}`);
+    return;
+  }
 
   const characters = (config.characters ?? []).filter((c) => c?.name && !PLACEHOLDER_NAMES.has(c.name));
   if (characters.length === 0) {
@@ -185,6 +192,7 @@ async function run() {
     if (!byName) throw new Error(`Cannot resolve world for ${c.name}; set worldId in characters.json`);
     return Number(byName[0]);
   };
+  const regionOf = (worldId) => worlds[worldId]?.region ?? 'na';
 
   console.log(`Snapshot ${date}: ${characters.length} character(s)`);
   const rows = [];
@@ -192,7 +200,7 @@ async function run() {
   for (const c of characters) {
     const worldId = worldIdFor(c);
     process.stdout.write(`- ${c.name} (${worlds[worldId]?.name ?? worldId}) ... `);
-    const row = await lookupCharacter(c.name, worldId);
+    const row = await lookupCharacter(c.name, worldId, regionOf(worldId));
     if (!row) { console.log('not in rankings'); missing.push(c.name); await sleep(GAP); continue; }
     row.world = worlds[worldId]?.name ?? String(worldId);
     row.role = c.role ?? 'mule';
@@ -203,7 +211,7 @@ async function run() {
     await sleep(GAP);
   }
   const renamed = new Map(characters.flatMap((c) => (c.formerNames ?? []).map((f) => [f.name, c.name])));
-  await collectLegions(rows, await latestSnapshot(date), renamed);
+  await collectLegions(rows, await latestSnapshot(date), renamed, regionOf);
 
   const snapshotPath = path.join(DATA_DIR, 'snapshots', `${date}.json`);
   const previous = await readJson(snapshotPath, null);

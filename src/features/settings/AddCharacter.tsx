@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { useStore } from '../../store';
 import { Card, Field, Badge } from '../../app/ui';
 import { useWorkflowRun } from '../../app/useWorkflowRun';
-import { tokenUrl, workflowUrl, WORKFLOWS } from '../../lib/github';
+import { REPO, tokenUrl, workflowUrl, WORKFLOWS } from '../../lib/github';
 import { useTrackedNames } from '../tracker/hooks';
 
 export function AddCharacter() {
@@ -47,7 +47,7 @@ export function AddCharacter() {
       </p>
       {!hasToken ? (
         <div className="flex flex-wrap items-center gap-2">
-          <input className="input max-w-md font-mono text-xs" type="password" placeholder="github_pat_…" value={token} onChange={(e) => setToken(e.target.value)} />
+          <input className="input max-w-md py-1 font-mono text-xs" type="password" placeholder="github_pat_…" value={token} onChange={(e) => setToken(e.target.value)} />
           <button
             className="btn-accent btn-sm"
             disabled={token.trim().length < 20}
@@ -59,7 +59,7 @@ export function AddCharacter() {
             Save token
           </button>
           <span className="text-xs text-ink-3 basis-full">
-            Create a <a className="underline hover:text-ink" href={tokenUrl} target="_blank" rel="noreferrer">fine-grained token</a> for the <span className="text-ink">mmc-spa</span> repo only, with <span className="text-ink">Actions: read and write</span> (and the default Metadata: read). Stored in this browser only. Without a token you can still run the <a className="underline hover:text-ink" href={workflowUrl(WORKFLOWS.add)} target="_blank" rel="noreferrer">Add character workflow</a> from the Actions tab.
+            Create a <a className="underline hover:text-ink" href={tokenUrl} target="_blank" rel="noreferrer">fine-grained token</a> for the <span className="text-ink">{REPO.repo}</span> repo only, with <span className="text-ink">Actions: read and write</span> (and the default Metadata: read). Stored in this browser only. Without a token you can still run the <a className="underline hover:text-ink" href={workflowUrl(WORKFLOWS.add)} target="_blank" rel="noreferrer">Add character workflow</a> from the Actions tab.
           </span>
         </div>
       ) : (

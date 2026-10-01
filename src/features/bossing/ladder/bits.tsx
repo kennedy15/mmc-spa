@@ -2,11 +2,7 @@ import type { ReactNode } from 'react';
 import type { LadderChar } from './model';
 import { People } from './icons';
 
-/**
- * index.css has an unlayered `button { font: inherit; color: inherit }`, which
- * beats Tailwind's text classes on a <button>. Buttons here take their size
- * from the parent and put colour on an inner span.
- */
+/** The keyboard focus outline on the ladder's buttons. */
 export const focusRing = 'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent';
 /** The label of a .btn-ghost, in its ink-2 with ink on hover; give the button `group`. */
 export const ghostText = 'inline-flex items-center gap-1.5 text-ink-2 group-hover:text-ink';
@@ -46,7 +42,7 @@ export function Count({ n }: { n: number }) {
   );
 }
 
-/** A pill toggle. Put it in a text-xs container so the button's own line height matches. */
+/** A pill toggle (.chip, .chip-on when on). */
 export function Chip({ on, onClick, children, label, title }: { on: boolean; onClick: () => void; children: ReactNode; label?: string; title?: string }) {
   return (
     <button type="button" aria-pressed={on} aria-label={label} title={title} onClick={onClick} className={`${on ? 'chip-on' : 'chip'} ${focusRing}`}>
@@ -55,10 +51,7 @@ export function Chip({ on, onClick, children, label, title }: { on: boolean; onC
   );
 }
 
-/**
- * The kit's Segmented look (active on surface-3 in ink, the rest in ink-3), with
- * the colours on inner spans so the unlayered button rule can't flatten them.
- */
+/** The kit's Segmented look (active on surface-3 in ink, the rest in ink-3). */
 export function Segment<T extends string>({ value, options, onChange, label }: { value: T; options: readonly { value: T; label: string }[]; onChange: (v: T) => void; label: string }) {
   return (
     <div role="group" aria-label={label} className="inline-flex rounded-lg border border-border-2 p-0.5 text-xs">
