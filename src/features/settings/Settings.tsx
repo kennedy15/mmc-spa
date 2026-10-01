@@ -27,7 +27,7 @@ export function Settings() {
   const exportZip = async () => {
     setBusy(true);
     try {
-      const blob = await buildExportZip({ ideas: s.ideas, photos: s.photos, assignments: s.assignments, clears: s.clears, prices: s.prices, goals: s.goals, settings: s.settings });
+      const blob = await buildExportZip({ ideas: s.ideas, photos: s.photos, assignments: s.assignments, clears: s.clears, prices: s.prices, goals: s.goals, settings: s.settings, presets: s.presetsEdited ? s.presets : null, appliedPresets: s.appliedPresets });
       const a = document.createElement('a');
       a.href = URL.createObjectURL(blob);
       a.download = `maple-tracker-export-${new Date().toISOString().slice(0, 10)}.zip`;

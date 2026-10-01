@@ -2,8 +2,7 @@ import { useMemo, useState } from 'react';
 import { useStore, mainCharacterName } from '../../store';
 import { useCharacterNames } from '../tracker/hooks';
 import { latestRow, lookImageUrl } from '../../lib/nexon/snapshots';
-import type { Assignment, BossPreset } from '../../lib/types';
-import { clearFor, currentPeriods, presetAssignments, visibleCharacters } from './lib';
+import { clearFor, currentPeriods, presetOf, visibleCharacters, weeklyOf } from './lib';
 
 type GroupId = string; // preset id | 'custom' | 'none'
 
@@ -23,13 +22,8 @@ interface TileInfo {
   monthTotal: number;
 }
 
-/** Most specific preset whose entries are all assigned to the character, else custom / none. */
-function groupOf(mine: Assignment[], presets: BossPreset[]): GroupId {
-  if (!mine.length) return 'none';
-  const have = new Set(mine.map((a) => `${a.bossId}:${a.difficulty}`));
-  const match = presets.filter((p) => p.entries.every((e) => have.has(`${e.bossId}:${e.difficulty}`))).sort((a, b) => b.entries.length - a.entries.length)[0];
-  return match?.id ?? 'custom';
-}
+/** "1 weekly boss", "3 weekly bosses". */
+const weeklyBosses = (n: number) => `${n} weekly ${n === 1 ? 'boss' : 'bosses'}`;
 
 export function CharacterPicker({ selected, onSelect, draggable = true }: { selected: string | null; onSelect: (name: string | null) => void; draggable?: boolean }) {
   const bosses = useStore((s) => s.bosses);
@@ -39,10 +33,11 @@ export function CharacterPicker({ selected, onSelect, draggable = true }: { sele
   const snapshots = useStore((s) => s.snapshots);
   const looks = useStore((s) => s.looks);
   const characters = useStore((s) => s.characters);
-  const setAssignments = useStore((s) => s.setAssignments);
+  const switchPreset = useStore((s) => s.switchPreset);
+  const appliedPresets = useStore((s) => s.appliedPresets);
   const names = visibleCharacters(useCharacterNames(), settings);
   const main = mainCharacterName({ characters, snapshots });
-  const presets = useMemo(() => bosses?.presets ?? [], [bosses]);
+  const presets = useStore((s) => s.presets);
   const [dragging, setDragging] = useState<string | null>(null);
   const [over, setOver] = useState<GroupId | null>(null);
 
@@ -56,29 +51,29 @@ export function CharacterPicker({ selected, onSelect, draggable = true }: { sele
       const monthDone = monthly.filter((a) => clearFor(clears, a, periods.monthly)).length;
       const row = latestRow(snapshots, name);
       const hash = row?.lookHash ?? looks[name]?.[looks[name].length - 1]?.hash ?? null;
-      return { name, img: hash ? lookImageUrl(name, hash) : (row?.imgUrl ?? null), level: row?.level ?? null, group: groupOf(mine, presets), assigned: mine.length, done, total: weekly.length, complete: weekly.length > 0 && done === weekly.length, monthDone, monthTotal: monthly.length };
+      return { name, img: hash ? lookImageUrl(name, hash) : (row?.imgUrl ?? null), level: row?.level ?? null, group: presetOf(name, appliedPresets, presets, assignments, bosses).preset?.id ?? (weeklyOf(assignments, name).length ? 'custom' : 'none'), assigned: mine.length, done, total: weekly.length, complete: weekly.length > 0 && done === weekly.length, monthDone, monthTotal: monthly.length };
     });
-  }, [names, assignments, clears, snapshots, looks, presets]);
+  }, [names, assignments, clears, snapshots, looks, presets, appliedPresets, bosses]);
 
   const groups: { id: GroupId; label: string; hint: string }[] = [
     ...presets.map((p) => ({ id: p.id, label: p.name, hint: `drop here to apply ${p.name}` })),
-    { id: 'custom', label: 'Custom', hint: 'hand-picked bosses' },
-    { id: 'none', label: 'No preset', hint: 'drop here to clear all bosses' },
+    { id: 'custom', label: 'No preset', hint: 'own boss list' },
+    { id: 'none', label: 'No bosses', hint: 'drop here to clear weekly bosses' },
   ];
 
   const move = (name: string, to: GroupId) => {
     const tile = tiles.find((t) => t.name === name);
     if (!tile || tile.group === to || to === 'custom') return;
-    const others = assignments.filter((a) => a.character !== name);
+    const weekly = weeklyOf(assignments, name).length;
     if (to === 'none') {
-      if (tile.assigned && !confirm(`Remove all ${tile.assigned} bosses from ${name}? Recorded clears are kept.`)) return;
-      void setAssignments(others);
+      if (weekly && !confirm(`Remove ${name}'s ${weeklyBosses(weekly)}? Monthly bosses and recorded clears are kept.`)) return;
+      void switchPreset([name], null);
       return;
     }
     const preset = presets.find((p) => p.id === to);
     if (!preset) return;
-    if (tile.assigned && !confirm(`Replace ${name}'s ${tile.assigned} bosses with the ${preset.name} preset? Recorded clears are kept.`)) return;
-    void setAssignments([...others, ...presetAssignments(preset, name, others, bosses)]);
+    if (weekly && !confirm(`Replace ${name}'s ${weeklyBosses(weekly)} with the ${preset.name} preset? Monthly bosses and recorded clears are kept.`)) return;
+    void switchPreset([name], preset.id);
   };
 
   return (
@@ -103,7 +98,7 @@ export function CharacterPicker({ selected, onSelect, draggable = true }: { sele
               setOver(null);
             }}
           >
-            <div className={`flex items-baseline gap-2 ${members.length || canDrop ? 'mb-1.5' : ''}`}>
+            <div className={`flex flex-wrap items-baseline gap-x-2 ${members.length || canDrop ? 'mb-1.5' : ''}`}>
               <span className="label">{g.label}</span>
               <span className="text-[11px] text-ink-3 tabular">{members.length}</span>
               {(canDrop || members.length === 0) && <span className="text-[11px] text-ink-3">· {g.hint}</span>}

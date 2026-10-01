@@ -1,4 +1,4 @@
-import { uid, type Assignment, type Boss, type BossesDoc, type BossPreset, type Clear, type PriceOverrides, type Settings } from '../../lib/types';
+import { uid, type AppliedPresets, type Assignment, type Boss, type BossesDoc, type BossPreset, type Clear, type PresetEntry, type PriceOverrides, type Settings } from '../../lib/types';
 import { periodKey, periodsBetween, previousPeriod, type Cadence } from '../../lib/reset/period';
 
 export const priceKey = (bossId: string, difficulty: string) => `${bossId}:${difficulty}`;
@@ -101,14 +101,97 @@ export function cadenceFor(doc: BossesDoc | null, bossId: string, difficulty: st
   return d?.cadence === 'monthly' ? 'monthly' : 'weekly';
 }
 
-/** Assignments a preset would add for a character (skipping ones already assigned). */
-export function presetAssignments(preset: BossPreset, character: string, existing: Assignment[], doc: BossesDoc | null): Assignment[] {
-  const mine = existing.filter((a) => a.character === character);
-  let order = mine.length ? Math.max(...mine.map((m) => m.order)) + 1 : 0;
-  const out: Assignment[] = [];
+/** Party size a preset entry is assigned with, within the boss's limit. */
+export function entryParty(doc: BossesDoc | null, e: PresetEntry): number {
+  return Math.max(1, Math.min(e.partySize ?? 1, maxParty(doc, e.bossId, e.difficulty)));
+}
+
+/** A character's weekly boss list, in order. */
+export function weeklyOf(assignments: Assignment[], character: string): Assignment[] {
+  return assignments.filter((a) => a.character === character && a.cadence === 'weekly').sort((a, b) => a.order - b.order);
+}
+
+/**
+ * Switch characters to a preset: each one's weekly bosses are wiped and replaced
+ * by the preset's (difficulties and party sizes included). Monthly bosses (Black
+ * Mage) are kept. `preset` null clears the weekly list. Recorded clears are
+ * separate and never touched.
+ */
+export function switchToPreset(assignments: Assignment[], characters: string[], preset: BossPreset | null, doc: BossesDoc | null): Assignment[] {
+  const who = new Set(characters);
+  const kept = assignments.filter((a) => !who.has(a.character) || a.cadence !== 'weekly');
+  if (!preset) return kept;
+  const added: Assignment[] = [];
+  for (const character of characters) {
+    const monthly = kept.filter((a) => a.character === character);
+    let order = monthly.length ? Math.max(...monthly.map((m) => m.order)) + 1 : 0;
+    for (const e of preset.entries) {
+      const cadence = cadenceFor(doc, e.bossId, e.difficulty);
+      if (cadence === 'monthly' && monthly.some((a) => a.bossId === e.bossId)) continue;
+      added.push({ id: uid(), character, bossId: e.bossId, difficulty: e.difficulty, cadence, defaultPartySize: entryParty(doc, e), order: order++ });
+    }
+  }
+  return [...kept, ...added];
+}
+
+/** Same presets in the same order: ids, names, Main tags, descriptions and bosses (difficulty and party size; the order of a preset's bosses doesn't count). */
+export function samePresets(a: BossPreset[], b: BossPreset[], doc: BossesDoc | null): boolean {
+  const key = (p: BossPreset) => JSON.stringify([p.id, p.name, !!p.main, p.description ?? '', p.entries.map((e) => `${e.bossId}:${e.difficulty}:${entryParty(doc, e)}`).sort()]);
+  return a.length === b.length && a.every((p, i) => key(p) === key(b[i]));
+}
+
+/** Weekly meso of a preset for one character if every boss is cleared (party sizes from the preset). */
+export function presetMeso(preset: BossPreset, doc: BossesDoc | null, prices: PriceOverrides, settings: Settings): number {
+  return preset.entries.reduce((n, e) => n + (cadenceFor(doc, e.bossId, e.difficulty) === 'weekly' ? mesoPerClear(crystalValue(doc, prices, settings, e.bossId, e.difficulty), entryParty(doc, e)) : 0), 0);
+}
+
+/** Preset entries a character is under-level for. Unknown level → none. */
+export function levelGaps(preset: BossPreset, level: number | null | undefined, doc: BossesDoc | null): { bossId: string; difficulty: string; need: number }[] {
+  if (level == null) return [];
+  const out: { bossId: string; difficulty: string; need: number }[] = [];
   for (const e of preset.entries) {
-    if (mine.some((a) => a.bossId === e.bossId && a.difficulty === e.difficulty)) continue;
-    out.push({ id: uid(), character, bossId: e.bossId, difficulty: e.difficulty, cadence: cadenceFor(doc, e.bossId, e.difficulty), defaultPartySize: 1, order: order++ });
+    const need = findBoss(doc, e.bossId)?.difficulties.find((d) => d.key === e.difficulty)?.minLevel ?? 0;
+    if (need > level) out.push({ bossId: e.bossId, difficulty: e.difficulty, need });
   }
   return out;
+}
+
+export interface PresetDiff {
+  /** Weekly bosses the switch drops. */
+  removed: Assignment[];
+  /** Preset bosses the character doesn't have yet. */
+  added: PresetEntry[];
+  /** Same boss, different difficulty or party size. */
+  changed: { from: Assignment; to: PresetEntry }[];
+  kept: Assignment[];
+  /** Weekly meso before and after, if every boss is cleared. */
+  before: number;
+  after: number;
+}
+
+/** What switching a character's weekly list to `preset` would change (also how far an edited list has drifted from it). */
+export function diffPreset(weekly: Assignment[], preset: BossPreset, doc: BossesDoc | null, prices: PriceOverrides, settings: Settings): PresetDiff {
+  const entries = preset.entries.filter((e) => cadenceFor(doc, e.bossId, e.difficulty) === 'weekly');
+  const removed: Assignment[] = [];
+  const changed: { from: Assignment; to: PresetEntry }[] = [];
+  const kept: Assignment[] = [];
+  for (const a of weekly) {
+    const t = entries.find((e) => e.bossId === a.bossId);
+    if (!t) removed.push(a);
+    else if (t.difficulty !== a.difficulty || entryParty(doc, t) !== a.defaultPartySize) changed.push({ from: a, to: t });
+    else kept.push(a);
+  }
+  const added = entries.filter((e) => !weekly.some((a) => a.bossId === e.bossId));
+  const before = weekly.reduce((n, a) => n + assignmentMeso(a, doc, prices, settings), 0);
+  return { removed, added, changed, kept, before, after: presetMeso(preset, doc, prices, settings) };
+}
+
+/** The preset a character is on (null when none or deleted), and whether its weekly list has drifted from it. */
+export function presetOf(character: string, applied: AppliedPresets, presets: BossPreset[], assignments: Assignment[], doc: BossesDoc | null): { preset: BossPreset | null; edited: boolean } {
+  const preset = presets.find((p) => p.id === applied[character]) ?? null;
+  if (!preset) return { preset: null, edited: false };
+  const weekly = weeklyOf(assignments, character);
+  const entries = preset.entries.filter((e) => cadenceFor(doc, e.bossId, e.difficulty) === 'weekly');
+  const same = weekly.length === entries.length && entries.every((e) => weekly.some((a) => a.bossId === e.bossId && a.difficulty === e.difficulty && a.defaultPartySize === entryParty(doc, e)));
+  return { preset, edited: !same };
 }

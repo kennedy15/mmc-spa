@@ -6,9 +6,10 @@ import { dataUrl } from './lib/paths';
 import * as fs from './lib/storage/fs-access';
 import * as persist from './lib/storage/persist';
 import { mergeById, type ImportResult } from './lib/storage/exportImport';
-import { DEFAULT_SETTINGS, normalizeIdea, uid, type Assignment, type BossesDoc, type Clear, type Goal, type Idea, type PhotoMeta, type PriceOverrides, type Settings } from './lib/types';
+import { DEFAULT_SETTINGS, normalizeIdea, uid, type AppliedPresets, type Assignment, type BossesDoc, type BossPreset, type Clear, type Goal, type Idea, type PhotoMeta, type PriceOverrides, type Settings } from './lib/types';
 import { periodKey, type Cadence } from './lib/reset/period';
-import { nameResolver, renameAssignments, renameClears, renameGoals, renameSettings, renameSnapshots } from './lib/renames';
+import { nameResolver, renameAppliedPresets, renameAssignments, renameClears, renameGoals, renameSettings, renameSnapshots } from './lib/renames';
+import { samePresets, switchToPreset } from './features/bossing/lib';
 
 export interface FolderState {
   supported: boolean;
@@ -30,6 +31,12 @@ interface State {
   ideas: Idea[];
   photos: PhotoMeta[];
   assignments: Assignment[];
+  /** Boss presets in progression order: the saved list from the Presets page, else the defaults in bosses.json. */
+  presets: BossPreset[];
+  /** True while the saved preset list (bossing/presets.json) differs from the defaults. */
+  presetsEdited: boolean;
+  /** Which preset each character was last switched to. */
+  appliedPresets: AppliedPresets;
   clears: Clear[];
   prices: PriceOverrides;
   goals: Goal[];
@@ -51,6 +58,14 @@ interface State {
   addPhoto(file: Blob, name: string, sourceUrl?: string): Promise<PhotoMeta>;
   removePhoto(id: string): Promise<void>;
   setAssignments(list: Assignment[]): Promise<void>;
+  /** Switch characters to a preset (null = no preset): their weekly bosses are wiped and replaced; monthly bosses and clears stay. An unknown id does nothing. */
+  switchPreset(characters: string[], presetId: string | null): Promise<void>;
+  /** Replace assignments and/or applied presets in one save (edits, undo). */
+  setBossing(next: { assignments?: Assignment[]; appliedPresets?: AppliedPresets }): Promise<void>;
+  /** Save the edited preset list (order = progression order); a list equal to the defaults goes back to them, as resetPresets. */
+  savePresets(list: BossPreset[]): Promise<void>;
+  /** Drop the edited list and go back to the defaults in bosses.json. */
+  resetPresets(): Promise<void>;
   addClear(c: Clear): Promise<void>;
   removeClear(id: string): Promise<void>;
   updateClear(id: string, patch: Partial<Clear>): Promise<void>;
@@ -109,8 +124,8 @@ function realignClears(clears: Clear[], cadenceOf: (c: Clear) => Cadence | null)
   return out;
 }
 
-async function loadLocal(fallback: Pick<State, 'ideas' | 'photos' | 'assignments' | 'clears' | 'prices' | 'goals'> & { settings: Settings | null }) {
-  const [ideas, photos, assignments, clears, prices, goals, settings] = await Promise.all([
+async function loadLocal(fallback: Pick<State, 'ideas' | 'photos' | 'assignments' | 'clears' | 'prices' | 'goals' | 'appliedPresets'> & { settings: Settings | null; presets: BossPreset[] | null }) {
+  const [ideas, photos, assignments, clears, prices, goals, settings, savedPresets, appliedPresets] = await Promise.all([
     persist.loadDoc<Idea[]>('ideas.json', fallback.ideas),
     persist.loadDoc<PhotoMeta[]>('photos.json', fallback.photos),
     persist.loadDoc<Assignment[]>('bossing/assignments.json', fallback.assignments),
@@ -118,8 +133,10 @@ async function loadLocal(fallback: Pick<State, 'ideas' | 'photos' | 'assignments
     persist.loadDoc<PriceOverrides>('bossing/prices.json', fallback.prices),
     persist.loadDoc<Goal[]>('goals.json', fallback.goals),
     persist.loadDoc<Settings | null>('settings.json', fallback.settings),
+    persist.loadDoc<BossPreset[] | null>('bossing/presets.json', fallback.presets, true),
+    persist.loadDoc<AppliedPresets>('bossing/applied-presets.json', fallback.appliedPresets),
   ]);
-  return { ideas: ideas.map(normalizeIdea), photos, assignments, clears, prices, goals, settings };
+  return { ideas: ideas.map(normalizeIdea), photos, assignments, clears, prices, goals, settings, savedPresets, appliedPresets };
 }
 
 /** Snapshots as the repo serves them, for the data folder's mirror; the store's copies are filed under current names. */
@@ -132,17 +149,18 @@ async function loadSnapshots(index: SnapshotIndex | null, characters: Characters
   return renameSnapshots(fetchedSnapshots, nameResolver(characters));
 }
 
-type NamedRecords = Pick<State, 'assignments' | 'clears' | 'goals' | 'settings'>;
+type NamedRecords = Pick<State, 'assignments' | 'clears' | 'goals' | 'settings' | 'appliedPresets'>;
 
 /** Moves local records kept under a renamed character's former name to its current one, saving what moved. */
 async function renameLocal(local: NamedRecords, characters: CharactersConfig | null): Promise<NamedRecords> {
   const resolve = nameResolver(characters, local.settings.extraCharacters);
-  const next = { assignments: renameAssignments(local.assignments, resolve), clears: renameClears(local.clears, resolve), goals: renameGoals(local.goals, resolve), settings: renameSettings(local.settings, resolve) };
+  const next = { assignments: renameAssignments(local.assignments, resolve), clears: renameClears(local.clears, resolve), goals: renameGoals(local.goals, resolve), settings: renameSettings(local.settings, resolve), appliedPresets: renameAppliedPresets(local.appliedPresets, resolve) };
   await Promise.all([
     next.assignments !== local.assignments && persist.saveDoc('bossing/assignments.json', next.assignments),
     next.clears !== local.clears && persist.saveDoc('bossing/clears.json', next.clears),
     next.goals !== local.goals && persist.saveDoc('goals.json', next.goals),
     next.settings !== local.settings && persist.saveDoc('settings.json', next.settings),
+    next.appliedPresets !== local.appliedPresets && persist.saveDoc('bossing/applied-presets.json', next.appliedPresets),
   ]);
   return next;
 }
@@ -160,6 +178,9 @@ export const useStore = create<State>()((set, get) => ({
   ideas: [],
   photos: [],
   assignments: [],
+  presets: [],
+  presetsEdited: false,
+  appliedPresets: {},
   clears: [],
   prices: {},
   goals: [],
@@ -205,7 +226,7 @@ export const useStore = create<State>()((set, get) => ({
       );
 
       const worlds = worldsDoc?.worlds ?? {};
-      const local = await loadLocal({ ideas: [], photos: [], assignments: [], clears: [], prices: {}, goals: [], settings: null });
+      const local = await loadLocal({ ideas: [], photos: [], assignments: [], clears: [], prices: {}, goals: [], settings: null, presets: null, appliedPresets: {} });
       const worldHeroic = characters ? (worlds[String(characters.worldId)]?.heroic ?? true) : true;
       const settings: Settings = { ...DEFAULT_SETTINGS, heroic: worldHeroic, ...(local.settings ?? {}) };
       const key = await persist.apiKey.get();
@@ -221,9 +242,10 @@ export const useStore = create<State>()((set, get) => ({
       };
       const clears = bosses ? realignClears(local.clears, cadenceOf) : local.clears;
       if (clears.length !== local.clears.length || clears.some((c, i) => c !== local.clears[i])) await persist.saveDoc('bossing/clears.json', clears);
-      const named = await renameLocal({ assignments, clears, goals: local.goals, settings }, characters);
+      const named = await renameLocal({ assignments, clears, goals: local.goals, settings, appliedPresets: local.appliedPresets }, characters);
+      const { savedPresets, ...rest } = local;
 
-      set({ ready: true, index, characters, snapshots, looks, worlds, bosses, ...local, ...named, hasApiKey: !!key, hasGithubToken: !!ghTok });
+      set({ ready: true, index, characters, snapshots, looks, worlds, bosses, ...rest, ...named, presets: savedPresets ?? bosses?.presets ?? [], presetsEdited: !!savedPresets, hasApiKey: !!key, hasGithubToken: !!ghTok });
     } catch (e) {
       set({ error: e instanceof Error ? e.message : String(e) });
     } finally {
@@ -241,7 +263,7 @@ export const useStore = create<State>()((set, get) => ({
     await Promise.all([...names].map(async (n) => { const l = await loadLooks(n); if (l && l.length) looks[n] = l; }));
     // After a rename, boss clears and goals follow the character to its new name.
     const s = get();
-    const named = await renameLocal({ assignments: s.assignments, clears: s.clears, goals: s.goals, settings: s.settings }, characters);
+    const named = await renameLocal({ assignments: s.assignments, clears: s.clears, goals: s.goals, settings: s.settings, appliedPresets: s.appliedPresets }, characters);
     set({ index, characters, snapshots, looks, ...named });
   },
 
@@ -255,10 +277,10 @@ export const useStore = create<State>()((set, get) => ({
     const handle = await fs.pickFolder();
     persist.setFolder(handle);
     const s = get();
-    const local = await loadLocal({ ideas: s.ideas, photos: s.photos, assignments: s.assignments, clears: s.clears, prices: s.prices, goals: s.goals, settings: s.settings });
+    const { savedPresets, ...local } = await loadLocal({ ideas: s.ideas, photos: s.photos, assignments: s.assignments, clears: s.clears, prices: s.prices, goals: s.goals, settings: s.settings, presets: s.presetsEdited ? s.presets : null, appliedPresets: s.appliedPresets });
     for (const snap of fetchedSnapshots) void persist.mirrorSnapshot(snap.date, snap);
-    const named = await renameLocal({ assignments: local.assignments, clears: local.clears, goals: local.goals, settings: local.settings ?? s.settings }, s.characters);
-    set({ ...local, ...named, folder: { supported: true, connected: true, needsPermission: false, name: handle.name } });
+    const named = await renameLocal({ assignments: local.assignments, clears: local.clears, goals: local.goals, settings: local.settings ?? s.settings, appliedPresets: local.appliedPresets }, s.characters);
+    set({ ...local, ...named, presets: savedPresets ?? s.bosses?.presets ?? [], presetsEdited: !!savedPresets, folder: { supported: true, connected: true, needsPermission: false, name: handle.name } });
     await persist.saveDoc('settings.json', get().settings);
   },
 
@@ -269,10 +291,10 @@ export const useStore = create<State>()((set, get) => ({
     if (p !== 'granted') return;
     persist.setFolder(handle);
     const s = get();
-    const local = await loadLocal({ ideas: s.ideas, photos: s.photos, assignments: s.assignments, clears: s.clears, prices: s.prices, goals: s.goals, settings: s.settings });
+    const { savedPresets, ...local } = await loadLocal({ ideas: s.ideas, photos: s.photos, assignments: s.assignments, clears: s.clears, prices: s.prices, goals: s.goals, settings: s.settings, presets: s.presetsEdited ? s.presets : null, appliedPresets: s.appliedPresets });
     for (const snap of fetchedSnapshots) void persist.mirrorSnapshot(snap.date, snap);
-    const named = await renameLocal({ assignments: local.assignments, clears: local.clears, goals: local.goals, settings: local.settings ?? s.settings }, s.characters);
-    set({ ...local, ...named, folder: { supported: true, connected: true, needsPermission: false, name: handle.name } });
+    const named = await renameLocal({ assignments: local.assignments, clears: local.clears, goals: local.goals, settings: local.settings ?? s.settings, appliedPresets: local.appliedPresets }, s.characters);
+    set({ ...local, ...named, presets: savedPresets ?? s.bosses?.presets ?? [], presetsEdited: !!savedPresets, folder: { supported: true, connected: true, needsPermission: false, name: handle.name } });
   },
 
   async disconnectFolder() {
@@ -321,6 +343,39 @@ export const useStore = create<State>()((set, get) => ({
   async setAssignments(list) {
     set({ assignments: list });
     await persist.saveDoc('bossing/assignments.json', list);
+  },
+
+  async switchPreset(characters, presetId) {
+    const s = get();
+    const preset = presetId ? (s.presets.find((p) => p.id === presetId) ?? null) : null;
+    // An id that's gone (a preset deleted meanwhile) must not wipe anyone's bosses.
+    if (presetId && !preset) return;
+    const assignments = switchToPreset(s.assignments, characters, preset, s.bosses);
+    const appliedPresets = { ...s.appliedPresets };
+    for (const c of characters) {
+      if (preset) appliedPresets[c] = preset.id;
+      else delete appliedPresets[c];
+    }
+    await get().setBossing({ assignments, appliedPresets });
+  },
+
+  async setBossing({ assignments, appliedPresets }) {
+    set({ ...(assignments ? { assignments } : {}), ...(appliedPresets ? { appliedPresets } : {}) });
+    await Promise.all([assignments && persist.saveDoc('bossing/assignments.json', assignments), appliedPresets && persist.saveDoc('bossing/applied-presets.json', appliedPresets)]);
+  },
+
+  async savePresets(list) {
+    // A list that matches the defaults again (a reorder put back, an undo) is no edit: it follows bosses.json from then on.
+    const { bosses } = get();
+    if (samePresets(list, bosses?.presets ?? [], bosses)) return get().resetPresets();
+    set({ presets: list, presetsEdited: true });
+    await persist.saveDoc('bossing/presets.json', list);
+  },
+
+  async resetPresets() {
+    set({ presets: get().bosses?.presets ?? [], presetsEdited: false });
+    // A null doc falls back to the defaults on the next load too.
+    await persist.saveDoc('bossing/presets.json', null);
   },
 
   async addClear(c) {
@@ -395,8 +450,21 @@ export const useStore = create<State>()((set, get) => ({
       photos.push(p);
       added++;
     }
-    set({ ideas, clears, assignments, photos, goals });
+    // An edited preset list here merges with the bundle's by id (local wins); the defaults give way to the bundle's list.
+    // A bundle without presets.json was exported with the defaults and leaves the list alone.
+    const incoming = Array.isArray(r.bundle.presets) ? r.bundle.presets : null;
+    let { presets, presetsEdited } = s;
+    if (incoming) {
+      const list = s.presetsEdited ? mergeById(s.presets, incoming) : incoming;
+      presetsEdited = !samePresets(list, s.bosses?.presets ?? [], s.bosses);
+      presets = presetsEdited ? list : (s.bosses?.presets ?? []);
+    }
+    // A character's applied preset is taken only when it has none here.
+    const appliedPresets = { ...renameAppliedPresets(r.bundle.appliedPresets ?? {}, resolve), ...s.appliedPresets };
+    set({ ideas, clears, assignments, photos, goals, presets, presetsEdited, appliedPresets });
     await Promise.all([
+      incoming && persist.saveDoc('bossing/presets.json', presetsEdited ? presets : null),
+      persist.saveDoc('bossing/applied-presets.json', appliedPresets),
       persist.saveDoc('ideas.json', ideas),
       persist.saveDoc('bossing/clears.json', clears),
       persist.saveDoc('bossing/assignments.json', assignments),

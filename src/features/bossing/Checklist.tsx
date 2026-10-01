@@ -51,7 +51,7 @@ export function Checklist() {
       <>
         <PageHeader title="Checklist" />
         <Empty title="No bosses assigned yet">
-          Apply the CTENE or GRANDIS preset to a character, or pick bosses one by one.
+          Put your characters on a preset in Assignments, or build a boss list by hand.
           <div className="mt-3">
             <Link to="/bossing/assignments" className="btn-accent">
               Assign bosses

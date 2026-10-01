@@ -38,15 +38,15 @@ export const PALETTES: Record<ThemeId, Palette> = {
     heat: ['#713d19', '#a1521a', '#d0661a', '#ff7a1a', '#ff9e55'],
   },
   aurora: {
-    accent: '#a970ff',
-    // Validated on #0b0b0c: worst adjacent CVD ΔE 15.7, normal-vision 17.2, all >= 3:1. Green first so it never sits next to the purple accent.
-    series: ['#429c5a', '#8c74cc', '#b72164', '#d05fc8', '#66841e', '#5685d4', '#b68b16', '#b56ae7'],
-    axis: '#6e6e7a',
+    accent: '#9c83d4',
+    // Muted (chroma ×0.82, floor 0.105) and validated on #0b0b0c: worst adjacent CVD ΔE 13.9, normal-vision 16.2, all >= 3:1. Green first so it never sits next to the purple accent.
+    series: ['#539963', '#8a78c0', '#ab3865', '#c66bbf', '#698237', '#5f86c6', '#b08d3d', '#af74d8'],
+    axis: '#6f6f79',
     cursor: '#2e2e34',
     cursorFill: '#141416',
     surface: '#0b0b0c',
     others: '#3a3a42',
-    heat: ['#14532d', '#1a7a3f', '#22a352', '#3fcf72', '#7ff0a3'],
+    heat: ['#265133', '#397049', '#508f62', '#6baf7e', '#8dce9e'],
   },
 };
 

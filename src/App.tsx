@@ -9,6 +9,7 @@ import { Legion } from './features/tracker/Legion';
 import { Fashion } from './features/tracker/Fashion';
 import { Checklist } from './features/bossing/Checklist';
 import { Assignments } from './features/bossing/Assignments';
+import { Presets } from './features/bossing/Presets';
 import { History } from './features/bossing/History';
 import { Summary } from './features/bossing/Summary';
 import { Board } from './features/ideas/Board';
@@ -37,6 +38,7 @@ export default function App() {
               <Route path="fashion" element={<Fashion />} />
               <Route path="bossing" element={<Checklist />} />
               <Route path="bossing/assignments" element={<Assignments />} />
+              <Route path="bossing/presets" element={<Presets />} />
               <Route path="bossing/history" element={<History />} />
               <Route path="bossing/summary" element={<Summary />} />
               <Route path="ideas" element={<Board />} />

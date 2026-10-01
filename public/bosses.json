@@ -6,7 +6,7 @@
   "Crystal values are for 1 party member; meso per clear = crystal / partySize, floored. maxParty is the largest party the boss allows (6 when absent).",
   "Values are multiplied by 5 in Heroic worlds (Kronos, Hyperion, Solis) per the wiki footnote; the app applies this when the Heroic setting is on.",
   "cadence is the in-game reset for that difficulty: daily, weekly (Thursday 00:00 UTC) or monthly (1st 00:00 UTC). In GMS only Hard and Extreme Black Mage are monthly; Extreme Lotus/Seren/Kalos/Kaling/First Adversary reset weekly.",
-  "presets: bundles of boss/difficulty pairs that can be applied to a character in one click; Black Mage entries go to the monthly tracker, everything else to the weekly tracker.",
+  "presets: the default weekly boss lists, in progression order (Nathan's chart, 2026-10-01). partySize defaults to 1; main marks presets for the main character. The app copies them into bossing/presets.json on first edit; the Presets page edits that copy.",
   "Rechecked 2026-09-24 against the wiki's GMS table (still labelled v270): no value changed in v.271."
  ],
  "bosses": [
@@ -710,16 +710,19 @@
  ],
  "presets": [
   {
-   "id": "ctene",
-   "name": "CTENE",
-   "description": "Standard weekly CTENE rotation plus Hard Black Mage monthly.",
+   "id": "chaos-tenebris",
+   "name": "Chaos Tenebris",
    "entries": [
     {
-     "bossId": "darknell",
+     "bossId": "damien",
      "difficulty": "hard"
     },
     {
-     "bossId": "verus-hilla",
+     "bossId": "lotus",
+     "difficulty": "hard"
+    },
+    {
+     "bossId": "lucid",
      "difficulty": "hard"
     },
     {
@@ -735,19 +738,11 @@
      "difficulty": "hard"
     },
     {
-     "bossId": "lucid",
+     "bossId": "darknell",
      "difficulty": "hard"
     },
     {
-     "bossId": "damien",
-     "difficulty": "hard"
-    },
-    {
-     "bossId": "lotus",
-     "difficulty": "hard"
-    },
-    {
-     "bossId": "magnus",
+     "bossId": "verus-hilla",
      "difficulty": "hard"
     },
     {
@@ -755,62 +750,33 @@
      "difficulty": "chaos"
     },
     {
-     "bossId": "princess-no",
-     "difficulty": "normal"
+     "bossId": "magnus",
+     "difficulty": "hard"
     },
     {
      "bossId": "akechi",
      "difficulty": "normal"
     },
     {
-     "bossId": "black-mage",
-     "difficulty": "hard"
+     "bossId": "princess-no",
+     "difficulty": "normal"
     }
    ]
   },
   {
-   "id": "grandis",
-   "name": "GRANDIS",
-   "description": "Grandis-era rotation (Baldrix to Damien, Extreme Lotus) plus Hard Black Mage monthly.",
+   "id": "hard-seren-easy-grandis",
+   "name": "HSeren / Easy Grandis",
    "entries": [
     {
-     "bossId": "baldrix",
-     "difficulty": "normal"
-    },
-    {
-     "bossId": "limbo",
-     "difficulty": "normal"
-    },
-    {
-     "bossId": "malefic-star",
-     "difficulty": "normal"
-    },
-    {
-     "bossId": "kalos",
-     "difficulty": "chaos"
-    },
-    {
-     "bossId": "kaling",
-     "difficulty": "normal"
-    },
-    {
-     "bossId": "first-adversary",
-     "difficulty": "normal"
-    },
-    {
-     "bossId": "seren",
+     "bossId": "damien",
      "difficulty": "hard"
     },
     {
      "bossId": "lotus",
-     "difficulty": "extreme"
-    },
-    {
-     "bossId": "darknell",
      "difficulty": "hard"
     },
     {
-     "bossId": "verus-hilla",
+     "bossId": "lucid",
      "difficulty": "hard"
     },
     {
@@ -826,16 +792,279 @@
      "difficulty": "hard"
     },
     {
-     "bossId": "lucid",
+     "bossId": "darknell",
      "difficulty": "hard"
     },
+    {
+     "bossId": "verus-hilla",
+     "difficulty": "hard"
+    },
+    {
+     "bossId": "kalos",
+     "difficulty": "easy"
+    },
+    {
+     "bossId": "first-adversary",
+     "difficulty": "easy"
+    },
+    {
+     "bossId": "kaling",
+     "difficulty": "easy"
+    },
+    {
+     "bossId": "seren",
+     "difficulty": "hard"
+    }
+   ]
+  },
+  {
+   "id": "normal-grandis",
+   "name": "Normal Grandis",
+   "entries": [
     {
      "bossId": "damien",
      "difficulty": "hard"
     },
     {
-     "bossId": "black-mage",
+     "bossId": "lotus",
+     "difficulty": "extreme"
+    },
+    {
+     "bossId": "lucid",
      "difficulty": "hard"
+    },
+    {
+     "bossId": "gloom",
+     "difficulty": "chaos"
+    },
+    {
+     "bossId": "slime",
+     "difficulty": "chaos"
+    },
+    {
+     "bossId": "will",
+     "difficulty": "hard"
+    },
+    {
+     "bossId": "darknell",
+     "difficulty": "hard"
+    },
+    {
+     "bossId": "verus-hilla",
+     "difficulty": "hard"
+    },
+    {
+     "bossId": "kalos",
+     "difficulty": "normal"
+    },
+    {
+     "bossId": "first-adversary",
+     "difficulty": "normal"
+    },
+    {
+     "bossId": "kaling",
+     "difficulty": "easy"
+    },
+    {
+     "bossId": "seren",
+     "difficulty": "hard"
+    }
+   ]
+  },
+  {
+   "id": "normal-baldrix",
+   "name": "Normal Baltrix",
+   "main": true,
+   "entries": [
+    {
+     "bossId": "damien",
+     "difficulty": "hard"
+    },
+    {
+     "bossId": "lucid",
+     "difficulty": "hard"
+    },
+    {
+     "bossId": "gloom",
+     "difficulty": "chaos"
+    },
+    {
+     "bossId": "darknell",
+     "difficulty": "hard"
+    },
+    {
+     "bossId": "verus-hilla",
+     "difficulty": "hard"
+    },
+    {
+     "bossId": "seren",
+     "difficulty": "extreme",
+     "partySize": 6
+    },
+    {
+     "bossId": "lotus",
+     "difficulty": "extreme"
+    },
+    {
+     "bossId": "kalos",
+     "difficulty": "chaos",
+     "partySize": 6
+    },
+    {
+     "bossId": "first-adversary",
+     "difficulty": "hard",
+     "partySize": 3
+    },
+    {
+     "bossId": "kaling",
+     "difficulty": "normal",
+     "partySize": 3
+    },
+    {
+     "bossId": "malefic-star",
+     "difficulty": "normal"
+    },
+    {
+     "bossId": "limbo",
+     "difficulty": "normal",
+     "partySize": 3
+    },
+    {
+     "bossId": "baldrix",
+     "difficulty": "normal",
+     "partySize": 3
+    }
+   ]
+  },
+  {
+   "id": "hard-baldrix",
+   "name": "Hard Baltrix",
+   "main": true,
+   "entries": [
+    {
+     "bossId": "damien",
+     "difficulty": "hard"
+    },
+    {
+     "bossId": "lucid",
+     "difficulty": "hard"
+    },
+    {
+     "bossId": "gloom",
+     "difficulty": "chaos"
+    },
+    {
+     "bossId": "darknell",
+     "difficulty": "hard"
+    },
+    {
+     "bossId": "verus-hilla",
+     "difficulty": "hard"
+    },
+    {
+     "bossId": "seren",
+     "difficulty": "extreme",
+     "partySize": 2
+    },
+    {
+     "bossId": "lotus",
+     "difficulty": "extreme"
+    },
+    {
+     "bossId": "kalos",
+     "difficulty": "chaos",
+     "partySize": 3
+    },
+    {
+     "bossId": "first-adversary",
+     "difficulty": "hard",
+     "partySize": 3
+    },
+    {
+     "bossId": "kaling",
+     "difficulty": "hard",
+     "partySize": 3
+    },
+    {
+     "bossId": "malefic-star",
+     "difficulty": "hard",
+     "partySize": 3
+    },
+    {
+     "bossId": "limbo",
+     "difficulty": "hard",
+     "partySize": 3
+    },
+    {
+     "bossId": "baldrix",
+     "difficulty": "hard",
+     "partySize": 3
+    }
+   ]
+  },
+  {
+   "id": "the-juice",
+   "name": "The Juice",
+   "main": true,
+   "entries": [
+    {
+     "bossId": "damien",
+     "difficulty": "hard"
+    },
+    {
+     "bossId": "gloom",
+     "difficulty": "chaos"
+    },
+    {
+     "bossId": "darknell",
+     "difficulty": "hard"
+    },
+    {
+     "bossId": "verus-hilla",
+     "difficulty": "hard"
+    },
+    {
+     "bossId": "seren",
+     "difficulty": "extreme"
+    },
+    {
+     "bossId": "lotus",
+     "difficulty": "extreme"
+    },
+    {
+     "bossId": "kalos",
+     "difficulty": "extreme",
+     "partySize": 3
+    },
+    {
+     "bossId": "first-adversary",
+     "difficulty": "extreme",
+     "partySize": 3
+    },
+    {
+     "bossId": "kaling",
+     "difficulty": "extreme",
+     "partySize": 6
+    },
+    {
+     "bossId": "malefic-star",
+     "difficulty": "hard",
+     "partySize": 3
+    },
+    {
+     "bossId": "limbo",
+     "difficulty": "hard",
+     "partySize": 3
+    },
+    {
+     "bossId": "baldrix",
+     "difficulty": "hard",
+     "partySize": 3
+    },
+    {
+     "bossId": "jupiter",
+     "difficulty": "normal",
+     "partySize": 2
     }
    ]
   }

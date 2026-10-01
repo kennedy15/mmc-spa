@@ -24,7 +24,8 @@
 }
 
 html { color-scheme: dark; }
-/* Aurora theme (Theme button in the sidebar, src/app/theme.ts): true black, purple accent, greens for gains and activity. */
+/* Aurora theme (Theme button in the sidebar, src/app/theme.ts): true black, purple accent, greens for gains and activity.
+   Accents and text are kept soft (OKLCH chroma ~0.1–0.14, text at L 0.90) so the black doesn't glare. */
 html[data-theme="aurora"] {
   --color-bg: #000000;
   --color-surface: #0b0b0c;
@@ -32,14 +33,17 @@ html[data-theme="aurora"] {
   --color-surface-3: #1d1d21;
   --color-border: #1e1e22;
   --color-border-2: #2e2e34;
-  --color-ink: #ededf0;
-  --color-ink-2: #a3a3ad;
-  --color-ink-3: #6e6e7a;
-  --color-accent: #a970ff;
-  --color-accent-2: #c29bff;
-  --color-accent-dim: #2e1a4d;
-  --color-accent-alt: #42d77d;
-  --color-good: #42d77d;
+  --color-ink: #dcdce0;
+  --color-ink-2: #a0a1a9;
+  --color-ink-3: #6f6f79;
+  --color-accent: #9c83d4;
+  --color-accent-2: #b4a1e6;
+  --color-accent-dim: #312748;
+  --color-accent-alt: #75c291;
+  --color-good: #75c291;
+  --color-warn: #ebc573;
+  --color-bad: #e6768e;
+  --color-info: #6a93d5;
 }
 body {
   margin: 0;

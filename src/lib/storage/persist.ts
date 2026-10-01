@@ -12,6 +12,8 @@ export type DocName =
   | 'bossing/assignments.json'
   | 'bossing/clears.json'
   | 'bossing/prices.json'
+  | 'bossing/presets.json'
+  | 'bossing/applied-presets.json'
   | 'goals.json'
   | 'settings.json';
 
@@ -24,16 +26,33 @@ export function hasFolder() {
   return folder != null;
 }
 
-export async function loadDoc<T>(name: DocName, fallback: T): Promise<T> {
+/** A doc as the folder holds it: undefined when missing or unreadable, null when saved as null. */
+async function readFolderDoc<T>(dir: FileSystemDirectoryHandle, name: DocName): Promise<T | null | undefined> {
+  const text = await fs.readText(dir, name);
+  if (text == null) return undefined;
+  try {
+    return JSON.parse(text) as T | null;
+  } catch {
+    return undefined;
+  }
+}
+
+/**
+ * The folder's copy, else IndexedDB's, else `fallback`. A doc saved as null
+ * counts as missing unless `keepNull` (the presets doc, where null means "back
+ * to the defaults" and must beat an older list kept elsewhere).
+ */
+export async function loadDoc<T>(name: DocName, fallback: T, keepNull = false): Promise<T> {
+  const found = (v: T | null | undefined): v is T => v !== undefined && (keepNull || v !== null);
   if (folder) {
-    const fromFolder = await fs.readJson<T>(folder, name);
-    if (fromFolder != null) {
+    const fromFolder = await readFolderDoc<T>(folder, name);
+    if (found(fromFolder)) {
       await docs.set(name, fromFolder);
       return fromFolder;
     }
   }
-  const fromIdb = await docs.get<T>(name);
-  if (fromIdb != null) {
+  const fromIdb = await docs.get<T | null>(name);
+  if (found(fromIdb)) {
     if (folder) await fs.writeJson(folder, name, fromIdb).catch(() => {});
     return fromIdb;
   }

@@ -1,5 +1,5 @@
 import type { CharacterConfig, CharactersConfig, Snapshot, SnapshotRow } from './nexon/types';
-import type { Assignment, Clear, Goal, Settings } from './types';
+import type { AppliedPresets, Assignment, Clear, Goal, Settings } from './types';
 
 // A character renamed in game stays one character. data/characters.json lists
 // it under its current name, with the earlier ones in `formerNames` and the
@@ -82,6 +82,16 @@ export const renameClears = (list: Clear[], resolve: ResolveName) =>
     (c) => `${c.character}|${c.bossId}|${c.difficulty}|${c.period}`,
     (c) => c.clearedAt.slice(0, 10),
   );
+
+/** Applied presets under current names; when both names had one, the current name's stays. Returns `map` itself when nothing moved. */
+export function renameAppliedPresets(map: AppliedPresets, resolve: ResolveName): AppliedPresets {
+  const entries = Object.entries(map);
+  if (entries.every(([n]) => resolve(n) === n)) return map;
+  const out: AppliedPresets = {};
+  for (const [n, id] of entries) if (resolve(n) === n) out[n] = id;
+  for (const [n, id] of entries) if (resolve(n) !== n && !(resolve(n) in out)) out[resolve(n)] = id;
+  return out;
+}
 
 /** One goal per character: when both names had one, the current name's stays. */
 export const renameGoals = (list: Goal[], resolve: ResolveName) => moveRecords(list, resolve, (g) => g.character);

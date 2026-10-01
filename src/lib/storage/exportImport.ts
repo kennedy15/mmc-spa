@@ -1,4 +1,4 @@
-import type { Assignment, Clear, Goal, Idea, PhotoMeta, PriceOverrides, Settings } from '../types';
+import type { AppliedPresets, Assignment, BossPreset, Clear, Goal, Idea, PhotoMeta, PriceOverrides, Settings } from '../types';
 import { loadPhoto } from './persist';
 
 // JSZip is only needed when exporting or importing, so it loads on demand.
@@ -12,6 +12,9 @@ export interface Bundle {
   prices: PriceOverrides;
   goals: Goal[];
   settings: Settings;
+  /** null until presets are edited (the defaults from bosses.json apply). */
+  presets: BossPreset[] | null;
+  appliedPresets: AppliedPresets;
 }
 
 export async function buildExportZip(b: Bundle): Promise<Blob> {
@@ -22,6 +25,8 @@ export async function buildExportZip(b: Bundle): Promise<Blob> {
   zip.file('bossing/assignments.json', JSON.stringify(b.assignments, null, 2));
   zip.file('bossing/clears.json', JSON.stringify(b.clears, null, 2));
   zip.file('bossing/prices.json', JSON.stringify(b.prices, null, 2));
+  if (b.presets) zip.file('bossing/presets.json', JSON.stringify(b.presets, null, 2));
+  zip.file('bossing/applied-presets.json', JSON.stringify(b.appliedPresets, null, 2));
   zip.file('goals.json', JSON.stringify(b.goals, null, 2));
   zip.file('settings.json', JSON.stringify(b.settings, null, 2));
   zip.file('README.txt', 'MapleTracker export. Import from Settings > Import. Photos are in photos/.\n');
@@ -55,6 +60,8 @@ export async function readImportZip(file: File): Promise<ImportResult> {
     assignments: await json<Assignment[]>('bossing/assignments.json'),
     clears: await json<Clear[]>('bossing/clears.json'),
     prices: await json<PriceOverrides>('bossing/prices.json'),
+    presets: await json<BossPreset[]>('bossing/presets.json'),
+    appliedPresets: await json<AppliedPresets>('bossing/applied-presets.json'),
     goals: await json<Goal[]>('goals.json'),
   };
   const photoBlobs = new Map<string, Blob>();

@@ -101,12 +101,23 @@ export interface Boss {
   name: string;
   difficulties: BossDifficulty[];
 }
+export interface PresetEntry {
+  bossId: string;
+  difficulty: string;
+  /** Party size the boss is assigned with when the preset is applied; 1 when absent. */
+  partySize?: number;
+}
+/** A named weekly boss list. Applying one to a character replaces its weekly bosses (monthly Black Mage is left alone). */
 export interface BossPreset {
   id: string;
   name: string;
   description?: string;
-  entries: { bossId: string; difficulty: string }[];
+  /** Meant for the main character; shown as a "Main" tag. */
+  main?: boolean;
+  entries: PresetEntry[];
 }
+/** Which preset each character was last switched to (character name → preset id). */
+export type AppliedPresets = Record<string, string>;
 export interface BossesDoc {
   asOf: string;
   version?: string;

@@ -13,6 +13,7 @@ const NAV: { to: string; label: string; end?: boolean }[][] = [
   [
     { to: '/bossing', label: 'Checklist', end: true },
     { to: '/bossing/assignments', label: 'Assignments' },
+    { to: '/bossing/presets', label: 'Presets' },
     { to: '/bossing/history', label: 'History' },
     { to: '/bossing/summary', label: 'Summary' },
   ],
