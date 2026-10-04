@@ -38,21 +38,28 @@ function Build({ doc, build: b, prev, next }: { doc: ClassicDoc; build: ClassicB
 
   return (
     <div className="space-y-4">
-      <nav className="flex flex-wrap items-center justify-between gap-3">
-        <Link to="/classic/builds" className="btn gap-2 px-4 py-2.5 text-[15px]">
+      {/* One row on every width: phones keep the emblems and arrows, wider screens add a Previous/Next caption and the name. */}
+      <nav className="flex items-center justify-between gap-2 sm:gap-3">
+        <Link to="/classic/builds" className="btn gap-2 px-3 py-2 text-[15px] sm:px-4 sm:py-2.5">
           <span aria-hidden>←</span> Class builds
         </Link>
-        <div className="flex flex-wrap gap-2">
+        <div className="flex gap-2">
           {prev && (
-            <Link to={`/classic/builds/${prev.id}`} className="btn gap-2.5 py-2 pl-3 pr-4 text-[15px]" aria-label={`Previous build: ${launchName(prev, doc.world)}`}>
+            <Link to={`/classic/builds/${prev.id}`} className="btn gap-2.5 py-1.5 pl-2.5 pr-2.5 text-[15px] sm:pr-4" aria-label={`Previous build: ${launchName(prev, doc.world)}`}>
               <span aria-hidden className="text-ink-3">‹</span>
               <Emblem archetype={prev.archetype} size={32} />
-              {launchName(prev, doc.world)}
+              <span className="text-left leading-tight max-sm:hidden">
+                <span className="block text-[10px] font-medium uppercase tracking-wider text-ink-3">Previous</span>
+                {launchName(prev, doc.world)}
+              </span>
             </Link>
           )}
           {next && (
-            <Link to={`/classic/builds/${next.id}`} className="btn gap-2.5 py-2 pl-4 pr-3 text-[15px]" aria-label={`Next build: ${launchName(next, doc.world)}`}>
-              {launchName(next, doc.world)}
+            <Link to={`/classic/builds/${next.id}`} className="btn gap-2.5 py-1.5 pl-2.5 pr-2.5 text-[15px] sm:pl-4" aria-label={`Next build: ${launchName(next, doc.world)}`}>
+              <span className="text-right leading-tight max-sm:hidden">
+                <span className="block text-[10px] font-medium uppercase tracking-wider text-ink-3">Next</span>
+                {launchName(next, doc.world)}
+              </span>
               <Emblem archetype={next.archetype} size={32} />
               <span aria-hidden className="text-ink-3">›</span>
             </Link>
@@ -101,7 +108,8 @@ function Build({ doc, build: b, prev, next }: { doc: ClassicDoc; build: ClassicB
 
       {keyInfo.length > 0 && (
         <Card title="Key skills">
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
+          {/* Every build lists five: 3 + 2 on laptops, one row on wide screens. The job tag sits under the name so long names don't wrap. */}
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-5">
             {keyInfo.map((s) => (
               <div key={s.skill} className="rounded-xl border border-border bg-surface-2 p-3.5">
                 <div className="flex items-start gap-3">
@@ -110,13 +118,13 @@ function Build({ doc, build: b, prev, next }: { doc: ClassicDoc; build: ClassicB
                   </span>
                   <div className="min-w-0 flex-1">
                     <div className="font-medium text-ink">{s.skill}</div>
-                    <div className="text-[11px] text-ink-3 mt-0.5">
+                    <div className="mt-0.5 flex flex-wrap items-center gap-x-1.5 gap-y-1 text-[11px] text-ink-3">
                       {skillTypeLabel(s.type)} · max {s.max}
+                      <span className={`rounded-md border px-1.5 ${s.tier > doc.world.launchJobs ? 'border-warn/40 text-warn' : 'border-border-2 text-ink-2'}`}>
+                        {ordinal(s.tier)} job{s.tier > doc.world.launchJobs && ' · test only'}
+                      </span>
                     </div>
                   </div>
-                  <span className={`shrink-0 rounded-md border px-1.5 py-0.5 text-[11px] ${s.tier > doc.world.launchJobs ? 'border-warn/40 text-warn' : 'border-border-2 text-ink-2'}`}>
-                    {ordinal(s.tier)} job{s.tier > doc.world.launchJobs && ' · test only'}
-                  </span>
                 </div>
                 <p className="text-sm text-ink-2 mt-2">{s.what}</p>
                 {s.classicChange && (
@@ -249,7 +257,8 @@ function SectionNav() {
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
   return (
-    <nav aria-label="On this page" className="sticky top-0 z-20 -mx-1 flex flex-wrap gap-1 rounded-xl border border-border bg-surface/95 px-1.5 py-1.5 shadow-sm backdrop-blur">
+    // One scrolling line on phones, so the sticky bar covers 40px of the page instead of two wrapped rows.
+    <nav aria-label="On this page" className="sticky top-0 z-20 -mx-1 flex gap-1 overflow-x-auto rounded-xl border border-border bg-surface/95 px-1.5 py-1.5 shadow-sm backdrop-blur sm:flex-wrap [&>button]:shrink-0">
       {SECTIONS.map((s) => (
         <button
           key={s.id}
@@ -279,18 +288,23 @@ function AtAGlance({ build: b, info, world }: { build: ClassicBuild; info: Map<s
   const launchJobs = b.skills.filter((j) => !isPreview(j, world));
   return (
     <section className="card p-4 sm:p-5" aria-label="At a glance">
+      {/* Phones keep the title and a short link on one row, so the stats start a line higher. */}
       <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
         <div className="flex items-baseline gap-2">
           <h2 className="text-base font-semibold text-ink">At a glance</h2>
-          <span className="text-xs text-ink-3">the launch build, 1st and 2nd job</span>
+          <span className="text-xs text-ink-3 max-sm:hidden">the launch build, 1st and 2nd job</span>
         </div>
-        <Link to={`/classic/grinding?class=${encodeURIComponent(b.archetype)}&branch=${encodeURIComponent(b.path[1])}`} className="btn btn-sm gap-1.5">
+        <Link to={`/classic/grinding?class=${encodeURIComponent(b.archetype)}&branch=${encodeURIComponent(b.path[1])}`} className="btn btn-sm gap-1.5" aria-label={`Where to train as a ${b.path[1]}`}>
           <Emblem archetype={b.archetype} size={16} />
-          Where to train as a {b.path[1]} <span aria-hidden>→</span>
+          {/* One flex item, so the button's gap doesn't open up between "train" and "as". */}
+          <span>
+            Where to train<span className="max-sm:hidden"> as a {b.path[1]}</span>
+          </span>
+          <span aria-hidden>→</span>
         </Link>
       </div>
       <div className="grid grid-cols-1 gap-5 lg:grid-cols-[minmax(0,5fr)_minmax(0,8fr)]">
-        <dl className="grid grid-cols-[6.5rem_minmax(0,1fr)] gap-x-3 gap-y-2.5 text-sm">
+        <dl className="grid grid-cols-[4.5rem_minmax(0,1fr)] gap-x-3 gap-y-2.5 text-sm sm:grid-cols-[6.5rem_minmax(0,1fr)]">
           <dt className="label pt-0.5">Stats</dt>
           <dd>
             <span className="inline-flex items-center gap-1.5 font-semibold text-ink">
@@ -372,71 +386,100 @@ function SkillPath({ build: b, job, info, world }: { build: ClassicBuild; job: J
   );
 }
 
-/** The summary's first sentence as a tagline, the rest behind "More". */
+/**
+ * The summary's opening as a tagline, the rest behind "More". The tagline runs to the first sentence end past
+ * 60 characters, so a short opener ("The bow branch.") brings the sentence that says what the build does.
+ * Phones clamp it to two lines until "More" is open, which keeps the At a glance facts on the first screen.
+ */
 function Summary({ text }: { text: string }) {
-  const cut = text.search(/[.!?](\s|$)/);
-  const head = cut > 0 ? text.slice(0, cut + 1) : text;
-  const rest = cut > 0 ? text.slice(cut + 1).trim() : '';
+  const [open, setOpen] = useState(false);
+  const ends = [...text.matchAll(/[.!?](?=\s|$)/g)].map((m) => m.index + 1);
+  const cut = ends.find((i) => i >= 60) ?? text.length;
+  const head = text.slice(0, cut);
+  const rest = text.slice(cut).trim();
   return (
     <div className="mt-2 max-w-3xl text-sm text-ink-2">
-      <p className="text-[15px] text-ink">{head}</p>
+      <p className={`text-[15px] text-ink ${open ? '' : 'max-sm:line-clamp-2'}`}>{head}</p>
+      {open && rest && <p className="mt-1">{rest}</p>}
       {rest && (
-        <details className="group mt-1">
-          <summary className="cursor-pointer list-none text-xs font-medium text-ink-3 hover:text-ink [&::-webkit-details-marker]:hidden">
-            <span className="inline-block transition-transform group-open:rotate-90">›</span> More
-          </summary>
-          <p className="mt-1">{rest}</p>
-        </details>
+        <button type="button" aria-expanded={open} onClick={() => setOpen(!open)} className="mt-1 cursor-pointer text-xs font-medium text-ink-3 hover:text-ink">
+          <span aria-hidden className={`inline-block transition-transform ${open ? 'rotate-90' : ''}`}>
+            ›
+          </span>{' '}
+          {open ? 'Less' : 'More'}
+        </button>
       )}
     </div>
   );
 }
 
+/** Name, job path, tier and tagline, kept short so the At a glance card below is on the first screen. */
 function Hero({ build: b, world }: { build: ClassicBuild; world: World }) {
   const launch = tierLists(b, 2);
   return (
-    <section className="card relative overflow-hidden p-5 sm:p-6">
+    <section className="card relative overflow-hidden p-4 sm:p-6">
       <div className="pointer-events-none absolute -right-24 -top-24 size-72 rounded-full bg-accent/10 blur-3xl" aria-hidden />
-      <div className="relative flex flex-wrap items-start gap-5">
-        <Emblem archetype={b.archetype} size={64} />
-        <div className="min-w-0 flex-1 basis-72">
-          <div className="label">{b.archetype} · Classic World build</div>
-          <h1 className="text-3xl font-semibold tracking-tight mt-1">{launchName(b, world)}</h1>
-          <Summary text={b.summary} />
+      {/* Phones: emblem, name and tier on one row, then the job path and tagline at full width. From sm up the emblem
+          and tier box flank a middle column of name, path and tagline. */}
+      <div className="relative grid grid-cols-[auto_minmax(0,1fr)_auto] items-start gap-x-3 sm:gap-x-5">
+        <div className="sm:row-span-3">
+          <Emblem archetype={b.archetype} size={64} className="max-sm:hidden" />
+          <Emblem archetype={b.archetype} size={48} className="sm:hidden" />
         </div>
-        <div className="flex items-center gap-3 rounded-2xl border border-border bg-surface-2/70 p-2.5 pr-4">
-          <TierBadge tier={b.tier} size="lg" />
-          <div className="text-xs">
-            <div className="font-semibold text-ink">Launch tier</div>
-            <div className="text-ink-3">{launch.lists.length ? `${launch.agree} of ${launch.lists.length} lists agree` : 'no list yet'}</div>
-            <div className="mt-1.5 flex items-center gap-1.5 text-ink-2" title={`${b.name} was only in the second test`}>
-              <TierBadge tier={b.tier3} size="xs" />
-              {b.name} (3rd job, test)
+        <h1 className="min-w-0 text-[26px] font-semibold leading-tight tracking-tight max-sm:self-center sm:text-3xl">{launchName(b, world)}</h1>
+        <div className="sm:row-span-3">
+          <div className="flex items-center gap-3 rounded-2xl border border-border bg-surface-2/70 p-2.5 pr-4 max-sm:hidden">
+            <TierBadge tier={b.tier} size="lg" />
+            <div className="text-xs">
+              <div className="font-semibold text-ink">Launch tier</div>
+              <div className="text-ink-3">{launch.lists.length ? `${launch.agree} of ${launch.lists.length} lists agree` : 'no list yet'}</div>
+              <div className="mt-1.5 flex items-center gap-1.5 text-ink-2" title={`${b.name} was only in the second test`}>
+                <TierBadge tier={b.tier3} size="xs" />
+                {b.name} (3rd job, test)
+              </div>
             </div>
           </div>
+          {/* Phones: the build card's compact tier, launch on top and the 3rd job under it. */}
+          <div className="flex flex-col items-center gap-1 sm:hidden" title={`Launch: ${b.tier} tier${launch.lists.length ? ` (${launch.agree} of ${launch.lists.length} lists agree)` : ''} · ${b.name} (3rd job, second test): ${b.tier3} tier`}>
+            <TierBadge tier={b.tier} />
+            <span className="flex items-center gap-1 text-[10px] text-ink-3">
+              3rd <TierBadge tier={b.tier3} size="xs" />
+            </span>
+          </div>
+        </div>
+        <div className="col-span-3 max-sm:mt-2 sm:col-span-1 sm:col-start-2">
+          <JobPath build={b} world={world} />
+        </div>
+        <div className="col-span-3 sm:col-span-1 sm:col-start-2">
+          <Summary key={b.id} text={b.summary} />
         </div>
       </div>
-
-      <ol className="relative mt-6 grid grid-cols-3">
-        {b.path.map((job, i) => {
-          const later = i + 1 > world.launchJobs;
-          return (
-            <li key={job} className="min-w-0">
-              <div className="flex items-center">
-                <span className={`size-3 shrink-0 rounded-full ring-4 ring-surface ${later ? 'border border-dashed border-ink-3 bg-surface' : 'bg-accent'}`} />
-                {i < 2 && <span className={`h-px flex-1 ${i + 2 > world.launchJobs ? 'border-t border-dashed border-border-2' : 'bg-accent/50'}`} />}
-              </div>
-              <div className={`mt-2 pr-3 text-sm font-medium truncate ${later ? 'text-ink-3' : 'text-ink'}`}>{job}</div>
-              <div className="text-xs text-ink-3">
-                {ordinal(i + 1)} job · Lv {b.jobLevels[i]}
-                {later && <span className="text-warn"> · test only</span>}
-              </div>
-            </li>
-          );
-        })}
-      </ol>
-
     </section>
+  );
+}
+
+/** The three jobs on one line with their advancement levels; jobs the launch doesn't open are muted and marked. */
+function JobPath({ build: b, world }: { build: ClassicBuild; world: World }) {
+  return (
+    <ol className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-[13px] sm:mt-1 sm:text-sm" aria-label="Job advancements">
+      {b.path.map((job, i) => {
+        const later = i + 1 > world.launchJobs;
+        return (
+          <li key={job} className="flex items-center gap-1.5 whitespace-nowrap" title={`${ordinal(i + 1)} job at Lv ${b.jobLevels[i]}${later ? ', only in the second test' : ''}`}>
+            {i > 0 && (
+              <span aria-hidden className="text-ink-3">
+                ›
+              </span>
+            )}
+            <span className={later ? 'text-ink-3' : 'font-medium text-ink'}>{job}</span>
+            <span className="text-xs text-ink-3 tabular">
+              Lv {b.jobLevels[i]}
+              {later && <span className="text-warn"> · test only</span>}
+            </span>
+          </li>
+        );
+      })}
+    </ol>
   );
 }
 
@@ -488,17 +531,22 @@ function Milestones({ build: b, world }: { build: ClassicBuild; world: World }) 
     <Card title="Milestones" action={<span className="text-xs text-ink-3">key skills, at {world.rules.spPerLevel} SP a level</span>}>
       <ol className="relative ml-1.5 border-l border-border-2">
         {items.map((m, i) => (
-          <li key={i} className={`relative pl-5 pb-3 last:pb-0 ${m.preview ? 'opacity-50' : ''}`}>
-            <span className={`absolute -left-[5px] top-[5px] size-2.5 rounded-full ring-2 ring-surface ${m.kind === 'job' ? 'bg-accent' : 'bg-ink-3'}`} />
+          // Test-only steps are muted with the lightest text color rather than opacity, so they stay readable (WCAG AA).
+          <li key={i} className="relative pl-5 pb-3 last:pb-0">
+            <span className={`absolute -left-[5px] top-[5px] size-2.5 rounded-full ring-2 ring-surface ${m.preview ? 'border border-dashed border-ink-3 bg-surface' : m.kind === 'job' ? 'bg-accent' : 'bg-ink-3'}`} />
             <div className="flex items-center gap-2">
-              <span className="w-12 shrink-0 text-xs font-semibold text-ink tabular">Lv {m.level}</span>
-              {m.kind === 'skill' && <SkillIcon skill={m.skill} name={m.text} size={20} />}
-              <span className={`text-sm ${m.kind === 'job' ? 'text-ink font-medium' : 'text-ink-2'}`}>{m.text}</span>
+              <span className={`w-12 shrink-0 text-xs font-semibold tabular ${m.preview ? 'text-ink-3' : 'text-ink'}`}>Lv {m.level}</span>
+              {m.kind === 'skill' && (
+                <span className={m.preview ? 'opacity-50 grayscale' : undefined}>
+                  <SkillIcon skill={m.skill} name={m.text} size={20} />
+                </span>
+              )}
+              <span className={`text-sm ${m.preview ? 'text-ink-3' : m.kind === 'job' ? 'text-ink font-medium' : 'text-ink-2'}`}>{m.text}</span>
             </div>
           </li>
         ))}
       </ol>
-      {items.some((m) => m.preview) && <p className="text-xs text-ink-3 mt-3">Faded: 3rd job, which was only in the second test and isn't in the launch.</p>}
+      {items.some((m) => m.preview) && <p className="text-xs text-ink-3 mt-3">Dashed: 3rd job, which was only in the second test and isn't in the launch.</p>}
     </Card>
   );
 }
@@ -575,7 +623,7 @@ function JobColumn({ build: b, job, info, world, at, reasons }: { build: Classic
   for (const st of steps) if (done(st)) nowPoints.set(st.skill, Math.max(nowPoints.get(st.skill) ?? 0, st.to));
   const next = at == null ? null : steps.find((st) => !done(st));
   return (
-    <section className={`min-w-0 rounded-xl border p-3.5 ${preview ? 'border-dashed border-border-2' : 'border-border bg-surface-2/40'} ${at != null && at < job.from ? 'opacity-60' : ''}`}>
+    <section className={`min-w-0 rounded-xl border p-3.5 ${preview || (at != null && at < job.from) ? 'border-dashed border-border-2' : 'border-border bg-surface-2/40'}`}>
       <header className="flex items-baseline justify-between gap-2">
         <div className="min-w-0">
           <div className="label">
@@ -628,14 +676,18 @@ function JobColumn({ build: b, job, info, world, at, reasons }: { build: Classic
         {steps.map((s) => {
           const isDone = at != null && done(s);
           const isNext = next?.n === s.n;
+          // Steps still ahead of the chosen level: faded icon, lightest text (opacity on text would drop it below WCAG AA).
+          const ahead = at != null && !isDone && !isNext;
           return (
-            <li key={s.n} className={`flex items-start gap-2.5 rounded-lg text-sm ${isNext ? '-mx-1.5 bg-accent/10 px-1.5 py-1 ring-1 ring-accent/50' : ''} ${at != null && !isDone && !isNext ? 'opacity-55' : ''}`}>
+            <li key={s.n} className={`flex items-start gap-2.5 rounded-lg text-sm ${isNext ? '-mx-1.5 bg-accent/10 px-1.5 py-1 ring-1 ring-accent/50' : ''}`}>
               <span className="relative mt-0.5 shrink-0">
-                <SkillIcon skill={info.get(s.skill)} name={s.skill} />
+                <span className={ahead ? 'block opacity-45' : 'block'}>
+                  <SkillIcon skill={info.get(s.skill)} name={s.skill} />
+                </span>
                 <span className={`absolute -left-1.5 -top-1.5 flex min-w-4 h-4 items-center justify-center rounded-full px-0.5 text-[9px] font-semibold tabular ring-2 ring-surface ${isDone ? 'bg-good text-surface' : 'bg-surface-3 text-ink'}`}>{isDone ? '✓' : s.n}</span>
               </span>
               <span className="min-w-0 flex-1">
-                <span className="text-ink">{s.skill}</span> <span className="text-ink-3">→ {s.to}</span>
+                <span className={ahead ? 'text-ink-3' : 'text-ink'}>{s.skill}</span> <span className="text-ink-3">→ {s.to}</span>
                 {isNext && <span className="ml-1.5 text-[11px] font-semibold text-accent">next</span>}
                 {reasons && s.note && <span className="block text-xs text-ink-3">{s.note}</span>}
               </span>

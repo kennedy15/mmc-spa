@@ -1,6 +1,6 @@
 import { dataUrl } from '../../lib/paths';
 import { fmtInt } from '../../app/format';
-import { bySpawns } from './labels';
+import { bySpawns, missGap } from './labels';
 import type { GrindSpot, Monster } from './types';
 
 /**
@@ -67,8 +67,21 @@ export function SpotLayout({ spot, legend = true }: { spot: GrindSpot; legend?: 
   );
 }
 
-/** A compact monster line: sprite, name, level, HP and EXP. */
-export function MobRow({ monster, count }: { monster: Monster; count?: number }) {
+/** The "+N Lv" tag's look, shared with the legend that explains it. */
+export const MISS_TAG = 'inline-block shrink-0 rounded border border-warn/50 bg-warn/10 px-1 align-middle text-[10px] font-semibold leading-4 text-warn tabular';
+
+/** "+N Lv" in the warn color: the monster is N levels above you (MISS_GAP or more), so your hits and spells will miss it more often. */
+export function MissTag({ monster, gap }: { monster: Monster; gap: number }) {
+  return (
+    <span className={MISS_TAG} title={`${monster.name} is ${gap} levels above you: expect to miss it more often (accuracy drops against higher-level monsters, spells included)`}>
+      +{gap} Lv<span className="sr-only"> above you, expect misses</span>
+    </span>
+  );
+}
+
+/** A compact monster line: sprite, name, level, HP and EXP; with your `level`, a monster MISS_GAP or more above you is tagged. */
+export function MobRow({ monster, count, level }: { monster: Monster; count?: number; level?: number | null }) {
+  const gap = missGap(monster, level);
   return (
     <div className="flex items-center gap-2.5 min-w-0">
       <MobSprite monster={monster} box={36} />
@@ -78,7 +91,14 @@ export function MobRow({ monster, count }: { monster: Monster; count?: number })
           {count != null && count > 0 && <span className="ml-1 text-xs font-normal text-ink-3 tabular">×{count}</span>}
         </div>
         <div className="text-[11px] text-ink-3 tabular">
-          Lv {monster.level} · {fmtInt(monster.hp)} HP · {monster.exp == null ? 'no EXP' : `${fmtInt(monster.exp)} EXP`}
+          Lv {monster.level}
+          {gap > 0 && (
+            <>
+              {' '}
+              <MissTag monster={monster} gap={gap} />
+            </>
+          )}{' '}
+          · {fmtInt(monster.hp)} HP · {monster.exp == null ? 'no EXP' : `${fmtInt(monster.exp)} EXP`}
         </div>
       </div>
     </div>

@@ -5,9 +5,9 @@ import { HoverTip } from '../../app/HoverTip';
 import { anchorOf, type Tip } from '../../app/tip';
 import { fmtInt } from '../../app/format';
 import { useClassic } from './data';
-import { ARCHETYPES, bySpawns, expPerHp, siteOf } from './labels';
+import { ARCHETYPES, bySpawns, expPerHp, mainMonster, MISS_GAP, MISS_SOURCE, missGap, siteOf } from './labels';
 import { Emblem } from './bits';
-import { MobRow, MobSprite, SpotLayout } from './SpotParts';
+import { MISS_TAG, MissTag, MobRow, MobSprite, SpotLayout } from './SpotParts';
 import { MapView } from './MapView';
 import type { Archetype, Availability, ClassicDoc, GrindSpot, PartyQuest } from './types';
 
@@ -115,6 +115,8 @@ function Grinding({ doc }: { doc: ClassicDoc }) {
   };
   const mapped = spots.filter(shown);
   const now = spots.filter(fits);
+  // Any monster on a listed spot far enough above your level to miss: the list then explains its "+N Lv" tags.
+  const flagged = now.some((s) => s.monsters.some((m) => missGap(m, level) > 0));
   const hidden = spots.filter((s) => !shown(s)).length;
   const quests = doc.partyQuests.filter((q) => level >= q.levels[0] && level <= q.levels[1]);
   // bestFor names a spot can use: archetypes and the 2nd/3rd jobs of each build.
@@ -167,10 +169,11 @@ function Grinding({ doc }: { doc: ClassicDoc }) {
       <div className="flex flex-wrap items-center gap-x-5 gap-y-3 mb-4">
         <div className="flex flex-wrap items-center gap-2" role="group" aria-label="Filter by class">
           <span className="label w-12">Class</span>
+          {/* As tall as the level boxes, so the two filter rows line up and are easy to tap. */}
           {(['All', ...archetypes] as const).map((a) => (
-            <button key={a} type="button" className={`${cls === a ? 'chip-on' : 'chip'} gap-1.5 py-1 pl-1`} aria-pressed={cls === a} onClick={() => setCls(a)}>
-              {a === 'All' ? <span className="px-1">All</span> : <Emblem archetype={a} size={16} />}
-              {a !== 'All' && a}
+            <button key={a} type="button" className={`${cls === a ? 'chip-on' : 'chip'} h-8 gap-1.5 text-sm ${a === 'All' ? 'px-3.5' : 'pl-2 pr-3'}`} aria-pressed={cls === a} onClick={() => setCls(a)}>
+              {a !== 'All' && <Emblem archetype={a} size={16} />}
+              {a}
             </button>
           ))}
         </div>
@@ -178,23 +181,20 @@ function Grinding({ doc }: { doc: ClassicDoc }) {
       </div>
       {builds.length > 1 && (
         <div className="flex flex-wrap items-center gap-2 -mt-1 mb-4" role="group" aria-label={`${cls} branch`}>
-          <span className="label mr-1">Branch</span>
-          <button type="button" className={branch == null ? 'chip-on' : 'chip'} aria-pressed={branch == null} onClick={() => setBranch(null)}>
+          <span className="label w-12">Branch</span>
+          <button type="button" className={`${branch == null ? 'chip-on' : 'chip'} h-8 px-3 text-sm`} aria-pressed={branch == null} onClick={() => setBranch(null)}>
             Any {cls}
           </button>
           {builds.map((b) => (
-            <button key={b.id} type="button" className={branch === b.path[1] ? 'chip-on' : 'chip'} aria-pressed={branch === b.path[1]} onClick={() => setBranch(b.path[1])}>
+            <button key={b.id} type="button" className={`${branch === b.path[1] ? 'chip-on' : 'chip'} h-8 px-3 text-sm`} aria-pressed={branch === b.path[1]} onClick={() => setBranch(b.path[1])}>
               {b.path[1]}
             </button>
           ))}
         </div>
       )}
 
-      <Route spots={spots.filter((x) => shown(x) && suits(x))} level={level} top={top} onLevel={setLevel} onOpen={reveal} />
-
-      <LevelMap spots={mapped} level={level} top={top} fits={fits} onPick={setLevel} onOpen={reveal} hidden={hidden} />
-
-      <section className="mt-4" aria-label={`Spots at level ${level}`}>
+      {/* The answer to "where do I train?" comes straight after the filters; the overviews follow it. */}
+      <section aria-label={`Spots at level ${level}`}>
         <div className="mb-2 flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
           <h2 className="text-lg font-semibold">
             At Lv {level}
@@ -204,62 +204,75 @@ function Grinding({ doc }: { doc: ClassicDoc }) {
             {now.length} spot{now.length === 1 ? '' : 's'} · open a row for its minimap, monsters and tips
           </span>
         </div>
+        {flagged && (
+          <p className="-mt-1 mb-2 text-xs text-ink-3">
+            <span className={MISS_TAG}>+N Lv</span> a monster that many levels above you. From {MISS_GAP} up, your attacks and spells miss it more often.{' '}
+            <a href={MISS_SOURCE.url} target="_blank" rel="noreferrer" className="whitespace-nowrap hover:text-accent" title={MISS_SOURCE.title}>
+              ↗ henesys.gg
+            </a>
+          </p>
+        )}
         {now.length === 0 ? (
           <Empty title="No listed spot for this level and class">Try “Any” for the branch or class, or a level a little higher or lower.</Empty>
         ) : (
-          <SpotList spots={now} sort={nowSort} onSort={setNowSort} open={openNow} onOpen={setOpenNow} onMap={setMapFor} classOf={classOf} idPrefix="now" />
+          <SpotList spots={now} level={level} sort={nowSort} onSort={setNowSort} open={openNow} onOpen={setOpenNow} onMap={setMapFor} classOf={classOf} idPrefix="now" />
         )}
       </section>
 
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 items-start mt-4">
-        <Card
-          title={`Quests at Lv ${level}`}
-          action={
-            <button type="button" className="text-xs text-ink-3 hover:text-accent cursor-pointer" onClick={() => setJump({ id: 'quests' })}>
-              All quests ↓
-            </button>
-          }
-        >
-          {quests.length === 0 ? (
-            <p className="text-sm text-ink-3">Nothing listed for this level.</p>
-          ) : (
-            <ul className="space-y-2.5">
-              {quests.map((q) => (
-                <li key={q.id} className="text-sm">
-                  <div className="flex items-baseline justify-between gap-2">
-                    <span className="font-medium text-ink">{q.name}</span>
-                    <span className="text-xs text-ink-3 tabular shrink-0">
-                      Lv {q.levels[0]}–{q.levels[1]}
-                    </span>
-                  </div>
-                  <div className="text-xs text-ink-3">
-                    {q.where} · {q.party}
-                  </div>
-                </li>
-              ))}
-            </ul>
-          )}
-        </Card>
-        <Card title="Leveling tips">
-          <ul className="space-y-2.5">
-            {doc.tips.map((t, i) => (
-              <li key={i} className="flex gap-2.5 text-sm text-ink-2">
-                <span className="text-accent shrink-0" aria-hidden>
-                  ◆
-                </span>
-                <span>
-                  {t.text}
-                  {t.source && (
-                    <a href={t.source.url} target="_blank" rel="noreferrer" className="ml-1 text-xs text-ink-3 hover:text-accent whitespace-nowrap" title={t.source.title}>
-                      ↗ {siteOf(t.source.url)}
-                    </a>
-                  )}
-                </span>
+      <Card
+        title={`Quests at Lv ${level}`}
+        className="mt-4"
+        action={
+          <button type="button" className="text-xs text-ink-3 hover:text-accent cursor-pointer" onClick={() => setJump({ id: 'quests' })}>
+            All quests ↓
+          </button>
+        }
+      >
+        {quests.length === 0 ? (
+          <p className="text-sm text-ink-3">Nothing listed for this level.</p>
+        ) : (
+          <ul className="grid grid-cols-1 gap-x-8 gap-y-2.5 md:grid-cols-2">
+            {quests.map((q) => (
+              <li key={q.id} className="text-sm">
+                <div className="flex items-baseline justify-between gap-2">
+                  <span className="font-medium text-ink">{q.name}</span>
+                  <span className="text-xs text-ink-3 tabular shrink-0">
+                    Lv {q.levels[0]}–{q.levels[1]}
+                  </span>
+                </div>
+                <div className="text-xs text-ink-3">
+                  {q.where} · {q.party}
+                </div>
               </li>
             ))}
           </ul>
-        </Card>
-      </div>
+        )}
+      </Card>
+
+      <Route spots={spots.filter((x) => shown(x) && suits(x))} level={level} top={top} onLevel={setLevel} onOpen={reveal} />
+
+      <LevelMap spots={mapped} level={level} top={top} fits={fits} onPick={setLevel} onOpen={reveal} hidden={hidden} />
+
+      {/* Full width, two columns from md up, so the long list stays short. */}
+      <Card title="Leveling tips" className="mt-4">
+        <ul className="gap-x-8 md:columns-2">
+          {doc.tips.map((t, i) => (
+            <li key={i} className="mb-2.5 flex break-inside-avoid gap-2.5 text-sm text-ink-2">
+              <span className="text-accent shrink-0" aria-hidden>
+                ◆
+              </span>
+              <span>
+                {t.text}
+                {t.source && (
+                  <a href={t.source.url} target="_blank" rel="noreferrer" className="ml-1 text-xs text-ink-3 hover:text-accent whitespace-nowrap" title={t.source.title}>
+                    ↗ {siteOf(t.source.url)}
+                  </a>
+                )}
+              </span>
+            </li>
+          ))}
+        </ul>
+      </Card>
 
       <h2 className="text-lg font-semibold mt-8 mb-1">Every spot</h2>
       <p className="text-sm text-ink-3 mb-4">Monster numbers are from the second test's game data; the launch build may differ.</p>
@@ -274,7 +287,7 @@ function Grinding({ doc }: { doc: ClassicDoc }) {
                 {g.note} · {list.length}
               </span>
             </div>
-            <SpotList spots={list} open={open} onOpen={setOpen} fits={fits} onMap={setMapFor} classOf={classOf} idPrefix="spot" />
+            <SpotList spots={list} level={level} open={open} onOpen={setOpen} fits={fits} onMap={setMapFor} classOf={classOf} idPrefix="spot" />
           </section>
         );
       })}
@@ -287,23 +300,27 @@ function Grinding({ doc }: { doc: ClassicDoc }) {
         <h2 className="text-lg font-semibold mt-8 mb-1">Quests and party quests</h2>
         <p className="text-sm text-ink-3 mb-4">Worth doing alongside grinding. KPQ is the only party quest in the launch.</p>
         <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
-          {doc.partyQuests.map((q) => (
-            <div key={q.id} className={`card p-4 ${level >= q.levels[0] && level <= q.levels[1] ? '' : 'opacity-60 hover:opacity-100 transition-opacity'}`}>
-              <Quest quest={q} />
-            </div>
-          ))}
+          {/* Quests at your level get an accent outline and level tag; the others keep full-contrast text. */}
+          {doc.partyQuests.map((q) => {
+            const here = level >= q.levels[0] && level <= q.levels[1];
+            return (
+              <div key={q.id} className={`card p-4 ${here ? 'border-accent' : ''}`}>
+                <Quest quest={q} here={here} />
+              </div>
+            );
+          })}
         </div>
       </section>
     </>
   );
 }
 
-function Quest({ quest: q }: { quest: PartyQuest }) {
+function Quest({ quest: q, here }: { quest: PartyQuest; here: boolean }) {
   return (
     <div className="text-sm">
       <div className="flex items-baseline justify-between gap-2">
         <span className="font-medium text-ink">{q.name}</span>
-        <span className="text-xs text-ink-3 tabular shrink-0">
+        <span className={`shrink-0 text-xs tabular ${here ? 'rounded-md bg-accent px-1.5 py-0.5 font-semibold text-on-accent' : 'text-ink-3'}`} title={here ? 'At your level' : undefined}>
           Lv {q.levels[0]}–{q.levels[1]}
         </span>
       </div>
@@ -325,14 +342,14 @@ function Quest({ quest: q }: { quest: PartyQuest }) {
 
 /**
  * The whole climb at a glance: for every ten levels, the spots that cover most of that bracket for the
- * chosen class (up to three, each with its most common monster). The bracket you're in is lit; a spot
- * opens its card below, a bracket heading jumps your level there.
+ * chosen class (up to three, each with its main monster). The bracket you're in is lit; a spot opens its
+ * card below, a bracket heading jumps your level there. Spots the launch doesn't have carry a "later" tag.
  */
 function Route({ spots, level, top, onLevel, onOpen }: { spots: GrindSpot[]; level: number; top: number; onLevel: (n: number) => void; onOpen: (id: string) => void }) {
   const brackets = Array.from({ length: Math.ceil(top / 10) }, (_, i) => [i * 10 + 1, Math.min(top, i * 10 + 10)] as const);
   const overlap = (s: GrindSpot, [a, z]: readonly [number, number]) => Math.max(0, Math.min(z, s.levels[1]) - Math.max(a, s.levels[0]) + 1);
   return (
-    <Card title="Route" className="mb-4" action={<span className="text-xs text-ink-3">best-covering spots for every 10 levels · click one to open it</span>}>
+    <Card title="Route" className="mt-4" action={<span className="text-xs text-ink-3">best-covering spots for every 10 levels · click one to open it</span>}>
       <ol className="grid grid-cols-2 gap-2 sm:grid-cols-5">
         {brackets.map((br) => {
           const picks = spots
@@ -349,12 +366,14 @@ function Route({ spots, level, top, onLevel, onOpen }: { spots: GrindSpot[]; lev
               {picks.length === 0 && <p className="text-[11px] text-ink-3">No listed spot</p>}
               <ul className="space-y-1">
                 {picks.map(({ s }) => {
-                  const main = bySpawns(s)[0]?.monster;
+                  const main = mainMonster(s);
+                  const later = s.available !== 'launch';
                   return (
                     <li key={s.id}>
-                      <button type="button" onClick={() => onOpen(s.id)} className="flex w-full items-center gap-1.5 rounded-md px-1 py-0.5 text-left hover:bg-surface cursor-pointer" title={`${s.map} · Lv ${s.levels[0]}–${s.levels[1]}`}>
-                        {main && <MobSprite monster={main} box={24} />}
+                      <button type="button" onClick={() => onOpen(s.id)} className="flex w-full items-center gap-1.5 rounded-md px-1 py-0.5 text-left hover:bg-surface cursor-pointer" title={`${s.map} · Lv ${s.levels[0]}–${s.levels[1]}${later ? ` · ${availLabel(s.available)}` : ''}`}>
+                        {main ? <MobSprite monster={main} box={24} /> : <span className="size-6 shrink-0" />}
                         <span className="min-w-0 flex-1 truncate text-xs text-ink">{s.map}</span>
+                        {later && <span className="shrink-0 rounded border border-dashed border-warn/60 px-1 text-[10px] font-medium leading-4 text-warn">later</span>}
                       </button>
                     </li>
                   );
@@ -398,14 +417,18 @@ function LevelMap({ spots, level, top, fits, onPick, onOpen, hidden }: { spots: 
     const rows = [
       { value: s.map },
       { value: `Lv ${s.levels[0]}–${s.levels[1]}`, label: s.available === 'launch' ? s.area : `${s.area} · not at launch` },
-      ...s.monsters.slice(0, 3).map((m) => ({ value: m.name, label: [`Lv ${m.level}`, m.hp != null && `${fmtInt(m.hp)} HP`, m.exp != null && `${fmtInt(m.exp)} EXP`].filter(Boolean).join(' · ') })),
+      ...s.monsters.slice(0, 3).map((m) => {
+        // The same "+N Lv" warning as the spot rows, for spots whose range includes your level.
+        const gap = level >= s.levels[0] && level <= s.levels[1] ? missGap(m, level) : 0;
+        return { value: m.name, label: [`Lv ${m.level}${gap ? ` (+${gap}, expect misses)` : ''}`, m.hp != null && `${fmtInt(m.hp)} HP`, m.exp != null && `${fmtInt(m.exp)} EXP`].filter(Boolean).join(' · ') };
+      }),
     ];
     setTip({ ...anchorOf(el, box.current), rows, width: box.current.clientWidth });
   };
   return (
     <Card
       title="Level map"
-      className="max-sm:hidden"
+      className="mt-4 max-sm:hidden"
       action={
         <span className="text-xs text-ink-3">
           Bars span each spot's levels · click one to open it{hidden > 0 && ` · ${hidden} spots not at launch hidden`}
@@ -438,9 +461,11 @@ function LevelMap({ spots, level, top, fits, onPick, onOpen, hidden }: { spots: 
                   onFocus={(e) => show(e.currentTarget, s)}
                   onBlur={() => setTip(null)}
                 >
+                  {/* Matches are thick and dark, the rest thin and pale, so they separate by lightness and size as well as hue
+                      (full-strength border-2 is only 1.5:1 against the accent, 1.4:1 for deuteranopes). */}
                   <span
-                    className={`block h-2.5 w-full rounded-full transition-colors ${
-                      later ? `border border-dashed ${on ? 'border-accent bg-accent/20' : 'border-ink-3 group-hover:border-ink-2'}` : on ? 'bg-accent group-hover:bg-accent-2' : 'bg-border-2 group-hover:bg-ink-3'
+                    className={`block w-full rounded-full transition-colors ${on ? 'h-3' : 'h-2'} ${
+                      later ? `border border-dashed ${on ? 'border-accent bg-accent/20' : 'border-ink-3/70 group-hover:border-ink-2'}` : on ? 'bg-accent group-hover:bg-accent-2' : 'bg-border-2/50 group-hover:bg-border-2'
                     }`}
                   />
                 </button>
@@ -507,17 +532,21 @@ type SpotSort = { key: 'levels' | 'exp' | 'spawns'; desc: boolean };
 /** Columns from md up: spot, levels, EXP/HP, spawns, best for, map pin, chevron. Phones get a wrapped row. */
 const GRID = 'md:grid md:grid-cols-[minmax(0,1fr)_5.5rem_4.5rem_3.75rem_6rem_1.75rem_0.75rem] md:gap-x-3';
 
-const pct = (r: number) => `${(r * 100).toFixed(1)}%`;
+/** EXP/HP as the plain ratio Classic guides use (mapleclassic.wiki, maplestory.quest: "0.091"); a percent read like a share of the EXP bar. */
+const ratioText = (r: number) => r.toFixed(3);
 
 function sortSpots(list: GrindSpot[], sort: SpotSort): GrindSpot[] {
   const v = (s: GrindSpot) => (sort.key === 'exp' ? (expPerHp(s) ?? 0) : sort.key === 'spawns' ? s.spawns : s.levels[0] + s.levels[1] / 1000);
   return [...list].sort((a, b) => (sort.desc ? v(b) - v(a) : v(a) - v(b)));
 }
 
-const EXP_HP_HINT = "EXP as a share of monster HP over the map's spawn points: 7.5% is 7.5 EXP for every 100 HP you deal. Compare maps you kill in the same number of hits.";
+const EXP_HP_HINT = "EXP per point of monster HP, averaged over the map's spawn points: 0.075 is 75 EXP for every 1,000 HP you deal. Compare maps you kill in the same number of hits.";
 
-/** Spot rows under a column header; with `sort`, the level, EXP/HP and spawn headings sort the list. A row opens to its details. */
-function SpotList({ spots, sort, onSort, open, onOpen, fits, onMap, classOf, idPrefix }: { spots: GrindSpot[]; sort?: SpotSort; onSort?: (s: SpotSort) => void; open: string | null; onOpen: (id: string | null) => void; fits?: (s: GrindSpot) => boolean; onMap: (s: GrindSpot) => void; classOf: ClassOf; idPrefix: string }) {
+/**
+ * Spot rows under a column header; with `sort`, the level, EXP/HP and spawn headings sort the list. A row opens to its details.
+ * Rows whose range includes your `level` tag monsters MISS_GAP or more levels above it; other rows aren't spots for you yet.
+ */
+function SpotList({ spots, level, sort, onSort, open, onOpen, fits, onMap, classOf, idPrefix }: { spots: GrindSpot[]; level: number; sort?: SpotSort; onSort?: (s: SpotSort) => void; open: string | null; onOpen: (id: string | null) => void; fits?: (s: GrindSpot) => boolean; onMap: (s: GrindSpot) => void; classOf: ClassOf; idPrefix: string }) {
   const list = sort ? sortSpots(spots, sort) : spots;
   // Levels sort low-first; EXP/HP and spawns start from the top.
   const head = (key: SpotSort['key'], label: string, title?: string) => {
@@ -544,15 +573,16 @@ function SpotList({ spots, sort, onSort, open, onOpen, fits, onMap, classOf, idP
         <span />
       </div>
       {list.map((s) => (
-        <SpotRow key={s.id} id={`${idPrefix}-${s.id}`} spot={s} on={fits?.(s)} open={open === s.id} onToggle={(o) => (o ? onOpen(s.id) : open === s.id && onOpen(null))} onMap={onMap} classOf={classOf} />
+        <SpotRow key={s.id} id={`${idPrefix}-${s.id}`} spot={s} level={level >= s.levels[0] && level <= s.levels[1] ? level : null} on={fits?.(s)} open={open === s.id} onToggle={(o) => (o ? onOpen(s.id) : open === s.id && onOpen(null))} onMap={onMap} classOf={classOf} />
       ))}
     </div>
   );
 }
 
 /** One spot: its main monster, levels and numbers in columns; opens to the minimap, monsters, tips and sources. */
-function SpotRow({ spot: s, id, on, open, onToggle, onMap, classOf }: { spot: GrindSpot; id: string; on?: boolean; open: boolean; onToggle: (open: boolean) => void; onMap: (s: GrindSpot) => void; classOf: ClassOf }) {
-  const main = bySpawns(s)[0]?.monster;
+function SpotRow({ spot: s, id, level, on, open, onToggle, onMap, classOf }: { spot: GrindSpot; id: string; level: number | null; on?: boolean; open: boolean; onToggle: (open: boolean) => void; onMap: (s: GrindSpot) => void; classOf: ClassOf }) {
+  const main = mainMonster(s);
+  const gap = main ? missGap(main, level) : 0;
   const ratio = expPerHp(s);
   const any = s.bestFor.includes('All');
   const classes = ARCHETYPES.filter((a) => s.bestFor.some((f) => classOf(f) === a));
@@ -560,23 +590,31 @@ function SpotRow({ spot: s, id, on, open, onToggle, onMap, classOf }: { spot: Gr
     <details id={id} open={open} onToggle={(e) => e.currentTarget.open !== open && onToggle(e.currentTarget.open)} className="group scroll-mt-4">
       <summary className={`flex cursor-pointer list-none items-center gap-3 px-4 py-2.5 hover:bg-surface-2/60 [&::-webkit-details-marker]:hidden ${GRID} md:items-center`}>
         <span className="flex min-w-0 flex-1 items-center gap-3">
-          {on != null && <span className={`size-1.5 shrink-0 rounded-full ${on ? 'bg-accent' : 'bg-border-2'}`} title={on ? 'Fits your level and class' : undefined} aria-hidden />}
+          {/* Only matches get a dot (the space stays so rows line up); their level badge is lit too. */}
+          {on != null && <span className={`size-2 shrink-0 rounded-full ${on ? 'bg-accent' : ''}`} title={on ? 'Fits your level and class' : undefined} aria-hidden />}
           {main ? <MobSprite monster={main} box={32} /> : <span className="size-8 shrink-0" />}
           <span className="min-w-0">
-            <span className="block font-medium text-ink md:truncate">{s.map}</span>
-            <span className="block text-xs text-ink-3 md:truncate">
-              {s.area}
-              {main && ` · ${main.name}, Lv ${main.level}`}
+            {/* Not-at-launch spots are tagged on the row itself, not only inside it or in a group heading. */}
+            <span className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-0.5">
+              <span className="min-w-0 font-medium text-ink md:truncate">{s.map}</span>
+              <AvailBadge spot={s} />
+            </span>
+            <span className="flex min-w-0 flex-wrap items-center gap-x-1.5 text-xs text-ink-3 md:flex-nowrap">
+              <span className="min-w-0 md:truncate">
+                {s.area}
+                {main && ` · ${main.name}, Lv ${main.level}`}
+              </span>
+              {main && gap > 0 && <MissTag monster={main} gap={gap} />}
             </span>
             <span className="block text-[11px] text-ink-3 tabular md:hidden">
-              {ratio != null && `${pct(ratio)} EXP/HP · `}
+              {ratio != null && `${ratioText(ratio)} EXP/HP · `}
               {s.spawns} spawns
             </span>
           </span>
         </span>
-        <LevelBadge spot={s} />
+        <LevelBadge spot={s} lit={on === true} />
         <span className="hidden text-sm text-ink tabular md:block" title={EXP_HP_HINT}>
-          {ratio != null ? pct(ratio) : '—'}
+          {ratio != null ? ratioText(ratio) : '—'}
         </span>
         <span className="hidden text-sm text-ink tabular md:block">{s.spawns}</span>
         <span className="hidden flex-wrap items-center gap-1 md:flex" title={s.bestFor.map((f) => (f === 'All' ? 'Any class' : f)).join(', ')}>
@@ -606,36 +644,38 @@ function SpotRow({ spot: s, id, on, open, onToggle, onMap, classOf }: { spot: Gr
       <div className={`px-4 pb-4 ${on != null ? 'md:pl-[4.1rem]' : 'md:pl-[3.75rem]'}`}>
         <div className="flex flex-wrap items-center gap-2 text-xs text-ink-3">
           {s.region} · {s.style === 'both' ? 'solo or party' : s.style}
-          <AvailBadge spot={s} />
           {s.place && (
             <button type="button" className="btn btn-sm ml-auto" onClick={() => onMap(s)}>
               <PinIcon /> Show on the world map
             </button>
           )}
         </div>
-        <SpotBody spot={s} classOf={classOf} />
+        <SpotBody spot={s} level={level} classOf={classOf} />
       </div>
     </details>
   );
 }
 
-function LevelBadge({ spot: s }: { spot: GrindSpot }) {
+/** A spot's level range; `lit` (it fits your level and class) fills it with the accent. */
+function LevelBadge({ spot: s, lit = false }: { spot: GrindSpot; lit?: boolean }) {
   return (
-    <span className="shrink-0 rounded-lg bg-surface-2 border border-border-2 px-2 py-1 text-xs font-semibold text-ink tabular">
+    <span className={`shrink-0 rounded-lg border px-2 py-1 text-xs font-semibold tabular ${lit ? 'border-accent bg-accent text-on-accent' : 'border-border-2 bg-surface-2 text-ink'}`}>
       Lv {s.levels[0]}–{s.levels[1]}
     </span>
   );
 }
 
+const availLabel = (a: Availability) => (a === 'cot2' ? 'Second test only' : a === 'soon' ? 'Not at launch yet' : 'Open at launch');
+
 function AvailBadge({ spot: s }: { spot: GrindSpot }) {
   if (s.available === 'launch') return null;
-  return <span className="rounded-md border border-warn/40 bg-warn/10 px-1.5 py-0.5 text-[11px] font-medium text-warn">{s.available === 'cot2' ? 'Second test only' : 'Not at launch yet'}</span>;
+  return <span className="shrink-0 rounded-md border border-dashed border-warn/60 bg-warn/10 px-1.5 py-px text-[11px] font-medium text-warn">{availLabel(s.available)}</span>;
 }
 
 /** Which archetype a bestFor name belongs to ("Ice/Lightning Wizard" -> Magician), for its class icon. */
 type ClassOf = (name: string) => Archetype | null;
 
-function SpotBody({ spot: s, classOf }: { spot: GrindSpot; classOf: ClassOf }) {
+function SpotBody({ spot: s, level, classOf }: { spot: GrindSpot; level: number | null; classOf: ClassOf }) {
   const ranked = bySpawns(s);
   return (
     <>
@@ -643,7 +683,7 @@ function SpotBody({ spot: s, classOf }: { spot: GrindSpot; classOf: ClassOf }) {
         <SpotLayout spot={s} />
         <div className="space-y-2.5">
           {ranked.map((r) => (
-            <MobRow key={r.monster.name} monster={r.monster} count={r.count} />
+            <MobRow key={r.monster.name} monster={r.monster} count={r.count} level={level} />
           ))}
           <div className="flex flex-wrap gap-x-3 gap-y-1 border-t border-border pt-2 text-[11px] text-ink-3 tabular">
             <span>

@@ -55,6 +55,23 @@ export function bySpawns(spot: GrindSpot): { monster: Monster; index: number; co
   return spot.monsters.map((monster, index) => ({ monster, index, count: counts.get(index) ?? 0 })).sort((a, b) => b.count - a.count);
 }
 
+/** From this many levels above you, hits and spells start missing ("You'll miss monsters 5+ levels above you": henesys.gg). */
+export const MISS_GAP = 5;
+export const MISS_SOURCE = { title: 'Classic World beginner guide', url: 'https://henesys.gg/guides/beginner' };
+
+/** How many levels `monster` is above a character of `level`, once that is MISS_GAP or more; 0 otherwise or with no level. */
+export const missGap = (monster: Monster, level: number | null | undefined): number => (level != null && monster.level - level >= MISS_GAP ? monster.level - level : 0);
+
+/**
+ * The monster a spot is for: the biggest share of the map's EXP (spawn points × EXP), falling back to the most spawns.
+ * Spawn count alone headlines filler, e.g. Lv 19 Blue Mushrooms at the Lv 50–60 Golem's Temple instead of its Stone Golems.
+ */
+export function mainMonster(spot: GrindSpot): Monster | undefined {
+  const ranked = bySpawns(spot);
+  const share = (r: (typeof ranked)[number]) => r.count * (r.monster.exp ?? 0);
+  return ranked.reduce<(typeof ranked)[number] | undefined>((best, r) => (!best || share(r) > share(best) ? r : best), undefined)?.monster;
+}
+
 /**
  * EXP per HP across the map's monsters, weighted by their spawn points: higher means more EXP for the
  * same damage. It ignores overkill, so it compares maps you kill in the same number of hits best.

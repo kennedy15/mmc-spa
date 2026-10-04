@@ -7,7 +7,7 @@ import { siteOf } from './labels';
  * The in-game class icon (32px pixel art in public/classic/jobs/); multiples of 16 stay pixel-sharp on 2x screens.
  * Pirate has an icon too, but no builds or spots until Classic World adds the class.
  */
-export function Emblem({ archetype, size = 32 }: { archetype: Archetype; size?: number }) {
+export function Emblem({ archetype, size = 32, className = '' }: { archetype: Archetype; size?: number; className?: string }) {
   return (
     <img
       src={dataUrl(`classic/jobs/${archetype.toLowerCase()}.webp`, 'public')}
@@ -15,7 +15,7 @@ export function Emblem({ archetype, size = 32 }: { archetype: Archetype; size?: 
       aria-hidden
       width={size}
       height={size}
-      className="shrink-0 rounded-[22%] shadow-sm"
+      className={`shrink-0 rounded-[22%] shadow-sm ${className}`}
       style={{ width: size, height: size, imageRendering: size % 16 === 0 ? 'pixelated' : 'auto' }}
     />
   );

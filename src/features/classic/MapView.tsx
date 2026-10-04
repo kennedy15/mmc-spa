@@ -27,15 +27,18 @@ export function MapView({ maps, spot }: { maps: WorldMap[]; spot: GrindSpot }) {
   return (
     <div>
       <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-        <Segmented
-          value={wm.id}
-          options={maps.map((m) => ({ value: m.id, label: m.name }))}
-          onChange={(id) => {
-            setShown(id);
-            setHover(null);
-          }}
-          label="World map"
-        />
+        {/* The four map tabs are wider than a phone's modal; they scroll sideways instead of spilling out. */}
+        <div className="max-w-full overflow-x-auto">
+          <Segmented
+            value={wm.id}
+            options={maps.map((m) => ({ value: m.id, label: m.name }))}
+            onChange={(id) => {
+              setShown(id);
+              setHover(null);
+            }}
+            label="World map"
+          />
+        </div>
         {spot.available !== 'launch' && <span className="rounded-md border border-warn/40 bg-warn/10 px-1.5 py-0.5 text-[11px] font-medium text-warn">{spot.available === 'cot2' ? 'Second test only' : 'Not at launch yet'}</span>}
       </div>
 

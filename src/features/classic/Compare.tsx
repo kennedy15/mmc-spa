@@ -47,12 +47,13 @@ export function ClassPicker({ builds, value, onChange }: { builds: ClassicBuild[
           </button>
         );
       })}
-      <div className="card flex items-center gap-3 p-3 opacity-60" title="Pirates aren't in Classic World. There are no guides for them until Nexon adds the class.">
-        <span className="grayscale">
+      {/* Unavailable, not faded: a dashed outline and a grey emblem, with text kept at full contrast. */}
+      <div className="flex items-center gap-3 rounded-xl border border-dashed border-border-2 p-3" title="Pirates aren't in Classic World. There are no guides for them until Nexon adds the class.">
+        <span className="opacity-50 grayscale">
           <Emblem archetype="Pirate" size={48} />
         </span>
         <span className="min-w-0">
-          <span className="block font-semibold text-ink">Pirate</span>
+          <span className="block font-semibold text-ink-3">Pirate</span>
           <span className="block text-xs text-ink-3">Not in Classic World yet</span>
         </span>
       </div>
