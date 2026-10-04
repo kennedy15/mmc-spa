@@ -6855,7 +6855,12 @@
      "title": "NiaMeowDB map: Snail Hunting Ground II",
      "url": "https://meowdb.com/msclassic/maps/000000041"
     }
-   ]
+   ],
+   "mapId": 41,
+   "place": {
+    "worldMap": "maple-island",
+    "spot": 5
+   }
   },
   {
    "id": "the-field-west-of-amherst",
@@ -6933,7 +6938,12 @@
      "title": "NiaMeowDB map: The Field West of Amherst",
      "url": "https://meowdb.com/msclassic/maps/000001000"
     }
-   ]
+   ],
+   "mapId": 1000,
+   "place": {
+    "worldMap": "maple-island",
+    "spot": 8
+   }
   },
   {
    "id": "henesys-hunting-ground-i",
@@ -7024,7 +7034,12 @@
      "title": "NiaMeowDB map: Henesys Hunting Ground I",
      "url": "https://meowdb.com/msclassic/maps/010001010"
     }
-   ]
+   ],
+   "mapId": 10001010,
+   "place": {
+    "worldMap": "victoria-island",
+    "spot": 55
+   }
   },
   {
    "id": "kerning-city-construction-site",
@@ -7096,7 +7111,12 @@
      "title": "NiaMeowDB map: Kerning City Construction Site",
      "url": "https://meowdb.com/msclassic/maps/010003010"
     }
-   ]
+   ],
+   "mapId": 10003010,
+   "place": {
+    "worldMap": "victoria-island",
+    "spot": 20
+   }
   },
   {
    "id": "the-forest-north-of-ellinia",
@@ -7172,7 +7192,12 @@
      "title": "NiaMeowDB map: The Forest North of Ellinia",
      "url": "https://meowdb.com/msclassic/maps/010002070"
     }
-   ]
+   ],
+   "mapId": 10002070,
+   "place": {
+    "worldMap": "victoria-island",
+    "spot": 15
+   }
   },
   {
    "id": "west-rocky-mountain-iii",
@@ -7255,7 +7280,12 @@
      "title": "NiaMeowDB map: West Rocky Mountain III",
      "url": "https://meowdb.com/msclassic/maps/010004022"
     }
-   ]
+   ],
+   "mapId": 10004022,
+   "place": {
+    "worldMap": "victoria-island",
+    "spot": 32
+   }
   },
   {
    "id": "line-1-area-1",
@@ -7310,7 +7340,12 @@
      "title": "MapleClassic Wiki: Training guide",
      "url": "https://mapleclassic.wiki/wiki/Training_guide"
     }
-   ]
+   ],
+   "mapId": 10003061,
+   "place": {
+    "worldMap": "victoria-island",
+    "spot": 21
+   }
   },
   {
    "id": "tree-dungeon-forest-up-north-iv",
@@ -7371,7 +7406,12 @@
      "title": "NiaMeowDB map: Tree Dungeon, Forest Up North IV",
      "url": "https://meowdb.com/msclassic/maps/010002075"
     }
-   ]
+   ],
+   "mapId": 10002075,
+   "place": {
+    "worldMap": "victoria-island",
+    "spot": 15
+   }
   },
   {
    "id": "transfer-area",
@@ -7427,7 +7467,12 @@
      "title": "NiaMeowDB: Magician guide Lv 1-30",
      "url": "https://meowdb.com/msclassic/guides/magician-class-guide"
     }
-   ]
+   ],
+   "mapId": 10003062,
+   "place": {
+    "worldMap": "victoria-island",
+    "spot": 21
+   }
   },
   {
    "id": "ant-tunnel-iii",
@@ -7494,7 +7539,12 @@
      "title": "NiaMeowDB: I/L Wizard guide",
      "url": "https://meowdb.com/msclassic/guides/il-wizard-class-guide"
     }
-   ]
+   ],
+   "mapId": 10005062,
+   "place": {
+    "worldMap": "victoria-island",
+    "spot": 52
+   }
   },
   {
    "id": "damp-forest",
@@ -7559,7 +7609,12 @@
      "title": "NiaMeowDB map: Damp Forest",
      "url": "https://meowdb.com/msclassic/maps/010005031"
     }
-   ]
+   ],
+   "mapId": 10005031,
+   "place": {
+    "worldMap": "victoria-island",
+    "spot": 52
+   }
   },
   {
    "id": "land-of-wild-boar",
@@ -7627,7 +7682,12 @@
      "title": "NiaMeowDB: Best Grind Maps 1-70",
      "url": "https://meowdb.com/msclassic/guides/best-grind-maps-every-level"
     }
-   ]
+   ],
+   "mapId": 10004041,
+   "place": {
+    "worldMap": "victoria-island",
+    "spot": 35
+   }
   },
   {
    "id": "ant-tunnel-park",
@@ -7696,7 +7756,12 @@
      "title": "YouTube (Eleveny): Complete Lv.1-70 Training Guide",
      "url": "https://www.youtube.com/watch?v=-WmSz0pQkUo"
     }
-   ]
+   ],
+   "mapId": 10005070,
+   "place": {
+    "worldMap": "victoria-island",
+    "spot": 52
+   }
   },
   {
    "id": "the-burnt-land-ii",
@@ -7764,7 +7829,12 @@
      "title": "NiaMeowDB: Spearman guide",
      "url": "https://meowdb.com/msclassic/guides/spearman-class-guide"
     }
-   ]
+   ],
+   "mapId": 10004112,
+   "place": {
+    "worldMap": "victoria-island",
+    "spot": 42
+   }
   },
   {
    "id": "line-2-area-1",
@@ -7829,7 +7899,12 @@
      "title": "Metaroad: Classic World Changes Explained",
      "url": "https://metaroad.gg/maplestory-classic/meta/classic-world-changes-explained"
     }
-   ]
+   ],
+   "mapId": 10003066,
+   "place": {
+    "worldMap": "victoria-island",
+    "spot": 21
+   }
   },
   {
    "id": "tree-dungeon-forest-up-north-vi",
@@ -7890,7 +7965,12 @@
      "title": "NiaMeowDB map: Tree Dungeon, Forest Up North VI",
      "url": "https://meowdb.com/msclassic/maps/010002080"
     }
-   ]
+   ],
+   "mapId": 10002080,
+   "place": {
+    "worldMap": "victoria-island",
+    "spot": 15
+   }
   },
   {
    "id": "lorang-lorang",
@@ -7955,7 +8035,12 @@
      "title": "Metaroad: Must-Do Quests Guide",
      "url": "https://metaroad.gg/maplestory-classic/archives/must-do-quests-valuable-rewards-guide"
     }
-   ]
+   ],
+   "mapId": 10007020,
+   "place": {
+    "worldMap": "victoria-island",
+    "spot": 49
+   }
   },
   {
    "id": "dangerous-valley",
@@ -8009,7 +8094,12 @@
      "title": "MMOEXP (low trust): Training Guide 1-70",
      "url": "https://www.mmoexp.com/News/maplestory-classic-world-victoria-island-training-guide-best-level-1-70-grinding-spots-2026.html"
     }
-   ]
+   ],
+   "mapId": 10004101,
+   "place": {
+    "worldMap": "victoria-island",
+    "spot": 41
+   }
   },
   {
    "id": "monkey-forest-ii",
@@ -8072,7 +8162,12 @@
      "title": "NiaMeowDB: Assassin guide",
      "url": "https://meowdb.com/msclassic/guides/assassin-class-guide"
     }
-   ]
+   ],
+   "mapId": 10002023,
+   "place": {
+    "worldMap": "victoria-island",
+    "spot": 9
+   }
   },
   {
    "id": "drake-hunting-ground",
@@ -8135,7 +8230,12 @@
      "title": "MMOEXP (low trust): Training Guide 1-70",
      "url": "https://www.mmoexp.com/News/maplestory-classic-world-victoria-island-training-guide-best-level-1-70-grinding-spots-2026.html"
     }
-   ]
+   ],
+   "mapId": 10005075,
+   "place": {
+    "worldMap": "victoria-island",
+    "spot": 52
+   }
   },
   {
    "id": "line-2-area-3",
@@ -8189,7 +8289,12 @@
      "title": "NiaMeowDB forum: Grummash's Cleric guide (COT #2)",
      "url": "https://meowdb.com/msclassic/forum/guides/Grummash/cleric-meso-management-guide"
     }
-   ]
+   ],
+   "mapId": 10003068,
+   "place": {
+    "worldMap": "victoria-island",
+    "spot": 21
+   }
   },
   {
    "id": "the-entrance-of-golems-temple",
@@ -8250,7 +8355,12 @@
      "title": "MapleClassic Wiki: Training guide",
      "url": "https://mapleclassic.wiki/wiki/Training_guide"
     }
-   ]
+   ],
+   "mapId": 10001102,
+   "place": {
+    "worldMap": "victoria-island",
+    "spot": 4
+   }
   },
   {
    "id": "the-tunnel-that-lost-light-ii",
@@ -8313,7 +8423,12 @@
      "title": "NiaMeowDB map: Wild Kargo's Area",
      "url": "https://meowdb.com/msclassic/maps/010005091"
     }
-   ]
+   ],
+   "mapId": 10005077,
+   "place": {
+    "worldMap": "victoria-island",
+    "spot": 52
+   }
   },
   {
    "id": "sleepy-dungeon-v",
@@ -8398,7 +8513,12 @@
      "title": "NiaMeowDB map: Sleepy Dungeon V",
      "url": "https://meowdb.com/msclassic/maps/010005054"
     }
-   ]
+   ],
+   "mapId": 10005054,
+   "place": {
+    "worldMap": "victoria-island",
+    "spot": 52
+   }
   },
   {
    "id": "the-forest-of-evil-ii",
@@ -8459,7 +8579,12 @@
      "title": "NiaMeowDB map: The Forest of Evil II",
      "url": "https://meowdb.com/msclassic/maps/010002026"
     }
-   ]
+   ],
+   "mapId": 10002026,
+   "place": {
+    "worldMap": "victoria-island",
+    "spot": 9
+   }
   },
   {
    "id": "dangerous-valley-ii",
@@ -8516,7 +8641,12 @@
      "title": "YouTube (Eleveny): Complete Lv.1-70 Training Guide",
      "url": "https://www.youtube.com/watch?v=-WmSz0pQkUo"
     }
-   ]
+   ],
+   "mapId": 10004102,
+   "place": {
+    "worldMap": "victoria-island",
+    "spot": 41
+   }
   },
   {
    "id": "sanctuary-entrance-iii",
@@ -8574,7 +8704,12 @@
      "title": "NiaMeowDB map: Sanctuary Entrance III",
      "url": "https://meowdb.com/msclassic/maps/010005103"
     }
-   ]
+   ],
+   "mapId": 10005103,
+   "place": {
+    "worldMap": "victoria-island",
+    "spot": 52
+   }
   },
   {
    "id": "line-1-area-2",
@@ -8640,7 +8775,12 @@
      "title": "NiaMeowDB map: Line 1 <Area 2>",
      "url": "https://meowdb.com/msclassic/maps/010003063"
     }
-   ]
+   ],
+   "mapId": 10003063,
+   "place": {
+    "worldMap": "victoria-island",
+    "spot": 21
+   }
   },
   {
    "id": "forgotten-entrance-iii",
@@ -8708,7 +8848,12 @@
      "title": "Nexon: Founder's Access Release Notes (Oct 3)",
      "url": "https://www.nexon.com/maplestory/news/general/45621/founder-s-access-release-notes"
     }
-   ]
+   ],
+   "mapId": 10006060,
+   "place": {
+    "worldMap": "victoria-island",
+    "spot": 46
+   }
   },
   {
    "id": "the-end-of-fleeting-light",
@@ -8779,7 +8924,12 @@
      "title": "Nexon: Founder's Access Release Notes (Oct 3)",
      "url": "https://www.nexon.com/maplestory/news/general/45621/founder-s-access-release-notes"
     }
-   ]
+   ],
+   "mapId": 10006070,
+   "place": {
+    "worldMap": "victoria-island",
+    "spot": 46
+   }
   },
   {
    "id": "another-sanctuary",
@@ -8844,7 +8994,12 @@
      "title": "Nexon: Founder's Access Release Notes (Oct 3)",
      "url": "https://www.nexon.com/maplestory/news/general/45621/founder-s-access-release-notes"
     }
-   ]
+   ],
+   "mapId": 10006162,
+   "place": {
+    "worldMap": "victoria-island",
+    "spot": 46
+   }
   },
   {
    "id": "cloud-park-v",
@@ -8905,7 +9060,12 @@
      "title": "NiaMeowDB map: Cloud Park V",
      "url": "https://meowdb.com/msclassic/maps/020000087"
     }
-   ]
+   ],
+   "mapId": 20000087,
+   "place": {
+    "worldMap": "el-nath-mts",
+    "spot": 14
+   }
   },
   {
    "id": "watch-out-for-icy-path-ii",
@@ -8959,7 +9119,12 @@
      "title": "NiaMeowDB map: Watch Out for Icy Path II",
      "url": "https://meowdb.com/msclassic/maps/020001031"
     }
-   ]
+   ],
+   "mapId": 20001031,
+   "place": {
+    "worldMap": "el-nath-mts",
+    "spot": 24
+   }
   },
   {
    "id": "dead-mine-ii",
@@ -9015,7 +9180,12 @@
      "title": "NiaMeowDB map: Dead Mine II",
      "url": "https://meowdb.com/msclassic/maps/020001065"
     }
-   ]
+   ],
+   "mapId": 20001065,
+   "place": {
+    "worldMap": "dead-mine",
+    "spot": 5
+   }
   },
   {
    "id": "cold-field-i",
@@ -9074,7 +9244,12 @@
      "title": "NiaMeowDB map: Dead Mine II",
      "url": "https://meowdb.com/msclassic/maps/020001065"
     }
-   ]
+   ],
+   "mapId": 20001032,
+   "place": {
+    "worldMap": "el-nath-mts",
+    "spot": 25
+   }
   },
   {
    "id": "icy-cold-field",
@@ -9124,7 +9299,12 @@
      "title": "NiaMeowDB map: Icy Cold Field",
      "url": "https://meowdb.com/msclassic/maps/020001035"
     }
-   ]
+   ],
+   "mapId": 20001035,
+   "place": {
+    "worldMap": "el-nath-mts",
+    "spot": 27
+   }
   },
   {
    "id": "garden-of-darkness-ii",
@@ -9167,6 +9347,1885 @@
     {
      "title": "NiaMeowDB map: Garden of Darkness II",
      "url": "https://meowdb.com/msclassic/maps/020000057"
+    }
+   ],
+   "mapId": 20000057,
+   "place": {
+    "worldMap": "el-nath-mts",
+    "spot": 3
+   }
+  }
+ ],
+ "worldMaps": [
+  {
+   "id": "maple-island",
+   "name": "Maple Island",
+   "image": "classic/worldmap/maple-island.webp",
+   "width": 634,
+   "height": 446,
+   "spots": [
+    {
+     "x": 137,
+     "y": 149,
+     "type": 1,
+     "maps": [
+      1
+     ],
+     "names": [
+      "Mushroom Town - West Entrance"
+     ]
+    },
+    {
+     "x": 193,
+     "y": 141,
+     "type": 1,
+     "maps": [
+      10,
+      20,
+      21
+     ],
+     "names": [
+      "Mushroom Town",
+      "Mushroom Town Townstreet"
+     ]
+    },
+    {
+     "x": 380,
+     "y": 295,
+     "type": 0,
+     "maps": [
+      60,
+      61
+     ],
+     "names": [
+      "Southperry",
+      "Southperry Armor Store"
+     ]
+    },
+    {
+     "x": 202,
+     "y": 178,
+     "type": 1,
+     "maps": [
+      30
+     ],
+     "names": [
+      "East Entrance to Mushroom Town"
+     ]
+    },
+    {
+     "x": 224,
+     "y": 216,
+     "type": 1,
+     "maps": [
+      40
+     ],
+     "names": [
+      "Snail Hunting Ground I"
+     ]
+    },
+    {
+     "x": 269,
+     "y": 226,
+     "type": 1,
+     "maps": [
+      41
+     ],
+     "names": [
+      "Snail Hunting Ground II"
+     ]
+    },
+    {
+     "x": 309,
+     "y": 231,
+     "type": 1,
+     "maps": [
+      42
+     ],
+     "names": [
+      "Snail Hunting Ground III"
+     ]
+    },
+    {
+     "x": 350,
+     "y": 253,
+     "type": 1,
+     "maps": [
+      50
+     ],
+     "names": [
+      "A Split Road"
+     ]
+    },
+    {
+     "x": 385,
+     "y": 234,
+     "type": 1,
+     "maps": [
+      1000,
+      1001,
+      1002,
+      1003,
+      1004,
+      1005,
+      1006
+     ],
+     "names": [
+      "The Field West of Amherst",
+      "In a Small Forest",
+      "Dangerous Forest",
+      "Mushroom Garden",
+      "Snail Garden",
+      "Hunting Ground Middle of the Forest I",
+      "Hunting Ground Middle of the Forest II"
+     ]
+    },
+    {
+     "x": 453,
+     "y": 222,
+     "type": 0,
+     "maps": [
+      1010,
+      1011,
+      1012,
+      1013,
+      1014
+     ],
+     "names": [
+      "Amherst",
+      "Amherst Weapon Store",
+      "Amherst Townstreet",
+      "Amherst Department Store",
+      "Snail Field of Flowers"
+     ]
+    },
+    {
+     "x": 475,
+     "y": 264,
+     "type": 1,
+     "maps": [
+      1020,
+      1021
+     ],
+     "names": [
+      "The Field East of Amherst",
+      "Tomato Field"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "victoria-island",
+   "name": "Victoria Island",
+   "image": "classic/worldmap/victoria-island.webp",
+   "width": 636,
+   "height": 466,
+   "spots": [
+    {
+     "x": 101,
+     "y": 374,
+     "type": 0,
+     "maps": [
+      10000000,
+      10000001,
+      10000002,
+      10000003
+     ],
+     "names": [
+      "Lith Harbor",
+      "Lith Harbor Armor Shop",
+      "Lith Harbor Department Store",
+      "Lith Harbor Weapon Shop"
+     ]
+    },
+    {
+     "x": 105,
+     "y": 331,
+     "type": 3,
+     "maps": [
+      10000010
+     ],
+     "names": [
+      "Right Around Lith Harbor"
+     ]
+    },
+    {
+     "x": 291,
+     "y": 375,
+     "type": 0,
+     "maps": [
+      10001000,
+      10001001,
+      10001042,
+      10001043,
+      10001044,
+      10001045,
+      10001050,
+      10001051,
+      10001052,
+      88000000,
+      10001002,
+      10001003,
+      10001004,
+      10001005,
+      10001006,
+      10001007,
+      10001040,
+      10001041
+     ],
+     "names": [
+      "Henesys",
+      "Henesys Townstreet",
+      "Henesys Department Store",
+      "Henesys Plastic Surgery",
+      "Henesys Hair Salon",
+      "Henesys Skin-Care",
+      "Henesys Park",
+      "Bowman Instructional School",
+      "Pet-Walking Road",
+      "Victoria Road",
+      "An Empty House",
+      "Pig Park",
+      "Pig Park II",
+      "Someone Else's House",
+      "The Resting Spot, Pig Park",
+      "Henesys Town Hall",
+      "Henesys Market",
+      "Henesys Weapon Store"
+     ]
+    },
+    {
+     "x": 285,
+     "y": 336,
+     "type": 3,
+     "maps": [
+      10001090
+     ],
+     "names": [
+      "The Road to the Dungeon"
+     ]
+    },
+    {
+     "x": 276,
+     "y": 314,
+     "type": 3,
+     "maps": [
+      10001100,
+      10001101,
+      10001102,
+      10001103,
+      10001104,
+      10001105,
+      10001106
+     ],
+     "names": [
+      "Henesys Dungeon Entrance",
+      "The Breathing Rock",
+      "The Entrance of Golem's Temple",
+      "Golem's Temple I",
+      "Golem's Temple II",
+      "Golem's Temple III",
+      "Golem's Temple IV"
+     ]
+    },
+    {
+     "x": 342,
+     "y": 370,
+     "type": 3,
+     "maps": [
+      10001060
+     ],
+     "names": [
+      "The Hill East of Henesys"
+     ]
+    },
+    {
+     "x": 352,
+     "y": 351,
+     "type": 3,
+     "maps": [
+      10001070
+     ],
+     "names": [
+      "The Rain-Forest East of Henesys"
+     ]
+    },
+    {
+     "x": 358,
+     "y": 325,
+     "type": 3,
+     "maps": [
+      10001080,
+      10001081,
+      10001082
+     ],
+     "names": [
+      "The Forest East of Henesys",
+      "The Blue Mushroom Forest",
+      "Utah's Pig Farm"
+     ]
+    },
+    {
+     "x": 372,
+     "y": 310,
+     "type": 3,
+     "maps": [
+      10002030,
+      10002031,
+      10002032,
+      10002033,
+      10002034
+     ],
+     "names": [
+      "The Forest South of Ellinia",
+      "Dungeon, Southern Forest I",
+      "Dungeon, Southern Forest II",
+      "Dungeon, Southern Forest III",
+      "Dungeon, Southern Forest IV"
+     ]
+    },
+    {
+     "x": 394,
+     "y": 300,
+     "type": 3,
+     "maps": [
+      10002020,
+      10002021,
+      10002022,
+      10002023,
+      10002024,
+      10002025,
+      10002026,
+      10002027
+     ],
+     "names": [
+      "The Forest of Wisdom",
+      "Monkey Forest I",
+      "Tree Dungeon, Monkey Forest I",
+      "Monkey Forest II",
+      "Tree Dungeon, Monkey Forest II",
+      "The Forest of Evil I",
+      "The Forest of Evil II",
+      "Downstairs at the Forest"
+     ]
+    },
+    {
+     "x": 414,
+     "y": 289,
+     "type": 3,
+     "maps": [
+      10002010
+     ],
+     "names": [
+      "The Field South of Ellinia"
+     ]
+    },
+    {
+     "x": 442,
+     "y": 254,
+     "type": 0,
+     "maps": [
+      10002000,
+      10002001,
+      10002090,
+      10002091,
+      10002002,
+      10002003,
+      10002004,
+      10002040,
+      10002041,
+      10002042,
+      10002043,
+      10002044
+     ],
+     "names": [
+      "Ellinia",
+      "Ellinia Weapon Store",
+      "Ellinia Station",
+      "Before Takeoff <To Orbis>",
+      "Ellinia Department Store",
+      "Magic Library",
+      "Marr's Forest",
+      "The Forest of Patience <Step 1>",
+      "The Forest of Patience <Step 2>",
+      "The Forest of Patience <Step 3>",
+      "The Forest of Patience <Step 4>",
+      "The Forest of Patience <Step 5>"
+     ]
+    },
+    {
+     "x": 125,
+     "y": 318,
+     "type": 3,
+     "maps": [
+      10000011
+     ],
+     "names": [
+      "Thicket Around the Beach I"
+     ]
+    },
+    {
+     "x": 391,
+     "y": 258,
+     "type": 3,
+     "maps": [
+      10002050
+     ],
+     "names": [
+      "The Field Up North of Ellinia"
+     ]
+    },
+    {
+     "x": 372,
+     "y": 251,
+     "type": 3,
+     "maps": [
+      10002060,
+      10002061,
+      10002062
+     ],
+     "names": [
+      "The Tree That Grew I",
+      "The Tree That Grew II",
+      "The Tree That Grew III"
+     ]
+    },
+    {
+     "x": 361,
+     "y": 226,
+     "type": 3,
+     "maps": [
+      10002070,
+      10002071,
+      10002083,
+      10002072,
+      10002073,
+      10002074,
+      10002075,
+      10002076,
+      10002080,
+      10002081,
+      10002082
+     ],
+     "names": [
+      "The Forest North of Ellinia",
+      "The Tree Tunnel At the Forest Up North",
+      "Tree Dungeon, Forest Up North IX",
+      "Tree Dungeon, Forest Up North I",
+      "Tree Dungeon, Forest Up North II",
+      "Tree Dungeon, Forest Up North III",
+      "Tree Dungeon, Forest Up North IV",
+      "Tree Dungeon, Forest Up North V",
+      "Tree Dungeon, Forest Up North VI",
+      "Tree Dungeon, Forest Up North VII",
+      "Tree Dungeon, Forest Up North VIII"
+     ]
+    },
+    {
+     "x": 159,
+     "y": 280,
+     "type": 3,
+     "maps": [
+      10003050,
+      10003051,
+      10003052
+     ],
+     "names": [
+      "Kerning City Middle Forest I",
+      "Kerning City Middle Forest II",
+      "Kerning City Middle Forest III"
+     ]
+    },
+    {
+     "x": 130,
+     "y": 286,
+     "type": 3,
+     "maps": [
+      10003040
+     ],
+     "names": [
+      "L Forest III"
+     ]
+    },
+    {
+     "x": 111,
+     "y": 268,
+     "type": 3,
+     "maps": [
+      10003030
+     ],
+     "names": [
+      "L Forest II"
+     ]
+    },
+    {
+     "x": 116,
+     "y": 240,
+     "type": 3,
+     "maps": [
+      10003020
+     ],
+     "names": [
+      "L Forest I"
+     ]
+    },
+    {
+     "x": 116,
+     "y": 216,
+     "type": 3,
+     "maps": [
+      10003010,
+      10003011
+     ],
+     "names": [
+      "Kerning City Construction Site",
+      "Caution Falling Down"
+     ]
+    },
+    {
+     "x": 96,
+     "y": 184,
+     "type": 0,
+     "maps": [
+      10003000,
+      10003001,
+      10003062,
+      10003063,
+      10003064,
+      10003065,
+      10003066,
+      10003067,
+      10003068,
+      10003002,
+      10003003,
+      10003004,
+      10003005,
+      10003006,
+      10003007,
+      10003060,
+      10003061
+     ],
+     "names": [
+      "Kerning City",
+      "Kerning City Self-Defence Item Store",
+      "Transfer Area",
+      "Line 1 <Area 2>",
+      "Line 1 <Area 3>",
+      "Line 1 <Area 4>",
+      "Line 2 <Area 1>",
+      "Line 2 <Area 2>",
+      "Line 2 <Area 3>",
+      "Kerning City Pharmacy",
+      "Thieves' Hideout",
+      "Niora Hospital",
+      "Kerning City Hair Salon",
+      "Kerning City Repair Shop",
+      "Kerning City Civic Center",
+      "Subway Ticketing Booth",
+      "Line 1 <Area 1>"
+     ]
+    },
+    {
+     "x": 132,
+     "y": 152,
+     "type": 3,
+     "maps": [
+      10003070
+     ],
+     "names": [
+      "Sunset Sky"
+     ]
+    },
+    {
+     "x": 148,
+     "y": 320,
+     "type": 3,
+     "maps": [
+      10000012
+     ],
+     "names": [
+      "Thicket Around the Beach II"
+     ]
+    },
+    {
+     "x": 158,
+     "y": 153,
+     "type": 3,
+     "maps": [
+      10003080,
+      10003081
+     ],
+     "names": [
+      "Construction Site North of Kerning City",
+      "Northern Top of Construction Site"
+     ]
+    },
+    {
+     "x": 142,
+     "y": 186,
+     "type": 3,
+     "maps": [
+      10003090
+     ],
+     "names": [
+      "The Swamp of Despair I"
+     ]
+    },
+    {
+     "x": 170,
+     "y": 192,
+     "type": 3,
+     "maps": [
+      10003091
+     ],
+     "names": [
+      "The Swamp of Despair II"
+     ]
+    },
+    {
+     "x": 187,
+     "y": 218,
+     "type": 3,
+     "maps": [
+      10003092
+     ],
+     "names": [
+      "The Swamp of Despair III"
+     ]
+    },
+    {
+     "x": 195,
+     "y": 242,
+     "type": 3,
+     "maps": [
+      10003093
+     ],
+     "names": [
+      "Dangerous Croko I"
+     ]
+    },
+    {
+     "x": 215,
+     "y": 256,
+     "type": 3,
+     "maps": [
+      10003094,
+      10003095,
+      10003096,
+      10003097
+     ],
+     "names": [
+      "Dangerous Croko II",
+      "Monkey Swamp I",
+      "Monkey Swamp II",
+      "Monkey Swamp III"
+     ]
+    },
+    {
+     "x": 244,
+     "y": 86,
+     "type": 0,
+     "maps": [
+      10004000,
+      10004001,
+      10004002,
+      10004003
+     ],
+     "names": [
+      "Perion",
+      "Perion Weapon Store",
+      "Perion Department Store",
+      "Warriors' Sanctuary"
+     ]
+    },
+    {
+     "x": 203,
+     "y": 114,
+     "type": 3,
+     "maps": [
+      10004010
+     ],
+     "names": [
+      "West Street Corner of Perion"
+     ]
+    },
+    {
+     "x": 200,
+     "y": 136,
+     "type": 3,
+     "maps": [
+      10004020,
+      10004021,
+      10004022,
+      10004023
+     ],
+     "names": [
+      "West Rocky Mountain I",
+      "West Rocky Mountain II",
+      "West Rocky Mountain III",
+      "West Rocky Mountain IV"
+     ]
+    },
+    {
+     "x": 185,
+     "y": 152,
+     "type": 3,
+     "maps": [
+      10004030
+     ],
+     "names": [
+      "West Domain of Perion"
+     ]
+    },
+    {
+     "x": 172,
+     "y": 311,
+     "type": 3,
+     "maps": [
+      10000013
+     ],
+     "names": [
+      "Thicket Around the Beach III"
+     ]
+    },
+    {
+     "x": 284,
+     "y": 109,
+     "type": 3,
+     "maps": [
+      10004040,
+      10004041,
+      10004042
+     ],
+     "names": [
+      "Perion Street Corner",
+      "Land of Wild Boar",
+      "Over the Wall"
+     ]
+    },
+    {
+     "x": 302,
+     "y": 118,
+     "type": 3,
+     "maps": [
+      10004050,
+      10004051,
+      10004052,
+      10004053,
+      10004054,
+      10004055,
+      10004056
+     ],
+     "names": [
+      "East Rocky Mountain I",
+      "East Rocky Mountain II",
+      "East Rocky Mountain III",
+      "East Rocky Mountain IV",
+      "East Rocky Mountain V",
+      "East Rocky Mountain VI",
+      "East Rocky Mountain VII"
+     ]
+    },
+    {
+     "x": 324,
+     "y": 126,
+     "type": 3,
+     "maps": [
+      10004060
+     ],
+     "names": [
+      "Rocky Road I"
+     ]
+    },
+    {
+     "x": 340,
+     "y": 147,
+     "type": 3,
+     "maps": [
+      10004070
+     ],
+     "names": [
+      "Rocky Road II"
+     ]
+    },
+    {
+     "x": 360,
+     "y": 170,
+     "type": 3,
+     "maps": [
+      10004080
+     ],
+     "names": [
+      "Rocky Road III"
+     ]
+    },
+    {
+     "x": 362,
+     "y": 201,
+     "type": 3,
+     "maps": [
+      10004090,
+      10004091
+     ],
+     "names": [
+      "East Domain of Perion",
+      "The Land of Wild Boar II"
+     ]
+    },
+    {
+     "x": 239,
+     "y": 137,
+     "type": 3,
+     "maps": [
+      10004100,
+      10004101,
+      10004102
+     ],
+     "names": [
+      "Deep Valley I",
+      "Dangerous Valley",
+      "Dangerous Valley II"
+     ]
+    },
+    {
+     "x": 227,
+     "y": 156,
+     "type": 3,
+     "maps": [
+      10004110,
+      10004111,
+      10004112,
+      10004113,
+      10004114,
+      10004115
+     ],
+     "names": [
+      "Deep Valley II",
+      "The Burnt Land I",
+      "The Burnt Land II",
+      "The Burnt Land III",
+      "The Burnt Land IV",
+      "The Burnt Land V"
+     ]
+    },
+    {
+     "x": 217,
+     "y": 187,
+     "type": 3,
+     "maps": [
+      10004120
+     ],
+     "names": [
+      "Deep Valley III"
+     ]
+    },
+    {
+     "x": 236,
+     "y": 207,
+     "type": 3,
+     "maps": [
+      10004121
+     ],
+     "names": [
+      "Perion Dungeon Entrance"
+     ]
+    },
+    {
+     "x": 184,
+     "y": 291,
+     "type": 3,
+     "maps": [
+      10000020
+     ],
+     "names": [
+      "3-Way Road-Split"
+     ]
+    },
+    {
+     "x": 346,
+     "y": 253,
+     "type": 2,
+     "maps": [
+      10006000,
+      10006001,
+      10006041,
+      10006042,
+      10006050,
+      10006060,
+      10006061,
+      10006070,
+      10006071,
+      10006072,
+      10006080,
+      10006090,
+      10006002,
+      10006100,
+      10006110,
+      10006111,
+      10006120,
+      10006121,
+      10006130,
+      10006140,
+      10006150,
+      10006151,
+      10006152,
+      10006010,
+      10006160,
+      10006161,
+      10006162,
+      10006020,
+      10006021,
+      10006022,
+      10006030,
+      10006031,
+      10006040
+     ],
+     "names": [
+      "Forgotten Hollow",
+      "Cave Fairy Sanctuary",
+      "Forgotten Entrance II",
+      "Forgotten Entrance III",
+      "The End of Fleeting Light",
+      "Forgotten Dungeon Tunnel",
+      "The Faded Canopy",
+      "Forbidden Entrance",
+      "Perilous Descent I",
+      "Cave Fairy Department Store",
+      "Perilous Descent II",
+      "Perilous Descent III",
+      "Decayed Tunnel I",
+      "Someone Else's Grave",
+      "Decayed Tunnel II",
+      "Decayed Tunnel III",
+      "Lingering Regret",
+      "Bygone Days",
+      "Primeval Forest I",
+      "Precipice of Darkness",
+      "Dilapidated Tomb",
+      "Another Sanctuary",
+      "Primeval Forest II",
+      "Collision of Ice and Fire",
+      "Primeval Forest III",
+      "The Valley of Death",
+      "Forgotten Entrance I"
+     ]
+    },
+    {
+     "x": 526,
+     "y": 371,
+     "type": 0,
+     "maps": [
+      10007000
+     ],
+     "names": [
+      "Florina Beach"
+     ]
+    },
+    {
+     "x": 551,
+     "y": 365,
+     "type": 3,
+     "maps": [
+      10007010
+     ],
+     "names": [
+      "A Look-Out Shed Around the Beach"
+     ]
+    },
+    {
+     "x": 568,
+     "y": 349,
+     "type": 3,
+     "maps": [
+      10007020,
+      10007021
+     ],
+     "names": [
+      "Lorang Lorang",
+      "Lorang Lorang Lorang"
+     ]
+    },
+    {
+     "x": 564,
+     "y": 323,
+     "type": 3,
+     "maps": [
+      10007030,
+      10007031
+     ],
+     "names": [
+      "Lorang and Clang",
+      "Clang and Lorang"
+     ]
+    },
+    {
+     "x": 538,
+     "y": 319,
+     "type": 3,
+     "maps": [
+      10007040
+     ],
+     "names": [
+      "Hot Sand"
+     ]
+    },
+    {
+     "x": 271,
+     "y": 258,
+     "type": 2,
+     "maps": [
+      10005030,
+      10005031,
+      10005040,
+      10005041,
+      10005042,
+      10005043,
+      10005044,
+      10005045,
+      10005046,
+      10005050,
+      10005051,
+      10005052,
+      10005020,
+      10005053,
+      10005054,
+      10005060,
+      10005061,
+      10005062,
+      10005063,
+      10005064,
+      10005065,
+      10005066,
+      10005067,
+      10005010,
+      10005070,
+      10005071,
+      10005072,
+      10005073,
+      10005074,
+      10005075,
+      10005076,
+      10005077,
+      10005080,
+      10005090,
+      10005011,
+      10005100,
+      10005101,
+      10005102,
+      10005103,
+      10005104,
+      10005105,
+      10005012,
+      10005000,
+      10005001,
+      10005002,
+      10005003
+     ],
+     "names": [
+      "Damp Tree-Forest",
+      "Damp Forest",
+      "The Deep Forest of Patience <Step 1>",
+      "The Deep Forest of Patience <Step 2>",
+      "The Deep Forest of Patience <Step 3>",
+      "The Deep Forest of Patience <Step 4>",
+      "The Deep Forest of Patience <Step 5>",
+      "The Deep Forest of Patience <Step 6>",
+      "The Deep Forest of Patience <Step 7>",
+      "Sleepy Dungeon I",
+      "Sleepy Dungeon II",
+      "Sleepy Dungeon III",
+      "Deep Forest",
+      "Sleepy Dungeon IV",
+      "Sleepy Dungeon V",
+      "Ant Tunnel I",
+      "Ant Tunnel II",
+      "Ant Tunnel III",
+      "Ant Tunnel IV",
+      "Dark Cave",
+      "Dangerous Steam",
+      "Deep Ant Tunnel I",
+      "Deep Ant Tunnel II",
+      "Swampy Land in a Deep Forest",
+      "Ant Tunnel Park",
+      "The Cave of Evil Eye I",
+      "The Cave of Evil Eye II",
+      "The Cave of Evil Eye III",
+      "The Cave of Evil Eye IV",
+      "Drake Hunting Ground",
+      "The Tunnel That Lost Light I",
+      "The Tunnel That Lost Light II",
+      "Another Entrance",
+      "Drake's Meal Table",
+      "Hunting Ground in the Deep Forest I",
+      "Another Path",
+      "Sanctuary Entrance I",
+      "Sanctuary Entrance II",
+      "Sanctuary Entrance III",
+      "Sanctuary Entrance IV",
+      "The Cursed Sanctuary",
+      "Hunting Ground in the Deep Forest II",
+      "Sleepywood",
+      "Sleepywood Hotel",
+      "Regular Sauna",
+      "VIP Sauna"
+     ]
+    },
+    {
+     "x": 194,
+     "y": 320,
+     "type": 3,
+     "maps": [
+      10001030
+     ],
+     "names": [
+      "Forest West of Henesys"
+     ]
+    },
+    {
+     "x": 207,
+     "y": 351,
+     "type": 3,
+     "maps": [
+      10001020,
+      10001021
+     ],
+     "names": [
+      "A Hill West of Henesys ",
+      "Mushroom Garden"
+     ]
+    },
+    {
+     "x": 237,
+     "y": 372,
+     "type": 3,
+     "maps": [
+      10001010,
+      10001011,
+      10001012
+     ],
+     "names": [
+      "Henesys Hunting Ground I",
+      "Henesys Hunting Ground II",
+      "Henesys Hunting Ground III"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "el-nath-mts",
+   "name": "El Nath Mts.",
+   "image": "classic/worldmap/el-nath-mts.webp",
+   "width": 636,
+   "height": 467,
+   "spots": [
+    {
+     "x": 125,
+     "y": 92,
+     "type": 0,
+     "maps": [
+      20000000,
+      20000001,
+      20000002
+     ],
+     "names": [
+      "Orbis",
+      "Orbis Weapon Store",
+      "Orbis Department Store"
+     ]
+    },
+    {
+     "x": 170,
+     "y": 56,
+     "type": 4,
+     "maps": [
+      20000010,
+      20000011,
+      20000012,
+      20000013
+     ],
+     "names": [
+      "Orbis Ticketing Booth",
+      "Station Tunnel <To Ellinia>",
+      "Station<To Ellinia>",
+      "Before Takeoff <To Ellinia>"
+     ]
+    },
+    {
+     "x": 574,
+     "y": 62,
+     "type": 3,
+     "maps": [
+      20000056
+     ],
+     "names": [
+      "Garden of Darkness I"
+     ]
+    },
+    {
+     "x": 570,
+     "y": 153,
+     "type": 3,
+     "maps": [
+      20000057
+     ],
+     "names": [
+      "Garden of Darkness II"
+     ]
+    },
+    {
+     "x": 383,
+     "y": 108,
+     "type": 3,
+     "maps": [
+      20000060
+     ],
+     "names": [
+      "Garden of Yellow I"
+     ]
+    },
+    {
+     "x": 424,
+     "y": 108,
+     "type": 3,
+     "maps": [
+      20000061
+     ],
+     "names": [
+      "Garden of Yellow II"
+     ]
+    },
+    {
+     "x": 369,
+     "y": 149,
+     "type": 3,
+     "maps": [
+      20000070
+     ],
+     "names": [
+      "Garden of Green I"
+     ]
+    },
+    {
+     "x": 441,
+     "y": 149,
+     "type": 3,
+     "maps": [
+      20000071
+     ],
+     "names": [
+      "Garden of Green II"
+     ]
+    },
+    {
+     "x": 257,
+     "y": 149,
+     "type": 3,
+     "maps": [
+      20000080
+     ],
+     "names": [
+      "Cloud Park II"
+     ]
+    },
+    {
+     "x": 268,
+     "y": 195,
+     "type": 3,
+     "maps": [
+      20000081
+     ],
+     "names": [
+      "Strolling Path"
+     ]
+    },
+    {
+     "x": 319,
+     "y": 221,
+     "type": 3,
+     "maps": [
+      20000082,
+      20000083
+     ],
+     "names": [
+      "Cloud Park III",
+      "Disposed Flower Garden"
+     ]
+    },
+    {
+     "x": 376,
+     "y": 225,
+     "type": 3,
+     "maps": [
+      20000084,
+      20000085
+     ],
+     "names": [
+      "Cloud Park IV",
+      "Old Man's House"
+     ]
+    },
+    {
+     "x": 104,
+     "y": 99,
+     "type": 4,
+     "maps": [
+      20000030,
+      20000031,
+      20000032,
+      20000033
+     ],
+     "names": [
+      "Orbis Park",
+      "Orbis Plastic Surgery",
+      "Orbis Hair Salon",
+      "Orbis Skin-Care"
+     ]
+    },
+    {
+     "x": 435,
+     "y": 226,
+     "type": 3,
+     "maps": [
+      20000086
+     ],
+     "names": [
+      "Strolling Path II"
+     ]
+    },
+    {
+     "x": 482,
+     "y": 218,
+     "type": 3,
+     "maps": [
+      20000087
+     ],
+     "names": [
+      "Cloud Park V"
+     ]
+    },
+    {
+     "x": 527,
+     "y": 199,
+     "type": 3,
+     "maps": [
+      20000088
+     ],
+     "names": [
+      "Cloud Park VI"
+     ]
+    },
+    {
+     "x": 133,
+     "y": 159,
+     "type": 3,
+     "maps": [
+      20000090
+     ],
+     "names": [
+      "Entrance to Orbis Tower"
+     ]
+    },
+    {
+     "x": 133,
+     "y": 233,
+     "type": 3,
+     "maps": [
+      20000091,
+      20000092,
+      20000101,
+      20000093,
+      20000094,
+      20000095,
+      20000096,
+      20000097,
+      20000098,
+      20000099,
+      20000100
+     ],
+     "names": [
+      "Orbis Tower <15th Floor>",
+      "Orbis Tower <14th Floor>",
+      "Orbis Tower <6th Floor>",
+      "Orbis Tower <13th Floor>",
+      "Orbis Tower <12th Floor>",
+      "Orbis Tower <11th Floor>",
+      "Orbis Tower <10th Floor>",
+      "Orbis Tower <9th Floor>",
+      "Orbis Tower <8th Floor>",
+      "Orbis Tower <Hidden Room>",
+      "Orbis Tower <7th Floor>"
+     ]
+    },
+    {
+     "x": 133,
+     "y": 296,
+     "type": 3,
+     "maps": [
+      20000102,
+      20000103,
+      20000104,
+      20000105,
+      20000106
+     ],
+     "names": [
+      "Orbis Tower <5th Floor>",
+      "Orbis Tower <4th Floor>",
+      "Orbis Tower <3rd Floor>",
+      "Orbis Tower <2nd Floor>",
+      "Orbis Tower <1st Floor>"
+     ]
+    },
+    {
+     "x": 165,
+     "y": 332,
+     "type": 3,
+     "maps": [
+      20001020
+     ],
+     "names": [
+      "Snowy Hill"
+     ]
+    },
+    {
+     "x": 228,
+     "y": 353,
+     "type": 0,
+     "maps": [
+      20001000,
+      20001001
+     ],
+     "names": [
+      "El Nath",
+      "Chief's Residence"
+     ]
+    },
+    {
+     "x": 253,
+     "y": 342,
+     "type": 4,
+     "maps": [
+      20001010,
+      20001011,
+      20001012
+     ],
+     "names": [
+      "El Nath Market",
+      "El Nath Weapon Store",
+      "El Nath Department Store"
+     ]
+    },
+    {
+     "x": 283,
+     "y": 384,
+     "type": 3,
+     "maps": [
+      20001030
+     ],
+     "names": [
+      "Watch Out for Icy Path I"
+     ]
+    },
+    {
+     "x": 61,
+     "y": 85,
+     "type": 4,
+     "maps": [
+      20000040,
+      20000041
+     ],
+     "names": [
+      "Top of the Hill",
+      "Guild Head Quarters<Hall of Fame>"
+     ]
+    },
+    {
+     "x": 320,
+     "y": 413,
+     "type": 3,
+     "maps": [
+      20001031
+     ],
+     "names": [
+      "Watch Out for Icy Path II"
+     ]
+    },
+    {
+     "x": 380,
+     "y": 407,
+     "type": 3,
+     "maps": [
+      20001032
+     ],
+     "names": [
+      "Cold Field I"
+     ]
+    },
+    {
+     "x": 378,
+     "y": 353,
+     "type": 3,
+     "maps": [
+      20001033,
+      20001034
+     ],
+     "names": [
+      "Cold Field II",
+      "The Crown-Flyer"
+     ]
+    },
+    {
+     "x": 350,
+     "y": 348,
+     "type": 3,
+     "maps": [
+      20001035
+     ],
+     "names": [
+      "Icy Cold Field"
+     ]
+    },
+    {
+     "x": 439,
+     "y": 340,
+     "type": 3,
+     "maps": [
+      20001040
+     ],
+     "names": [
+      "Ice Valley I"
+     ]
+    },
+    {
+     "x": 507,
+     "y": 345,
+     "type": 3,
+     "maps": [
+      20001041
+     ],
+     "names": [
+      "Ice Valley II"
+     ]
+    },
+    {
+     "x": 563,
+     "y": 330,
+     "type": 2,
+     "maps": [
+      20001042
+     ],
+     "names": [
+      "Sharp Cliff I"
+     ]
+    },
+    {
+     "x": 235,
+     "y": 95,
+     "type": 3,
+     "maps": [
+      20000050
+     ],
+     "names": [
+      "Cloud Park I"
+     ]
+    },
+    {
+     "x": 319,
+     "y": 107,
+     "type": 3,
+     "maps": [
+      20000051
+     ],
+     "names": [
+      "The Road to Garden of 3 Colors"
+     ]
+    },
+    {
+     "x": 373,
+     "y": 63,
+     "type": 3,
+     "maps": [
+      20000052
+     ],
+     "names": [
+      "Garden of Red I"
+     ]
+    },
+    {
+     "x": 434,
+     "y": 62,
+     "type": 3,
+     "maps": [
+      20000053
+     ],
+     "names": [
+      "Garden of Red II"
+     ]
+    },
+    {
+     "x": 481,
+     "y": 105,
+     "type": 3,
+     "maps": [
+      20000054
+     ],
+     "names": [
+      "Stairway to the Sky I"
+     ]
+    },
+    {
+     "x": 551,
+     "y": 104,
+     "type": 3,
+     "maps": [
+      20000055
+     ],
+     "names": [
+      "Stairway to the Sky II"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "dead-mine",
+   "name": "Dead Mine",
+   "image": "classic/worldmap/dead-mine.webp",
+   "width": 637,
+   "height": 468,
+   "spots": [
+    {
+     "x": 97,
+     "y": 110,
+     "type": 3,
+     "maps": [
+      20001042
+     ],
+     "names": [
+      "Sharp Cliff I"
+     ]
+    },
+    {
+     "x": 119,
+     "y": 131,
+     "type": 1,
+     "maps": [
+      20001043,
+      20001044
+     ],
+     "names": [
+      "Sharp Cliff II",
+      "Holy Ground at the Snowfield"
+     ]
+    },
+    {
+     "x": 237,
+     "y": 429,
+     "type": 1,
+     "maps": [
+      20001062
+     ],
+     "names": [
+      "Forest of Dead Trees III"
+     ]
+    },
+    {
+     "x": 296,
+     "y": 416,
+     "type": 1,
+     "maps": [
+      20001063
+     ],
+     "names": [
+      "Forest of Dead Trees IV"
+     ]
+    },
+    {
+     "x": 403,
+     "y": 362,
+     "type": 1,
+     "maps": [
+      20001064
+     ],
+     "names": [
+      "Dead Mine I"
+     ]
+    },
+    {
+     "x": 435,
+     "y": 362,
+     "type": 1,
+     "maps": [
+      20001065
+     ],
+     "names": [
+      "Dead Mine II"
+     ]
+    },
+    {
+     "x": 460,
+     "y": 336,
+     "type": 1,
+     "maps": [
+      20001066
+     ],
+     "names": [
+      "Dead Mine III"
+     ]
+    },
+    {
+     "x": 478,
+     "y": 318,
+     "type": 1,
+     "maps": [
+      20001067
+     ],
+     "names": [
+      "Dead Mine IV"
+     ]
+    },
+    {
+     "x": 495,
+     "y": 284,
+     "type": 1,
+     "maps": [
+      20001070
+     ],
+     "names": [
+      "The Passage"
+     ]
+    },
+    {
+     "x": 477,
+     "y": 264,
+     "type": 1,
+     "maps": [
+      20001071
+     ],
+     "names": [
+      "The Cave of Trial I"
+     ]
+    },
+    {
+     "x": 489,
+     "y": 237,
+     "type": 1,
+     "maps": [
+      20001072,
+      20001073
+     ],
+     "names": [
+      "The Cave of Trial II",
+      "Cave Within the Cave"
+     ]
+    },
+    {
+     "x": 505,
+     "y": 215,
+     "type": 1,
+     "maps": [
+      20001074
+     ],
+     "names": [
+      "The Cave of Trial III"
+     ]
+    },
+    {
+     "x": 148,
+     "y": 151,
+     "type": 1,
+     "maps": [
+      20001050
+     ],
+     "names": [
+      "Wolf Territory I"
+     ]
+    },
+    {
+     "x": 483,
+     "y": 197,
+     "type": 1,
+     "maps": [
+      20001075
+     ],
+     "names": [
+      "The Door to Zakum"
+     ]
+    },
+    {
+     "x": 177,
+     "y": 173,
+     "type": 1,
+     "maps": [
+      20001051
+     ],
+     "names": [
+      "Wolf Territory II"
+     ]
+    },
+    {
+     "x": 177,
+     "y": 205,
+     "type": 1,
+     "maps": [
+      20001052
+     ],
+     "names": [
+      "Dangerous Cliff"
+     ]
+    },
+    {
+     "x": 123,
+     "y": 245,
+     "type": 1,
+     "maps": [
+      20001053
+     ],
+     "names": [
+      "Wolf Territory III"
+     ]
+    },
+    {
+     "x": 130,
+     "y": 294,
+     "type": 1,
+     "maps": [
+      20001054
+     ],
+     "names": [
+      "Wolf Territory IV"
+     ]
+    },
+    {
+     "x": 155,
+     "y": 329,
+     "type": 1,
+     "maps": [
+      20001055
+     ],
+     "names": [
+      "Wolf Territory V"
+     ]
+    },
+    {
+     "x": 148,
+     "y": 377,
+     "type": 1,
+     "maps": [
+      20001060
+     ],
+     "names": [
+      "Forest of Dead Trees I"
+     ]
+    },
+    {
+     "x": 198,
+     "y": 399,
+     "type": 1,
+     "maps": [
+      20001061
+     ],
+     "names": [
+      "Forest of Dead Trees II"
+     ]
     }
    ]
   }

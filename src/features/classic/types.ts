@@ -110,6 +110,32 @@ export interface GrindSpot {
   classicNote: string | null;
   confidence: string;
   sources: Source[];
+  /** The Classic World map ID, when it could be matched. */
+  mapId: number | null;
+  /** The in-game world-map marker that covers this map: a `WorldMap.id` and an index into its `spots`. */
+  place: { worldMap: string; spot: number } | null;
+}
+
+/** A marker on an in-game world map; x and y are pixels from the image's top-left corner. */
+export interface WorldMapSpot {
+  x: number;
+  y: number;
+  /** The game's marker type (0 is a town). */
+  type: number;
+  /** Map IDs the marker stands for, and their names. */
+  maps: number[];
+  names: string[];
+}
+
+/** An in-game world map (Classic World COT #2 data): the art and its markers. */
+export interface WorldMap {
+  id: string;
+  name: string;
+  /** Image path under public/. */
+  image: string;
+  width: number;
+  height: number;
+  spots: WorldMapSpot[];
 }
 
 export interface PartyQuest {
@@ -142,6 +168,7 @@ export interface ClassicDoc {
   };
   builds: ClassicBuild[];
   spots: GrindSpot[];
+  worldMaps: WorldMap[];
   partyQuests: PartyQuest[];
   tips: { text: string; source?: Source }[];
 }

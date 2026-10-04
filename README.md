@@ -85,9 +85,9 @@ The sidebar has three sections. **Modern Maple** holds today's GMS tracker and b
   - the skill order for each job, showing the level each step is affordable at (1 SP at each advancement, 3 per level)
   - key skills, tips, gear and what Classic changed
   - its sources
-- **Grinding spots** puts every researched map on a Lv 1–100 chart. Pick a level, class and branch to see where to train, with quests and leveling tips alongside.
+- **Grinding spots** puts every researched map on a Lv 1–100 chart. Pick a level with the boxes (5 apart) or by dragging the orange line, then a class and branch, to see where to train, with quests and leveling tips alongside. **Show on map** opens the in-game world map (Maple Island, Victoria Island, El Nath Mts., Dead Mine) with the spot's marker highlighted.
 
-All of it is read from `public/classic.json`, researched on 2026-10-03 from Nexon's test and Founder's Access notes plus MeowDB, Metaroad and tester guides. Skill icons are in `public/classic/skills/`; they were taken once from [maplestory.io](https://maplestory.io/)'s Classic World data (region `MCW`, version `CBT2`), with the original GMS art used where that data didn't load. Each skill's `icon` in the JSON points at one of them, and skills without an icon show a lettered tile. Every build and spot lists its sources. 3rd job, Orbis and El Nath were only in COT #2, so they appear as a preview.
+All of it is read from `public/classic.json`, researched on 2026-10-03 from Nexon's test and Founder's Access notes plus MeowDB, Metaroad and tester guides. Skill icons are in `public/classic/skills/`; they were taken once from [maplestory.io](https://maplestory.io/)'s Classic World data (region `MCW`, version `CBT2`), with the original GMS art used where that data didn't load. Each skill's `icon` in the JSON points at one of them, and skills without an icon show a lettered tile. The world maps in `public/classic/worldmap/` and their markers (`worldMaps` in the JSON) come from the same Classic World data; each spot's `place` names its marker. Every build and spot lists its sources. 3rd job, Orbis and El Nath were only in COT #2, so they appear as a preview.
 
 Recheck the file once Founder's Access is live, because skill numbers come from COT #2 client data. When 3rd job ships, raise `world.launchJobs` to 3: the skill timelines and labels follow it.
 

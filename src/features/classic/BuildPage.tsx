@@ -38,19 +38,23 @@ function Build({ doc, build: b, prev, next }: { doc: ClassicDoc; build: ClassicB
 
   return (
     <div className="space-y-4">
-      <nav className="flex items-center justify-between gap-3 text-sm">
-        <Link to="/classic/builds" className="text-ink-3 hover:text-ink">
-          ← Class builds
+      <nav className="flex flex-wrap items-center justify-between gap-3">
+        <Link to="/classic/builds" className="btn gap-2 px-4 py-2.5 text-[15px]">
+          <span aria-hidden>←</span> Class builds
         </Link>
-        <div className="flex gap-1.5">
+        <div className="flex flex-wrap gap-2">
           {prev && (
-            <Link to={`/classic/builds/${prev.id}`} className="btn-ghost btn-sm">
-              ‹ {launchName(prev, doc.world)}
+            <Link to={`/classic/builds/${prev.id}`} className="btn gap-2.5 py-2 pl-3 pr-4 text-[15px]" aria-label={`Previous build: ${launchName(prev, doc.world)}`}>
+              <span aria-hidden className="text-ink-3">‹</span>
+              <Emblem archetype={prev.archetype} size={28} />
+              {launchName(prev, doc.world)}
             </Link>
           )}
           {next && (
-            <Link to={`/classic/builds/${next.id}`} className="btn-ghost btn-sm">
-              {launchName(next, doc.world)} ›
+            <Link to={`/classic/builds/${next.id}`} className="btn gap-2.5 py-2 pl-4 pr-3 text-[15px]" aria-label={`Next build: ${launchName(next, doc.world)}`}>
+              {launchName(next, doc.world)}
+              <Emblem archetype={next.archetype} size={28} />
+              <span aria-hidden className="text-ink-3">›</span>
             </Link>
           )}
         </div>

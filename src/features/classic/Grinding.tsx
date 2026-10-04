@@ -1,10 +1,11 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
-import { Card, Empty, PageHeader, Spinner, Toggle } from '../../app/ui';
+import { type KeyboardEvent, useEffect, useMemo, useRef, useState } from 'react';
+import { Card, Empty, Modal, PageHeader, Spinner, Toggle } from '../../app/ui';
 import { HoverTip } from '../../app/HoverTip';
 import { anchorOf, type Tip } from '../../app/tip';
 import { fmtInt } from '../../app/format';
 import { useClassic } from './data';
 import { ARCHETYPES, siteOf } from './labels';
+import { MapView } from './MapView';
 import type { Archetype, Availability, ClassicDoc, GrindSpot, PartyQuest } from './types';
 
 const LS_LEVEL = 'mt.classic.level';
@@ -87,6 +88,8 @@ function Grinding({ doc }: { doc: ClassicDoc }) {
   // Hash routing owns the URL fragment, so in-page jumps scroll by element id instead of #anchors.
   const [open, setOpen] = useState<string | null>(null);
   const [jump, setJump] = useState<{ id: string } | null>(null);
+  // The spot whose world-map location is open.
+  const [mapFor, setMapFor] = useState<GrindSpot | null>(null);
   useEffect(() => {
     if (jump) document.getElementById(jump.id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }, [jump]);
@@ -98,18 +101,34 @@ function Grinding({ doc }: { doc: ClassicDoc }) {
   const now = spots.filter(fits);
   const hidden = spots.filter((s) => !shown(s)).length;
   const quests = doc.partyQuests.filter((q) => level >= q.levels[0] && level <= q.levels[1]);
+  // Level boxes 5 apart (1, 5, 10 … the cap); the lit box is the highest one at or below the level.
+  const steps = [1, ...Array.from({ length: Math.floor(top / 5) }, (_, i) => (i + 1) * 5)];
+  const step = steps.filter((v) => v <= level).pop() ?? 1;
 
   return (
     <>
       <PageHeader title="Grinding spots" subtitle="MapleStory Classic World: where testers trained in the closed online tests, set against the Lv 100 launch. Pick your level and class." />
 
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-2 mb-3">
+        <span className="label w-12">Level</span>
+        <div className="flex flex-wrap gap-1" role="group" aria-label="Pick a level">
+          {steps.map((v) => (
+            <button
+              key={v}
+              type="button"
+              aria-pressed={v === step}
+              onClick={() => setLevel(v)}
+              className={`h-8 min-w-9 rounded-md border px-1.5 text-xs font-semibold tabular transition-colors cursor-pointer ${v === step ? 'border-accent bg-accent text-black' : 'border-border-2 bg-surface-2 text-ink-2 hover:border-ink-3 hover:text-ink'}`}
+            >
+              {v}
+            </button>
+          ))}
+        </div>
+        <input type="number" min={1} max={top} value={level} onChange={(e) => setLevel(Number(e.target.value))} className="input w-18 h-8 tabular" aria-label="Your exact level" />
+      </div>
       <div className="flex flex-wrap items-center gap-x-5 gap-y-3 mb-4">
-        <label className="flex items-center gap-3">
-          <span className="label">Level</span>
-          <input type="range" min={1} max={top} value={level} onChange={(e) => setLevel(Number(e.target.value))} className="w-44 accent-[var(--color-accent)]" aria-label="Your level" />
-          <input type="number" min={1} max={top} value={level} onChange={(e) => setLevel(Number(e.target.value))} className="input w-18 tabular" aria-label="Your level (number)" />
-        </label>
         <div className="flex flex-wrap items-center gap-2" role="group" aria-label="Filter by class">
+          <span className="label w-12">Class</span>
           {(['All', ...archetypes] as const).map((a) => (
             <button key={a} type="button" className={cls === a ? 'chip-on' : 'chip'} aria-pressed={cls === a} onClick={() => setCls(a)}>
               {a}
@@ -147,7 +166,7 @@ function Grinding({ doc }: { doc: ClassicDoc }) {
           </div>
           {now.length === 0 && <Empty title="No listed spot for this level and class">Try “Any” for the branch or class, or a level a little higher or lower.</Empty>}
           {now.map((s) => (
-            <SpotCard key={s.id} spot={s} />
+            <SpotCard key={s.id} spot={s} onMap={setMapFor} />
           ))}
         </div>
         <div className="space-y-4 min-w-0">
@@ -216,12 +235,16 @@ function Grinding({ doc }: { doc: ClassicDoc }) {
             </div>
             <div className="card divide-y divide-border">
               {list.map((s) => (
-                <SpotRow key={s.id} spot={s} on={fits(s)} open={open === s.id} onToggle={(o) => setOpen(o ? s.id : open === s.id ? null : open)} />
+                <SpotRow key={s.id} spot={s} on={fits(s)} open={open === s.id} onToggle={(o) => setOpen(o ? s.id : open === s.id ? null : open)} onMap={setMapFor} />
               ))}
             </div>
           </section>
         );
       })}
+
+      <Modal open={!!mapFor} onClose={() => setMapFor(null)} wide title={mapFor && <>{mapFor.map} <span className="text-ink-3 font-normal text-sm">· {mapFor.area} · Lv {mapFor.levels[0]}–{mapFor.levels[1]}</span></>}>
+        {mapFor && <MapView maps={doc.worldMaps} spot={mapFor} />}
+      </Modal>
 
       <section id="quests" className="scroll-mt-4">
         <h2 className="text-lg font-semibold mt-8 mb-1">Quests and party quests</h2>
@@ -266,10 +289,24 @@ function Quest({ quest: q }: { quest: PartyQuest }) {
 /**
  * Every shown spot as a level range on one axis, sorted by entry level. Spots that fit
  * the chosen level and class are the accent and the rest stay grey; spots the launch
- * doesn't have are outlined. Clicking a bar jumps to its card; clicking the axis sets the level.
+ * doesn't have are outlined. Clicking a bar jumps to its card; the orange level line can be
+ * dragged (or moved with the arrow keys), and clicking the axis jumps it there.
  */
 function LevelMap({ spots, level, top, fits, onPick, onOpen, hidden }: { spots: GrindSpot[]; level: number; top: number; fits: (s: GrindSpot) => boolean; onPick: (n: number) => void; onOpen: (id: string) => void; hidden: number }) {
   const box = useRef<HTMLDivElement>(null);
+  const plot = useRef<HTMLDivElement>(null);
+  const [dragging, setDragging] = useState(false);
+  const levelAt = (clientX: number) => {
+    const r = plot.current?.getBoundingClientRect();
+    if (!r || !r.width) return level;
+    return 1 + Math.min(1, Math.max(0, (clientX - r.left) / r.width)) * (top - 1);
+  };
+  const keys = (e: KeyboardEvent) => {
+    const to = { ArrowLeft: level - 1, ArrowDown: level - 1, ArrowRight: level + 1, ArrowUp: level + 1, PageDown: level - 5, PageUp: level + 5, Home: 1, End: top }[e.key];
+    if (to == null) return;
+    e.preventDefault();
+    onPick(to);
+  };
   // The box width rides along with the tip, read when it opens, so HoverTip can keep it inside the card.
   const [tip, setTip] = useState<(Tip & { width: number }) | null>(null);
   const x = (lvl: number) => `${((lvl - 1) / (top - 1)) * 100}%`;
@@ -292,7 +329,7 @@ function LevelMap({ spots, level, top, fits, onPick, onOpen, hidden }: { spots: 
         </span>
       }
     >
-      <div ref={box} className="relative flex gap-3 pt-5" onMouseLeave={() => setTip(null)}>
+      <div ref={box} className="relative flex gap-3 pt-6" onMouseLeave={() => setTip(null)}>
         <ul className="w-44 max-sm:w-28 shrink-0">
           {spots.map((s) => (
             <li key={s.id} className="h-[22px] flex items-center">
@@ -302,7 +339,7 @@ function LevelMap({ spots, level, top, fits, onPick, onOpen, hidden }: { spots: 
             </li>
           ))}
         </ul>
-        <div className="relative min-w-0 flex-1">
+        <div ref={plot} className="relative min-w-0 flex-1">
           {spots.map((s) => {
             const on = fits(s);
             const later = s.available !== 'launch';
@@ -342,8 +379,38 @@ function LevelMap({ spots, level, top, fits, onPick, onOpen, hidden }: { spots: 
               </span>
             ))}
           </button>
-          <div className="pointer-events-none absolute top-0 bottom-7 w-px bg-accent" style={{ left: x(level) }}>
-            <span className="absolute -top-1 left-1/2 -translate-x-1/2 -translate-y-full rounded bg-accent px-1 text-[10px] font-semibold text-black tabular">{level}</span>
+          <div
+            role="slider"
+            tabIndex={0}
+            aria-label="Your level"
+            aria-valuemin={1}
+            aria-valuemax={top}
+            aria-valuenow={level}
+            title="Drag to change your level"
+            className={`group absolute top-0 bottom-7 z-10 w-5 -translate-x-1/2 touch-none focus:outline-none ${dragging ? 'cursor-grabbing' : 'cursor-ew-resize'}`}
+            style={{ left: x(level) }}
+            onKeyDown={keys}
+            onPointerDown={(e) => {
+              e.preventDefault();
+              try {
+                e.currentTarget.setPointerCapture(e.pointerId);
+              } catch {
+                // No capture (e.g. a synthetic event): the drag still follows moves over the handle.
+              }
+              e.currentTarget.focus();
+              setDragging(true);
+              setTip(null);
+            }}
+            onPointerMove={(e) => dragging && onPick(levelAt(e.clientX))}
+            onPointerUp={() => setDragging(false)}
+            onPointerCancel={() => setDragging(false)}
+          >
+            <span className={`absolute inset-y-0 left-1/2 -translate-x-1/2 bg-accent transition-[width] ${dragging ? 'w-[3px]' : 'w-0.5 group-hover:w-[3px] group-focus-visible:w-[3px]'}`} />
+            <span className={`absolute -top-1 left-1/2 flex -translate-x-1/2 -translate-y-full items-center gap-1 rounded-md bg-accent px-1.5 py-0.5 text-[11px] font-semibold text-black tabular shadow ${dragging ? 'ring-2 ring-accent/40' : 'group-focus-visible:ring-2 group-focus-visible:ring-accent/40'}`}>
+              <span aria-hidden>‹</span>
+              {level}
+              <span aria-hidden>›</span>
+            </span>
           </div>
         </div>
         <HoverTip tip={tip} width={tip?.width} />
@@ -352,7 +419,7 @@ function LevelMap({ spots, level, top, fits, onPick, onOpen, hidden }: { spots: 
   );
 }
 
-function SpotCard({ spot: s }: { spot: GrindSpot }) {
+function SpotCard({ spot: s, onMap }: { spot: GrindSpot; onMap: (s: GrindSpot) => void }) {
   return (
     <article className="card p-4">
       <header className="flex items-start justify-between gap-3">
@@ -362,8 +429,15 @@ function SpotCard({ spot: s }: { spot: GrindSpot }) {
             {s.area} · {s.region} · {s.style === 'both' ? 'solo or party' : s.style}
           </div>
         </div>
-        <div className="flex shrink-0 flex-col items-end gap-1">
-          <LevelBadge spot={s} />
+        <div className="flex shrink-0 flex-col items-end gap-1.5">
+          <div className="flex items-center gap-1.5">
+            {s.place && (
+              <button type="button" className="btn btn-sm" onClick={() => onMap(s)}>
+                <PinIcon /> Show on map
+              </button>
+            )}
+            <LevelBadge spot={s} />
+          </div>
           <AvailBadge spot={s} />
         </div>
       </header>
@@ -373,7 +447,7 @@ function SpotCard({ spot: s }: { spot: GrindSpot }) {
 }
 
 /** A collapsed spot in the full list; opens to the same details as a card. */
-function SpotRow({ spot: s, on, open, onToggle }: { spot: GrindSpot; on: boolean; open: boolean; onToggle: (open: boolean) => void }) {
+function SpotRow({ spot: s, on, open, onToggle, onMap }: { spot: GrindSpot; on: boolean; open: boolean; onToggle: (open: boolean) => void; onMap: (s: GrindSpot) => void }) {
   return (
     <details id={`spot-${s.id}`} open={open} onToggle={(e) => e.currentTarget.open !== open && onToggle(e.currentTarget.open)} className="group scroll-mt-4">
       <summary className="flex cursor-pointer list-none items-center gap-3 px-4 py-3 hover:bg-surface-2/60 [&::-webkit-details-marker]:hidden">
@@ -389,6 +463,21 @@ function SpotRow({ spot: s, on, open, onToggle }: { spot: GrindSpot; on: boolean
             </span>
           ))}
         </span>
+        {s.place && (
+          <button
+            type="button"
+            className="btn-ghost btn-sm px-1.5"
+            title="Show on the in-game map"
+            aria-label={`Show ${s.map} on the in-game map`}
+            onClick={(e) => {
+              // A button inside <summary> would also toggle the row.
+              e.preventDefault();
+              onMap(s);
+            }}
+          >
+            <PinIcon />
+          </button>
+        )}
         <LevelBadge spot={s} />
         <span className="text-ink-3 transition-transform group-open:rotate-90" aria-hidden>
           ›
@@ -480,5 +569,14 @@ function SpotBody({ spot: s }: { spot: GrindSpot }) {
       </div>
       {s.confidence && <p className="mt-1 text-[11px] text-ink-3">{s.confidence}</p>}
     </>
+  );
+}
+
+function PinIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="size-3.5" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <path d="M12 21s-6.5-5.6-6.5-11a6.5 6.5 0 0 1 13 0c0 5.4-6.5 11-6.5 11z" />
+      <circle cx="12" cy="10" r="2.25" />
+    </svg>
   );
 }
