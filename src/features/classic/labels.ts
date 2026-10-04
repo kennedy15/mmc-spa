@@ -1,4 +1,4 @@
-import type { Archetype, ClassicBuild, ClassicDoc, GrindSpot, Monster, RatingKey, SkillType, Tier } from './types';
+import type { Archetype, ClassicBuild, ClassicDoc, GrindSpot, Monster, RatingKey, SkillInfo, SkillType, Tier } from './types';
 
 export const ARCHETYPES: Archetype[] = ['Warrior', 'Magician', 'Bowman', 'Thief', 'Pirate'];
 export const TIERS: Tier[] = ['S', 'A', 'B', 'C', 'D'];
@@ -37,6 +37,16 @@ export function launchKeySkills(build: ClassicBuild, world: ClassicDoc['world'],
   const open = (k: string) => tier(k) <= world.launchJobs;
   const sorted = [...build.keySkills].sort((a, b) => Number(open(b)) - Number(open(a)) || (open(a) ? tier(b) - tier(a) : 0));
   return onlyOpen && sorted.some(open) ? sorted.filter(open) : sorted;
+}
+
+/** Skills a skip label names, e.g. "Bow Booster (past 10) / Soul Arrow: Bow (past 11)": the longest skill name each "/" part starts with. */
+export function skillsIn(label: string, info: Map<string, SkillInfo>): SkillInfo[] {
+  const names = [...info.keys()].sort((a, b) => b.length - a.length);
+  return label
+    .split(' / ')
+    .map((part) => names.find((n) => part.startsWith(n)))
+    .filter((n): n is string => !!n)
+    .map((n) => info.get(n)!);
 }
 
 /** A build's consensus tier for its 2nd job (the launch job) or its 3rd job (COT #2 only). */

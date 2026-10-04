@@ -37,6 +37,8 @@ export interface JobSkills {
 
 export interface SkillInfo {
   skill: string;
+  /** The game's own skill ID (COT #2 data), keying public/classic/skill-levels.json. Skills with identical art share an icon file, so `icon` may name another ID. */
+  id: number;
   tier: JobTier;
   max: number;
   type: SkillType;
@@ -160,6 +162,18 @@ export interface PartyQuest {
   why: string;
   available: string;
   sources: Source[];
+}
+
+/**
+ * public/classic/skill-levels.json, loaded when a skill sheet first opens: each build skill's in-game
+ * description for every level (h1…hMax in the COT #2 client's String data), keyed by skill ID.
+ */
+export interface SkillLevelsDoc {
+  asOf: string;
+  source: Source;
+  skills: Record<string, string[]>;
+  /** By skill ID and level: where the game's own value disagrees with that level's text (the game applies the value). */
+  notes?: Record<string, Record<string, string>>;
 }
 
 export interface ClassicDoc {
