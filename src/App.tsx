@@ -15,6 +15,8 @@ import { Summary } from './features/bossing/Summary';
 import { ClassicBuilds } from './features/classic/Builds';
 import { BuildPage } from './features/classic/BuildPage';
 import { GrindingSpots } from './features/classic/Grinding';
+import { SkillBuilderPage } from './features/classic/SkillBuilder';
+import { CharacterLookupPage } from './features/classic/CharacterLookup';
 import { Board } from './features/ideas/Board';
 import { Settings } from './features/settings/Settings';
 
@@ -48,6 +50,8 @@ export default function App() {
               <Route path="classic/builds" element={<ClassicBuilds />} />
               <Route path="classic/builds/:id" element={<BuildPage />} />
               <Route path="classic/grinding" element={<GrindingSpots />} />
+              <Route path="classic/skills" element={<SkillBuilderPage />} />
+              <Route path="classic/characters" element={<CharacterLookupPage />} />
               <Route path="ideas" element={<Board />} />
               <Route path="settings" element={<Settings />} />
               <Route path="*" element={<Navigate to="/" replace />} />

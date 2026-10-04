@@ -1,7 +1,8 @@
-import type { ReactNode } from 'react';
+import { Fragment, type ReactNode } from 'react';
 import { dataUrl } from '../../lib/paths';
 import type { Archetype, SkillInfo, Source, Tier } from './types';
 import { siteOf } from './labels';
+import type { LevelLine } from './skillLevels';
 
 /**
  * The in-game class icon (32px pixel art in public/classic/jobs/); multiples of 16 stay pixel-sharp on 2x screens.
@@ -81,5 +82,30 @@ export function SkillIcon({ skill, name, size = 24 }: { skill?: SkillInfo | null
     <span aria-hidden className="inline-flex shrink-0 items-center justify-center rounded-md border border-dashed border-border-2 bg-surface-3 font-semibold text-ink-3" style={{ width: size, height: size, fontSize: Math.max(8, Math.round(size * 0.36)) }} title="No icon in the game data yet">
       {letters}
     </span>
+  );
+}
+
+/**
+ * A level's game text with each number that changed since the level before followed by its difference.
+ * `strong` also sets those numbers in bold; the skill builder leaves that off, since it bolds the whole level you're at.
+ */
+export function LevelText({ line, change, strong = true }: { line: LevelLine; change: number[] | null; strong?: boolean }) {
+  return (
+    <>
+      {line.text.map((t, k) => (
+        <Fragment key={k}>
+          {t}
+          {k < line.raw.length &&
+            (change && change[k] !== 0 ? (
+              <>
+                <span className={`text-ink tabular ${strong ? 'font-semibold' : ''}`}>{line.raw[k]}</span>
+                <span className="ml-0.5 align-super text-[10px] font-semibold text-accent tabular">{change[k] > 0 ? `+${change[k]}` : `−${-change[k]}`}</span>
+              </>
+            ) : (
+              <span className="tabular">{line.raw[k]}</span>
+            ))}
+        </Fragment>
+      ))}
+    </>
   );
 }

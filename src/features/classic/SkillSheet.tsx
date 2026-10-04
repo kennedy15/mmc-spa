@@ -1,8 +1,8 @@
 import { Fragment, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { useSkillLevels } from './data';
-import { SectionLabel, SkillIcon } from './bits';
+import { LevelText, SectionLabel, SkillIcon } from './bits';
 import { ordinal, siteOf, skillsIn, skillTypeLabel } from './labels';
-import { changesByLevel, growth, splitLine, type LevelLine } from './skillLevels';
+import { changesByLevel, growth, splitLine } from './skillLevels';
 import { timeSteps, type World } from './skillPlan';
 import { OpenSkill } from './skillSheetContext';
 import type { ClassicBuild } from './types';
@@ -200,27 +200,5 @@ function SkillSheet({ build: b, world, skill, onClose }: { build: ClassicBuild; 
         )}
       </div>
     </aside>
-  );
-}
-
-/** A level's text with the numbers that changed since the level before in bold, each followed by its difference. */
-function LevelText({ line, change }: { line: LevelLine; change: number[] | null }) {
-  return (
-    <>
-      {line.text.map((t, k) => (
-        <Fragment key={k}>
-          {t}
-          {k < line.raw.length &&
-            (change && change[k] !== 0 ? (
-              <>
-                <span className="font-semibold text-ink tabular">{line.raw[k]}</span>
-                <span className="ml-0.5 align-super text-[10px] font-semibold text-accent tabular">{change[k] > 0 ? `+${change[k]}` : `−${-change[k]}`}</span>
-              </>
-            ) : (
-              <span className="tabular">{line.raw[k]}</span>
-            ))}
-        </Fragment>
-      ))}
-    </>
   );
 }

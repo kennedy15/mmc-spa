@@ -42,6 +42,10 @@ export interface SkillInfo {
   tier: JobTier;
   max: number;
   type: SkillType;
+  /** Skills of the same job this one needs first, and at what level (the COT #2 skill data's requiredSkillLevels). */
+  req?: { skill: string; level: number }[];
+  /** Where the skill's in-game text names a different requirement than its data (the game goes by the data). */
+  reqNote?: string;
   what: string;
   /** What Classic World changed against the original game, if anything. */
   classicChange: string | null;
@@ -174,6 +178,18 @@ export interface SkillLevelsDoc {
   skills: Record<string, string[]>;
   /** By skill ID and level: where the game's own value disagrees with that level's text (the game applies the value). */
   notes?: Record<string, Record<string, string>>;
+}
+
+/** public/classic/exp-table.json: Classic World's EXP to go from each level to the next. */
+export interface ClassicExpDoc {
+  source: Source;
+  checked: Source;
+  fetched: string;
+  /** Levels up to here are confirmed for Classic World; above it the table is the original game's. */
+  confirmedTo: number;
+  note: string;
+  /** EXP from each level to the next, by level ("1" … "99"). */
+  expToNext: Record<string, number>;
 }
 
 export interface ClassicDoc {

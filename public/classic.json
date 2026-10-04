@@ -504,6 +504,12 @@
      "tier": 1,
      "max": 15,
      "type": "passive",
+     "req": [
+      {
+       "skill": "Improved HP Recovery",
+       "level": 3
+      }
+     ],
      "what": "+10% to +25% of base Max HP (requires Improved HP Recovery 3).",
      "classicChange": "Now an immediate % of base HP instead of extra HP per level/AP, so late points lose nothing and HP washing is gone (meowdb, MetaRoad).",
      "icon": "classic/skills/1000001.png"
@@ -524,6 +530,12 @@
      "tier": 1,
      "max": 20,
      "type": "buff",
+     "req": [
+      {
+       "skill": "Max HP Increase",
+       "level": 3
+      }
+     ],
      "what": "+5% to +25% Weapon DEF for 300-600 s, 15 MP (requires Max HP Increase 3).",
      "classicChange": "Cut from +30% (COT1/early previews) to +25% in COT2 (meowdb skill changes, MetaRoad).",
      "icon": "classic/skills/1001000.png"
@@ -544,6 +556,12 @@
      "tier": 1,
      "max": 20,
      "type": "attack",
+     "req": [
+      {
+       "skill": "Power Strike",
+       "level": 1
+      }
+     ],
      "what": "70% to 130% to up to 4 mobs, costs 3-8 HP and 4-12 MP; reach 130 px, 150 px from Lv 11 (requires Power Strike 1).",
      "classicChange": "4-target cap: Classic World cut most area attacks from 6 targets to 4 (MetaRoad).",
      "icon": "classic/skills/1001002.png"
@@ -574,6 +592,12 @@
      "tier": 2,
      "max": 30,
      "type": "buff",
+     "req": [
+      {
+       "skill": "Sword Mastery",
+       "level": 3
+      }
+     ],
      "what": "Toggle: 20% to 50% chance after an attack skill to hit up to 3 mobs for 110% to 140%; sword only; no MP cost (requires Sword Mastery 3).",
      "classicChange": "Now a toggle that only fires when a target is in range; COT2 raised the proc 35% to 50% and cut damage 180% to 140% (meowdb).",
      "icon": "classic/skills/1101000.png"
@@ -584,6 +608,12 @@
      "tier": 2,
      "max": 30,
      "type": "buff",
+     "req": [
+      {
+       "skill": "Axe Mastery",
+       "level": 3
+      }
+     ],
      "what": "Toggle: 20% to 50% chance to hit up to 3 mobs for 110% to 140%; axe only; no MP cost (requires Axe Mastery 3).",
      "classicChange": "Same COT2 change as the sword version: 50% proc, 140% damage (meowdb).",
      "icon": "classic/skills/1101000.png"
@@ -594,6 +624,12 @@
      "tier": 2,
      "max": 20,
      "type": "buff",
+     "req": [
+      {
+       "skill": "Sword Mastery",
+       "level": 5
+      }
+     ],
      "what": "+2 attack-speed stages with swords for 100-300 s; costs 30 to 10 HP and MP (requires Sword Mastery 5).",
      "classicChange": null,
      "icon": "classic/skills/1101002.png"
@@ -604,6 +640,12 @@
      "tier": 2,
      "max": 20,
      "type": "buff",
+     "req": [
+      {
+       "skill": "Axe Mastery",
+       "level": 5
+      }
+     ],
      "what": "+2 attack-speed stages with axes for 100-300 s; costs 30 to 10 HP and MP (requires Axe Mastery 5).",
      "classicChange": null,
      "icon": "classic/skills/1101003.png"
@@ -654,6 +696,12 @@
      "tier": 3,
      "max": 30,
      "type": "attack",
+     "req": [
+      {
+       "skill": "Combo Attack",
+       "level": 1
+      }
+     ],
      "what": "Spends orbs: 230% to 320% to 1 target with a 40% to 100% chance of Darkness (lower ACC) for 5-9 s; reach 64-127 px; orb bonus is 5 x orbs x (orbs - 1)%, i.e. x1.0/1.1/1.3/1.6/2.0 for 1-5 orbs (MetaRoad planner, matches Wild's tests).",
      "classicChange": "One skill for both swords and axes (the original had separate sword/axe versions - pre-BB fallback).",
      "icon": "classic/skills/1111001.png"
@@ -664,6 +712,12 @@
      "tier": 3,
      "max": 30,
      "type": "attack",
+     "req": [
+      {
+       "skill": "Combo Attack",
+       "level": 1
+      }
+     ],
      "what": "Spends orbs: 100% to 160% to up to 4 mobs in front (130-150 px) with the same orb bonus as Panic; bleed chance +20 points per orb spent, bleed deals 40% to 100% over 3 s; costs 8-16 HP and 12-20 MP.",
      "classicChange": "Single sword/axe skill that bleeds instead of stunning (the original's stun is pre-BB fallback).",
      "icon": "classic/skills/1111002.png"
@@ -684,6 +738,12 @@
      "tier": 3,
      "max": 20,
      "type": "buff",
+     "req": [
+      {
+       "skill": "Improved MP Recovery",
+       "level": 3
+      }
+     ],
      "what": "Debuff: sets the physical DEF of 2 to 4 nearby mobs to 0 for 8-15 s; 50 to 30 s cooldown (requires Improved MP Recovery 3).",
      "classicChange": "Zeroes defense outright rather than cancelling defense buffs (original behaviour is pre-BB fallback); a COT2 tester reports Crash debuffs from different jobs overwrite each other.",
      "icon": "classic/skills/1111004.png"
@@ -694,6 +754,12 @@
      "tier": 3,
      "max": 20,
      "type": "buff",
+     "req": [
+      {
+       "skill": "Armor Crash",
+       "level": 3
+      }
+     ],
      "what": "Reflects 20% to 40% of physical damage taken (100% if a shield guards the hit), capped at 10% of the mob's Max HP per reflect; 80-180 s (requires Armor Crash 3).",
      "classicChange": "Moved from Fighter/Page 2nd job (COT1) to Crusader/White Knight 3rd job in COT2 (meowdb).",
      "icon": "classic/skills/1111005.png"
@@ -1214,6 +1280,12 @@
      "tier": 1,
      "max": 15,
      "type": "passive",
+     "req": [
+      {
+       "skill": "Improved HP Recovery",
+       "level": 3
+      }
+     ],
      "what": "+10% to +25% of base Max HP (requires Improved HP Recovery 3).",
      "classicChange": "Now an immediate % of base HP instead of extra HP per level/AP; no need to max it early and HP washing is gone (meowdb, MetaRoad).",
      "icon": "classic/skills/1000001.png"
@@ -1234,6 +1306,12 @@
      "tier": 1,
      "max": 20,
      "type": "buff",
+     "req": [
+      {
+       "skill": "Max HP Increase",
+       "level": 3
+      }
+     ],
      "what": "+5% to +25% Weapon DEF for 300-600 s, 15 MP (requires Max HP Increase 3).",
      "classicChange": "Cut from +30% to +25% in COT2 (meowdb skill changes, MetaRoad).",
      "icon": "classic/skills/1001000.png"
@@ -1254,6 +1332,12 @@
      "tier": 1,
      "max": 20,
      "type": "attack",
+     "req": [
+      {
+       "skill": "Power Strike",
+       "level": 1
+      }
+     ],
      "what": "70% to 130% to up to 4 mobs, costs 3-8 HP and 4-12 MP; reach 130 px, 150 px from Lv 11 (requires Power Strike 1).",
      "classicChange": "4-target cap: Classic World cut most area attacks from 6 targets to 4 (MetaRoad).",
      "icon": "classic/skills/1001002.png"
@@ -1284,6 +1368,12 @@
      "tier": 2,
      "max": 30,
      "type": "buff",
+     "req": [
+      {
+       "skill": "Sword Mastery",
+       "level": 3
+      }
+     ],
      "what": "Toggle: 20% to 50% chance after an attack skill for a 240% to 270% hit on 1 target; sword only; no MP cost (requires Sword Mastery 3).",
      "classicChange": "Toggle that only fires with a target in range; COT2 raised the proc from 35% to 50% and cut damage from 300% to 270% (meowdb).",
      "icon": "classic/skills/1101000.png"
@@ -1294,6 +1384,12 @@
      "tier": 2,
      "max": 30,
      "type": "buff",
+     "req": [
+      {
+       "skill": "Blunt Weapon Mastery",
+       "level": 3
+      }
+     ],
      "what": "Toggle: 20% to 50% chance for a 240% to 270% single-target follow-up; blunt only; no MP cost (requires Blunt Weapon Mastery 3).",
      "classicChange": "Same COT2 change as the sword version (meowdb).",
      "icon": "classic/skills/1101000.png"
@@ -1304,6 +1400,12 @@
      "tier": 2,
      "max": 20,
      "type": "buff",
+     "req": [
+      {
+       "skill": "Sword Mastery",
+       "level": 5
+      }
+     ],
      "what": "+2 attack-speed stages with swords for 100-300 s; costs 30 to 10 HP and MP.",
      "classicChange": null,
      "icon": "classic/skills/1101002.png"
@@ -1314,6 +1416,12 @@
      "tier": 2,
      "max": 20,
      "type": "buff",
+     "req": [
+      {
+       "skill": "Blunt Weapon Mastery",
+       "level": 5
+      }
+     ],
      "what": "+2 attack-speed stages with blunt weapons for 100-300 s; costs 30 to 10 HP and MP (requires Blunt Weapon Mastery 5).",
      "classicChange": null,
      "icon": "classic/skills/1201003.png"
@@ -1394,6 +1502,12 @@
      "tier": 3,
      "max": 20,
      "type": "buff",
+     "req": [
+      {
+       "skill": "Charged Blow",
+       "level": 3
+      }
+     ],
      "what": "Debuff: removes Fire, Ice and Lightning resistance from 2 to 4 nearby mobs for 8-15 s; 50 to 30 s cooldown (requires Charged Blow 3).",
      "classicChange": "New Classic World skill (pvpbank, low trust, calls it new); it sits where the original's Magic Crash was (pre-BB fallback).",
      "icon": "classic/skills/1211004.png"
@@ -1404,6 +1518,12 @@
      "tier": 3,
      "max": 20,
      "type": "buff",
+     "req": [
+      {
+       "skill": "Elemental Crash",
+       "level": 3
+      }
+     ],
      "what": "Reflects 20% to 40% of physical damage taken (100% if a shield guards the hit), capped at 10% of the mob's Max HP per reflect; 80-180 s (requires Elemental Crash 3).",
      "classicChange": "Moved from Page 2nd job (COT1) to White Knight 3rd job in COT2 (meowdb).",
      "icon": "classic/skills/1111005.png"
@@ -1909,6 +2029,12 @@
      "tier": 1,
      "max": 15,
      "type": "passive",
+     "req": [
+      {
+       "skill": "Improved HP Recovery",
+       "level": 3
+      }
+     ],
      "what": "+10% to +25% of base Max HP (requires Improved HP Recovery 3).",
      "classicChange": "Now an immediate % of base HP instead of extra HP per level/AP; no need to max it early and HP washing is gone (meowdb, MetaRoad).",
      "icon": "classic/skills/1000001.png"
@@ -1929,6 +2055,12 @@
      "tier": 1,
      "max": 20,
      "type": "buff",
+     "req": [
+      {
+       "skill": "Max HP Increase",
+       "level": 3
+      }
+     ],
      "what": "+5% to +25% Weapon DEF for 300-600 s, 15 MP (requires Max HP Increase 3).",
      "classicChange": "Cut from +30% to +25% in COT2 (meowdb skill changes, MetaRoad).",
      "icon": "classic/skills/1001000.png"
@@ -1949,6 +2081,12 @@
      "tier": 1,
      "max": 20,
      "type": "attack",
+     "req": [
+      {
+       "skill": "Power Strike",
+       "level": 1
+      }
+     ],
      "what": "70% to 130% to up to 4 mobs, costs 3-8 HP and 4-12 MP; reach 130 px, 150 px from Lv 11 (requires Power Strike 1).",
      "classicChange": "4-target cap: Classic World cut most area attacks from 6 targets to 4 (MetaRoad).",
      "icon": "classic/skills/1001002.png"
@@ -1979,6 +2117,12 @@
      "tier": 2,
      "max": 30,
      "type": "buff",
+     "req": [
+      {
+       "skill": "Spear Mastery",
+       "level": 3
+      }
+     ],
      "what": "Toggle: 20% to 50% chance for a 230% to 260% single-target follow-up that heals 5% to 10% of the damage (heal capped at 25% of your or the mob's Max HP); no MP cost (requires Spear Mastery 3).",
      "classicChange": "The HP drain is new and it is now a toggle; COT2 raised the proc from 35% to 50% and cut damage from 280% to 260% (meowdb).",
      "icon": "classic/skills/1101000.png"
@@ -1989,6 +2133,12 @@
      "tier": 2,
      "max": 30,
      "type": "buff",
+     "req": [
+      {
+       "skill": "Polearm Mastery",
+       "level": 3
+      }
+     ],
      "what": "Toggle: 20% to 50% chance for a 230% to 260% single-target follow-up that heals 5% to 10% of the damage; no MP cost (requires Polearm Mastery 3).",
      "classicChange": "Same COT2 change as the spear version (meowdb).",
      "icon": "classic/skills/1101000.png"
@@ -1999,6 +2149,12 @@
      "tier": 2,
      "max": 20,
      "type": "buff",
+     "req": [
+      {
+       "skill": "Spear Mastery",
+       "level": 5
+      }
+     ],
      "what": "+2 attack-speed stages with spears for 100-300 s; costs 30 to 10 HP and MP (requires Spear Mastery 5).",
      "classicChange": null,
      "icon": "classic/skills/1301002.png"
@@ -2009,6 +2165,12 @@
      "tier": 2,
      "max": 20,
      "type": "buff",
+     "req": [
+      {
+       "skill": "Polearm Mastery",
+       "level": 5
+      }
+     ],
      "what": "+2 attack-speed stages with polearms for 100-300 s; costs 30 to 10 HP and MP (requires Polearm Mastery 5).",
      "classicChange": null,
      "icon": "classic/skills/1301003.png"
@@ -2069,6 +2231,12 @@
      "tier": 3,
      "max": 30,
      "type": "attack",
+     "req": [
+      {
+       "skill": "Dragon Blood",
+       "level": 3
+      }
+     ],
      "what": "120% to 180% to up to 8 mobs in a 220x165 to 800x600 px area; costs 1,500 to 900 HP and 24-35 MP and stuns you for 4 to 2 s; ground only (requires Dragon Blood 3).",
      "classicChange": "Target cap cut from 15 to 8 (MetaRoad).",
      "icon": "classic/skills/1311002.png"
@@ -2079,6 +2247,12 @@
      "tier": 3,
      "max": 20,
      "type": "buff",
+     "req": [
+      {
+       "skill": "Partial Resistance",
+       "level": 3
+      }
+     ],
      "what": "Debuff: lowers the attack of 2 to 4 nearby mobs by 15% to 25% for 8-15 s; 50 to 30 s cooldown (requires Partial Resistance 3).",
      "classicChange": "Now a %-attack-down debuff; COT2 tester Kevn rated it much weaker than the original version and reports Crash debuffs overwrite each other.",
      "icon": "classic/skills/1311003.png"
@@ -2099,6 +2273,12 @@
      "tier": 3,
      "max": 20,
      "type": "buff",
+     "req": [
+      {
+       "skill": "Partial Resistance",
+       "level": 5
+      }
+     ],
      "what": "Party: +10% to +30% Max HP for 100-300 s; 30 to 50 MP (requires Partial Resistance 5).",
      "classicChange": "Moved from Spearman 2nd job (COT1) to Dragon Knight in COT2 (meowdb); COT2 data shows Max HP only, while the original also raised MP (pre-BB fallback).",
      "icon": "classic/skills/1311005.png"
@@ -2663,6 +2843,12 @@
      "tier": 1,
      "max": 20,
      "type": "attack",
+     "req": [
+      {
+       "skill": "Energy Bolt",
+       "level": 1
+      }
+     ],
      "what": "Two hits on one target, 45 -> 65 Basic Attack each, 10 -> 20 MP, 300 px, hits through walls and platforms; needs Energy Bolt 1",
      "classicChange": "COT2 raised it from 30 to 65 per hit. Average damage now equals Energy Bolt's for 4 more MP. It is no longer the automatic max.",
      "icon": "classic/skills/2001003.png"
@@ -2683,6 +2869,12 @@
      "tier": 1,
      "max": 20,
      "type": "buff",
+     "req": [
+      {
+       "skill": "Magic Guard",
+       "level": 3
+      }
+     ],
      "what": "+40 -> +120 Weapon DEF and Magic DEF for 300 -> 600 s (8 -> 16 MP); needs Magic Guard 3",
      "classicChange": "Now raises Magic DEF too and uses large flat values. Pre-BB gave only +40 Weapon DEF at max, and the early playtest used % values.",
      "icon": "classic/skills/2001001.png"
@@ -2703,6 +2895,12 @@
      "tier": 1,
      "max": 15,
      "type": "passive",
+     "req": [
+      {
+       "skill": "Improved MP Recovery",
+       "level": 3
+      }
+     ],
      "what": "+10% -> +25% Max MP; needs Improved MP Recovery 3",
      "classicChange": "Replaces Improved MaxMP Increase (max 10, extra MP per level-up/AP). Now a % of Max MP, so it can be taken late with no loss. Prerequisite lowered from IMR 5 to IMR 3.",
      "icon": "classic/skills/2000001.png"
@@ -2753,6 +2951,12 @@
      "tier": 2,
      "max": 20,
      "type": "buff",
+     "req": [
+      {
+       "skill": "MP Eater",
+       "level": 3
+      }
+     ],
      "what": "Party +5 -> +25 Magic Attack for 100 -> 300 s (15 -> 25 MP); needs MP Eater 3; no effect on physical attacks",
      "classicChange": "Stronger than pre-BB (+20 for 200 s at max).",
      "icon": "classic/skills/2201000.png"
@@ -2763,6 +2967,12 @@
      "tier": 2,
      "max": 20,
      "type": "buff",
+     "req": [
+      {
+       "skill": "Teleport",
+       "level": 5
+      }
+     ],
      "what": "Debuff on up to 6 mobs: Speed -10 -> -30 and Evasion -1 -> -5 for 10 -> 20 s; needs Teleport 5; goes through walls",
      "classicChange": "COT2 raised targets from 4 to 6, cut duration from 25 to 20 s, and added the Evasion loss. Pre-BB was -40 Speed for 40 s.",
      "icon": "classic/skills/2201002.png"
@@ -2783,6 +2993,12 @@
      "tier": 3,
      "max": 30,
      "type": "buff",
+     "req": [
+      {
+       "skill": "Elemental Resistance",
+       "level": 1
+      }
+     ],
      "what": "Toggle: spell damage 105% -> 135% for MP cost 120% -> 150%; needs Elemental Resistance 1 (COT2; not in launch)",
      "classicChange": "Same 135% damage at max but cheaper (pre-BB: 200% MP cost). New Elemental Resistance prerequisite.",
      "icon": "classic/skills/2211000.png"
@@ -2793,6 +3009,12 @@
      "tier": 3,
      "max": 20,
      "type": "buff",
+     "req": [
+      {
+       "skill": "Element Amplification",
+       "level": 5
+      }
+     ],
      "what": "+1 (Lv 1-10) / +2 (Lv 11-20) cast-speed stages for 100 -> 300 s, costs a Magic Rock; needs Element Amplification 5 (COT2; not in launch)",
      "classicChange": "Costs a Magic Rock instead of HP+MP; prerequisite raised from EA 3 to EA 5.",
      "icon": "classic/skills/2211005.png"
@@ -2803,6 +3025,12 @@
      "tier": 3,
      "max": 20,
      "type": "buff",
+     "req": [
+      {
+       "skill": "Elemental Resistance",
+       "level": 3
+      }
+     ],
      "what": "Debuff: 60% -> 100% chance to stop up to 6 mobs using skills for 10 -> 20 s; no bosses; needs Elemental Resistance 3 (COT2; not in launch)",
      "classicChange": "Higher success rates; prerequisite moved from Element Amplification 3 to Elemental Resistance 3.",
      "icon": "classic/skills/2211004.png"
@@ -2833,6 +3061,16 @@
      "tier": 3,
      "max": 30,
      "type": "attack",
+     "req": [
+      {
+       "skill": "Thunder Spear",
+       "level": 1
+      },
+      {
+       "skill": "Ice Strike",
+       "level": 1
+      }
+     ],
      "what": "Ice+lightning arrow at the nearest mob, 160 -> 250 Basic Attack, 28 -> 35 MP, up to 1.5x vs mobs weak to both; needs Ice Strike 1 + Thunder Spear 1 (COT2; not in launch)",
      "classicChange": "Now a dual-element bonus skill shared with F/P and no longer freezes; much higher listed power.",
      "icon": "classic/skills/2211003.png"
@@ -3396,6 +3634,12 @@
      "tier": 1,
      "max": 20,
      "type": "attack",
+     "req": [
+      {
+       "skill": "Energy Bolt",
+       "level": 1
+      }
+     ],
      "what": "Two hits on one target, 45 -> 65 Basic Attack each, 10 -> 20 MP, 300 px, hits through walls and platforms; needs Energy Bolt 1",
      "classicChange": "COT2 raised it from 30 to 65 per hit. Average damage now equals Energy Bolt's for 4 more MP. It is no longer the automatic max.",
      "icon": "classic/skills/2001003.png"
@@ -3416,6 +3660,12 @@
      "tier": 1,
      "max": 20,
      "type": "buff",
+     "req": [
+      {
+       "skill": "Magic Guard",
+       "level": 3
+      }
+     ],
      "what": "+40 -> +120 Weapon DEF and Magic DEF for 300 -> 600 s (8 -> 16 MP); needs Magic Guard 3",
      "classicChange": "Now raises Magic DEF too and uses large flat values. Pre-BB gave only +40 Weapon DEF at max, and the early playtest used % values.",
      "icon": "classic/skills/2001001.png"
@@ -3436,6 +3686,12 @@
      "tier": 1,
      "max": 15,
      "type": "passive",
+     "req": [
+      {
+       "skill": "Improved MP Recovery",
+       "level": 3
+      }
+     ],
      "what": "+10% -> +25% Max MP; needs Improved MP Recovery 3",
      "classicChange": "Replaces Improved MaxMP Increase (max 10, extra MP per level-up/AP). Now a % of Max MP, so it can be taken late with no loss. Prerequisite lowered from IMR 5 to IMR 3.",
      "icon": "classic/skills/2000001.png"
@@ -3486,6 +3742,12 @@
      "tier": 2,
      "max": 20,
      "type": "buff",
+     "req": [
+      {
+       "skill": "MP Eater",
+       "level": 3
+      }
+     ],
      "what": "Party +5 -> +25 Magic Attack for 100 -> 300 s (15 -> 25 MP); needs MP Eater 3; no effect on physical attacks",
      "classicChange": "Stronger than pre-BB (+20 for 200 s at max).",
      "icon": "classic/skills/2201000.png"
@@ -3496,6 +3758,12 @@
      "tier": 2,
      "max": 20,
      "type": "buff",
+     "req": [
+      {
+       "skill": "Teleport",
+       "level": 5
+      }
+     ],
      "what": "Debuff on up to 6 mobs: Speed -10 -> -30 and Evasion -1 -> -5 for 10 -> 20 s; needs Teleport 5; goes through walls",
      "classicChange": "COT2 raised targets from 4 to 6, cut duration from 25 to 20 s, and added the Evasion loss. Pre-BB was -40 Speed for 40 s.",
      "icon": "classic/skills/2201002.png"
@@ -3516,6 +3784,12 @@
      "tier": 3,
      "max": 30,
      "type": "buff",
+     "req": [
+      {
+       "skill": "Elemental Resistance",
+       "level": 1
+      }
+     ],
      "what": "Toggle: spell damage 105% -> 135% for MP cost 120% -> 150%; needs Elemental Resistance 1 (COT2; not in launch)",
      "classicChange": "Same 135% damage at max but cheaper (pre-BB: 200% MP cost). New Elemental Resistance prerequisite.",
      "icon": "classic/skills/2211000.png"
@@ -3526,6 +3800,12 @@
      "tier": 3,
      "max": 20,
      "type": "buff",
+     "req": [
+      {
+       "skill": "Element Amplification",
+       "level": 5
+      }
+     ],
      "what": "+1 (Lv 1-10) / +2 (Lv 11-20) cast-speed stages for 100 -> 300 s, costs a Magic Rock; needs Element Amplification 5 (COT2; not in launch)",
      "classicChange": "Costs a Magic Rock instead of HP+MP; prerequisite raised from EA 3 to EA 5.",
      "icon": "classic/skills/2211005.png"
@@ -3536,6 +3816,12 @@
      "tier": 3,
      "max": 20,
      "type": "buff",
+     "req": [
+      {
+       "skill": "Elemental Resistance",
+       "level": 3
+      }
+     ],
      "what": "Debuff: 60% -> 100% chance to stop up to 6 mobs using skills for 10 -> 20 s; no bosses; needs Elemental Resistance 3 (COT2; not in launch)",
      "classicChange": "Higher success rates; prerequisite moved from Element Amplification 3 to Elemental Resistance 3.",
      "icon": "classic/skills/2211004.png"
@@ -3566,6 +3852,16 @@
      "tier": 3,
      "max": 30,
      "type": "attack",
+     "req": [
+      {
+       "skill": "Explosion",
+       "level": 1
+      },
+      {
+       "skill": "Poison Mist",
+       "level": 1
+      }
+     ],
      "what": "Fire+poison arrow at the nearest mob, 160 -> 250 Basic Attack, 28 -> 35 MP, up to 1.5x vs mobs weak to both; needs Explosion 1 + Poison Mist 1 (COT2; not in launch)",
      "classicChange": "Now a dual-element bonus skill shared with I/L; pre-BB F/P version was a poison-drop attack.",
      "icon": "classic/skills/2111003.png"
@@ -4144,6 +4440,12 @@
      "tier": 1,
      "max": 20,
      "type": "attack",
+     "req": [
+      {
+       "skill": "Energy Bolt",
+       "level": 1
+      }
+     ],
      "what": "Two hits on one target, 45 -> 65 Basic Attack each, 10 -> 20 MP, 300 px, hits through walls and platforms; needs Energy Bolt 1",
      "classicChange": "COT2 raised it from 30 to 65 per hit. Average damage now equals Energy Bolt's for 4 more MP. It is no longer the automatic max.",
      "icon": "classic/skills/2001003.png"
@@ -4164,6 +4466,12 @@
      "tier": 1,
      "max": 20,
      "type": "buff",
+     "req": [
+      {
+       "skill": "Magic Guard",
+       "level": 3
+      }
+     ],
      "what": "+40 -> +120 Weapon DEF and Magic DEF for 300 -> 600 s (8 -> 16 MP); needs Magic Guard 3",
      "classicChange": "Now raises Magic DEF too and uses large flat values. Pre-BB gave only +40 Weapon DEF at max, and the early playtest used % values.",
      "icon": "classic/skills/2001001.png"
@@ -4184,6 +4492,12 @@
      "tier": 1,
      "max": 15,
      "type": "passive",
+     "req": [
+      {
+       "skill": "Improved MP Recovery",
+       "level": 3
+      }
+     ],
      "what": "+10% -> +25% Max MP; needs Improved MP Recovery 3",
      "classicChange": "Replaces Improved MaxMP Increase (max 10, extra MP per level-up/AP). Now a % of Max MP, so it can be taken late with no loss. Prerequisite lowered from IMR 5 to IMR 3.",
      "icon": "classic/skills/2000001.png"
@@ -4214,6 +4528,12 @@
      "tier": 2,
      "max": 20,
      "type": "buff",
+     "req": [
+      {
+       "skill": "Heal",
+       "level": 5
+      }
+     ],
      "what": "Self: -10% -> -30% physical damage taken and 10 -> 30 Basic Attack magic damage to mobs that touch you, 100 -> 300 s; needs Heal 5",
      "classicChange": "The contact-damage effect is new; the damage cut at max (-30%) is unchanged.",
      "icon": "classic/skills/2301002.png"
@@ -4224,6 +4544,12 @@
      "tier": 2,
      "max": 20,
      "type": "buff",
+     "req": [
+      {
+       "skill": "Invincible",
+       "level": 5
+      }
+     ],
      "what": "Party: +1 -> +20 Accuracy and Evasion and +1% -> +10% Heal recovery for 100 -> 300 s (20 -> 30 MP); needs Invincible 5",
      "classicChange": "Lost its Weapon/Magic DEF bonus; now boosts Heal instead (COT1 boosted all item/skill healing).",
      "icon": "classic/skills/2301003.png"
@@ -4264,6 +4590,12 @@
      "tier": 3,
      "max": 30,
      "type": "buff",
+     "req": [
+      {
+       "skill": "Dispel",
+       "level": 5
+      }
+     ],
      "what": "Self-only: if you die within 15 -> 30 min you revive on the spot with 5% -> 35% HP; 120 -> 30 MP plus 3 -> 1 Magic Rock; 45-min cooldown; needs Dispel 5 (COT2; not in launch)",
      "classicChange": "Completely reworked: no longer the +50% party EXP aura, now a self-resurrection.",
      "icon": "classic/skills/2311002.png"
@@ -4274,6 +4606,12 @@
      "tier": 3,
      "max": 20,
      "type": "mobility",
+     "req": [
+      {
+       "skill": "Dispel",
+       "level": 3
+      }
+     ],
      "what": "Party portal to the nearest town for 40 -> 180 s, 100 -> 20 MP plus 2 -> 1 Magic Rock; needs Dispel 3 (COT2; not in launch)",
      "classicChange": "Cheaper at max (20 MP vs 33), pricier at Lv 1 (2 Magic Rocks).",
      "icon": "classic/skills/2311001.png"
@@ -4859,6 +5197,12 @@
      "tier": 1,
      "max": 20,
      "type": "buff",
+     "req": [
+      {
+       "skill": "The Eye of Amazon",
+       "level": 3
+      }
+     ],
      "what": "+20 Accuracy and +25 Evasion for 300 s for 16 MP at max; needs Eye of Amazon 3.",
      "classicChange": "Evasion bonus is +25 vs the original's +20 avoid (MetaRoad).",
      "icon": "classic/skills/3001000.png"
@@ -4889,6 +5233,12 @@
      "tier": 1,
      "max": 20,
      "type": "attack",
+     "req": [
+      {
+       "skill": "Arrow Blow",
+       "level": 1
+      }
+     ],
      "what": "Two 120% arrows that can hit one mob twice or two mobs once each; 16 MP, 2 arrows; needs Arrow Blow 1.",
      "classicChange": "Original was 130% x 2 on one target (MetaRoad); now it can split across two mobs.",
      "icon": "classic/skills/3001002.png"
@@ -4919,6 +5269,12 @@
      "tier": 2,
      "max": 20,
      "type": "passive",
+     "req": [
+      {
+       "skill": "Bow Mastery",
+       "level": 5
+      }
+     ],
      "what": "Critical hits slow the target: 100% chance, -35 speed for 5 s at max; needs Bow Mastery 5.",
      "classicChange": "New Classic skill. MetaRoad maps it to the original's accuracy passive slot; in COT1 it was a 15-level 1st-job skill.",
      "icon": "classic/skills/3100001.png"
@@ -4929,6 +5285,12 @@
      "tier": 2,
      "max": 30,
      "type": "buff",
+     "req": [
+      {
+       "skill": "Bow Mastery",
+       "level": 3
+      }
+     ],
      "what": "Toggle: 50% chance after an attack to fire 3 x 90% arrows split across up to 3 mobs; no MP, uses 3 arrows unless Soul Arrow is up; needs Bow Mastery 3.",
      "classicChange": "Original was a passive 60% / 250% proc (MetaRoad); Classic made it a toggle (COT1 35% / 100%, COT2 50% / 3 x 90%).",
      "icon": "classic/skills/1101000.png"
@@ -4939,6 +5301,12 @@
      "tier": 2,
      "max": 20,
      "type": "buff",
+     "req": [
+      {
+       "skill": "Bow Mastery",
+       "level": 5
+      }
+     ],
      "what": "+2 attack-speed stages for 300 s at max (10 HP and 10 MP); needs Bow Mastery 5.",
      "classicChange": "Max duration up from 200 s to 300 s (MetaRoad).",
      "icon": "classic/skills/3101001.png"
@@ -4949,6 +5317,12 @@
      "tier": 2,
      "max": 20,
      "type": "buff",
+     "req": [
+      {
+       "skill": "Bow Booster",
+       "level": 5
+      }
+     ],
      "what": "No arrow use for 300 s at max (5 MP); needs Bow Booster 5.",
      "classicChange": "Original lasted 600 s for 20 MP (MetaRoad); Classic is cheaper, shorter, and never uses arrows even at level 1.",
      "icon": "classic/skills/3101003.png"
@@ -4979,6 +5353,12 @@
      "tier": 3,
      "max": 30,
      "type": "attack",
+     "req": [
+      {
+       "skill": "Mortal Blow",
+       "level": 5
+      }
+     ],
      "what": "Hits up to 4 mobs twice for 120% in a 420x200 area around you; 35 MP and 4 arrows; usable with mobs in your face; needs Mortal Blow 5.",
      "classicChange": "Capped at 4 targets (MetaRoad: most original 3rd-job AoEs hit 6). COT2 launched it with a 5 s cooldown that Nexon removed on Aug 11, 2026.",
      "icon": "classic/skills/3111002.png"
@@ -5019,6 +5399,12 @@
      "tier": 3,
      "max": 30,
      "type": "summon",
+     "req": [
+      {
+       "skill": "Puppet",
+       "level": 5
+      }
+     ],
      "what": "Hawk with 100 attack power for 300 s and a 100% chance to stun for 1.5 s; damage scales with DEX/STR, not weapon attack, and it can miss; 65 MP and 1 Summoning Rock; needs Puppet 5.",
      "classicChange": null,
      "icon": "classic/skills/3111004.png"
@@ -5544,6 +5930,12 @@
      "tier": 1,
      "max": 20,
      "type": "buff",
+     "req": [
+      {
+       "skill": "The Eye of Amazon",
+       "level": 3
+      }
+     ],
      "what": "+20 Accuracy and +25 Evasion for 300 s for 16 MP at max; needs Eye of Amazon 3.",
      "classicChange": "Evasion bonus is +25 vs the original's +20 avoid (MetaRoad).",
      "icon": "classic/skills/3001000.png"
@@ -5574,6 +5966,12 @@
      "tier": 1,
      "max": 20,
      "type": "attack",
+     "req": [
+      {
+       "skill": "Arrow Blow",
+       "level": 1
+      }
+     ],
      "what": "Two 120% arrows that can hit one mob twice or two mobs once each; 16 MP, 2 arrows; needs Arrow Blow 1.",
      "classicChange": "Original was 130% x 2 on one target (MetaRoad); now it can split across two mobs.",
      "icon": "classic/skills/3001002.png"
@@ -5604,6 +6002,12 @@
      "tier": 2,
      "max": 20,
      "type": "passive",
+     "req": [
+      {
+       "skill": "Crossbow Mastery",
+       "level": 5
+      }
+     ],
      "what": "Critical hits slow the target: 100% chance, -35 speed for 5 s at max; needs Crossbow Mastery 5.",
      "classicChange": "New Classic skill. MetaRoad maps it to the original's accuracy passive slot; in COT1 it was a 15-level 1st-job skill.",
      "icon": "classic/skills/3100001.png"
@@ -5614,6 +6018,12 @@
      "tier": 2,
      "max": 30,
      "type": "buff",
+     "req": [
+      {
+       "skill": "Crossbow Mastery",
+       "level": 3
+      }
+     ],
      "what": "Toggle: 50% chance after an attack for a 250% single-target follow-up; no MP, 1 arrow per proc; needs Mastery 3.",
      "classicChange": "Original was a passive 60% / 250% proc (MetaRoad); Classic made it a toggle (COT1 35% / 270%, COT2 50% / 250%).",
      "icon": "classic/skills/1101000.png"
@@ -5624,6 +6034,12 @@
      "tier": 2,
      "max": 20,
      "type": "buff",
+     "req": [
+      {
+       "skill": "Crossbow Mastery",
+       "level": 5
+      }
+     ],
      "what": "+2 attack-speed stages for 300 s at max (10 HP and 10 MP); needs Mastery 5.",
      "classicChange": "Max duration up from 200 s to 300 s (MetaRoad).",
      "icon": "classic/skills/3201001.png"
@@ -5634,6 +6050,12 @@
      "tier": 2,
      "max": 20,
      "type": "buff",
+     "req": [
+      {
+       "skill": "Crossbow Booster",
+       "level": 5
+      }
+     ],
      "what": "No arrow use for 300 s at max (5 MP); needs Crossbow Booster 5.",
      "classicChange": "Original lasted 600 s for 20 MP (MetaRoad); Classic is cheaper, shorter, and never uses arrows even at level 1.",
      "icon": "classic/skills/3101003.png"
@@ -5664,6 +6086,12 @@
      "tier": 3,
      "max": 30,
      "type": "attack",
+     "req": [
+      {
+       "skill": "Mortal Blow",
+       "level": 5
+      }
+     ],
      "what": "Arrows erupt from the ground to hit up to 4 mobs for 250% in a 420x200 area around you; 35 MP and 4 arrows; usable with mobs in your face; needs Mortal Blow 5.",
      "classicChange": "Capped at 4 targets (MetaRoad: most original 3rd-job AoEs hit 6). COT2 launched it with a 5 s cooldown that Nexon removed on Aug 11, 2026.",
      "icon": "classic/skills/3211002.png"
@@ -5704,6 +6132,12 @@
      "tier": 3,
      "max": 30,
      "type": "summon",
+     "req": [
+      {
+       "skill": "Puppet",
+       "level": 5
+      }
+     ],
      "what": "Eagle with 100 attack power for 300 s and a 100% chance to stun for 1.5 s; damage scales with DEX/STR, not weapon attack, and it can miss; 65 MP and 1 Summoning Rock; needs Puppet 5.",
      "classicChange": null,
      "icon": "classic/skills/3211004.png"
@@ -6225,6 +6659,12 @@
      "tier": 1,
      "max": 15,
      "type": "passive",
+     "req": [
+      {
+       "skill": "Nimble Body",
+       "level": 3
+      }
+     ],
      "what": "+50 px star range at Lv 1, +200 px at Lv 15 (400 px total). Needs Nimble Body 3.",
      "classicChange": "Spread over 15 levels instead of 8 (same +200 at max). COT1's max was +150; COT2 raised it to +200.",
      "icon": "classic/skills/4000001.png"
@@ -6255,6 +6695,12 @@
      "tier": 1,
      "max": 20,
      "type": "buff",
+     "req": [
+      {
+       "skill": "Disorder",
+       "level": 3
+      }
+     ],
      "what": "On/off stealth: you can't attack or be hit. Lv 1 costs 50 MP and slows you by 20; Lv 20 costs 30 MP at normal speed.",
      "classicChange": "Changed from a timed buff (200 s at max in 2008) to a toggle with no duration.",
      "icon": "classic/skills/4001001.png"
@@ -6285,6 +6731,12 @@
      "tier": 2,
      "max": 30,
      "type": "passive",
+     "req": [
+      {
+       "skill": "Claw Mastery",
+       "level": 3
+      }
+     ],
      "what": "+15% crit rate and +35% crit damage at Lv 30, on top of everyone's base 5% / +20%. Needs Claw Mastery 3.",
      "classicChange": "Every class can crit in Classic. In 2008 this skill was the crit source itself: 50% chance for 200% damage.",
      "icon": "classic/skills/3000000.png"
@@ -6295,6 +6747,12 @@
      "tier": 2,
      "max": 20,
      "type": "buff",
+     "req": [
+      {
+       "skill": "Claw Mastery",
+       "level": 5
+      }
+     ],
      "what": "+2 attack-speed stages at every level. Lv 20 lasts 300 s for 10 HP / 10 MP. Needs Claw Mastery 5.",
      "classicChange": "Max duration is now 300 s (2008: 200 s).",
      "icon": "classic/skills/4101000.png"
@@ -6315,6 +6773,12 @@
      "tier": 2,
      "max": 30,
      "type": "attack",
+     "req": [
+      {
+       "skill": "Critical Recovery",
+       "level": 3
+      }
+     ],
      "what": "240% star hit (28 MP) with a 12% chance to absorb 15% of the damage as HP, capped at 25% of max HP. Needs Critical Recovery 3.",
      "classicChange": "COT1 absorbed on every hit; COT2 made it a 12% proc. 2008: 160% with 45% absorb, and it needed Endure 3.",
      "icon": "classic/skills/4101002.png"
@@ -6345,6 +6809,7 @@
      "tier": 3,
      "max": 20,
      "type": "buff",
+     "reqNote": "Its in-game text asks for Claw Guard Lv 5, but the second test's skill data sets no requirement, and the game goes by the data.",
      "what": "Costs a Magic Stone plus mesos. While active it saves you from one fatal hit and heals 25% HP. Lasts 30 min at Lv 20, with a 45 min cooldown per meowdb. Needs Claw Guard 5.",
      "classicChange": "New Classic skill. Meso Up was removed.",
      "icon": "classic/skills/4111000.png"
@@ -6355,6 +6820,12 @@
      "tier": 3,
      "max": 30,
      "type": "attack",
+     "req": [
+      {
+       "skill": "Meso Saver",
+       "level": 5
+      }
+     ],
      "what": "Throws 500 mesos for 8x damage (about 4,000 base) and ignores weapon-defense-up and magic-guard-up buffs. DEX gives a chance to refund half the cost. Needs Meso Saver 5.",
      "classicChange": "Now a flat 500-meso throw. The 2008 version scaled from 340 to 800 mesos and needed Meso Up 5.",
      "icon": "classic/skills/4111003.png"
@@ -6385,6 +6856,12 @@
      "tier": 3,
      "max": 20,
      "type": "mobility",
+     "req": [
+      {
+       "skill": "Avenger",
+       "level": 5
+      }
+     ],
      "what": "A second jump in mid-air. Costs 70 MP at Lv 1 and 30 MP at Lv 20; distance grows from 304 to 410 px. No cooldown. Needs Avenger 5.",
      "classicChange": "The Aug 11 COT2 patch removed the 3 s cooldown and raised the MP cost (60 to 70 at Lv 1, 20 to 30 at max). The 2008 version cost 13 MP at max.",
      "icon": "classic/skills/4111005.png"
@@ -6910,6 +7387,12 @@
      "tier": 1,
      "max": 15,
      "type": "passive",
+     "req": [
+      {
+       "skill": "Nimble Body",
+       "level": 3
+      }
+     ],
      "what": "+50 px at Lv 1 to +200 px at Lv 15 for throwing weapons. Only useful on the Sindit route.",
      "classicChange": "15 levels instead of 8. COT1's max was +150; COT2 raised it to +200.",
      "icon": "classic/skills/4000001.png"
@@ -6940,6 +7423,12 @@
      "tier": 1,
      "max": 20,
      "type": "buff",
+     "req": [
+      {
+       "skill": "Disorder",
+       "level": 3
+      }
+     ],
      "what": "On/off stealth: you can't attack or be hit. 50 MP and −20 Speed at Lv 1; 30 MP at normal speed at Lv 20.",
      "classicChange": "Changed from a timed buff (200 s at max in 2008) to a toggle.",
      "icon": "classic/skills/4001001.png"
@@ -6970,6 +7459,12 @@
      "tier": 2,
      "max": 20,
      "type": "buff",
+     "req": [
+      {
+       "skill": "Dagger Mastery",
+       "level": 5
+      }
+     ],
      "what": "+2 attack-speed stages at every level. 300 s for 10 HP / 10 MP at Lv 20. Needs Dagger Mastery 5.",
      "classicChange": "Max duration is now 300 s (2008: 200 s).",
      "icon": "classic/skills/4201000.png"
@@ -7000,6 +7495,12 @@
      "tier": 2,
      "max": 30,
      "type": "attack",
+     "req": [
+      {
+       "skill": "Haste",
+       "level": 5
+      }
+     ],
      "what": "Hits up to 2 monsters for 180% (24 MP) with a 90% steal chance. On success: 1.5 s stun and +35 Attack Power for 30 s (about +8.7% damage). Each monster can only be stolen from once. Needs Haste 5.",
      "classicChange": "COT2 raised it to 2 targets (from 1) and cut damage to 180% (from 200%). In 2008 it was 40% steal and 100% damage with no buff.",
      "icon": "classic/skills/4201002.png"
@@ -7030,6 +7531,12 @@
      "tier": 3,
      "max": 20,
      "type": "buff",
+     "req": [
+      {
+       "skill": "Chakra",
+       "level": 3
+      }
+     ],
      "what": "Toggle. Blocks 50% of incoming damage and charges mesos equal to 40% of the blocked amount (35 MP). Turns off if you run out of mesos. Needs Chakra 3.",
      "classicChange": "Now an on/off toggle that charges per blocked hit.",
      "icon": "classic/skills/4211000.png"
@@ -7050,6 +7557,12 @@
      "tier": 3,
      "max": 30,
      "type": "attack",
+     "req": [
+      {
+       "skill": "Pickpocket",
+       "level": 3
+      }
+     ],
      "what": "Crouch to detonate up to 15 of your own meso drops (40 MP). Each drop hits one monster for about 750–1,500 at Lv 30 regardless of your stats; a 50-meso drop does about 92% of a 10,000-meso bag. Mesos from other players' kills don't count.",
      "classicChange": "Now unlocked by Pickpocket (reversed prerequisite); the damage formula is Classic's own.",
      "icon": "classic/skills/4211004.png"
@@ -7070,6 +7583,13 @@
      "tier": 3,
      "max": 20,
      "type": "mobility",
+     "req": [
+      {
+       "skill": "Assaulter",
+       "level": 5
+      }
+     ],
+     "reqNote": "Its in-game text asks for Avenger Lv 5 (a Hermit skill); the second test's skill data requires Assaulter Lv 5, and the game goes by the data.",
      "what": "A second jump in mid-air. 70 MP at Lv 1, 30 MP at Lv 20; 304 to 410 px. No cooldown. Needs Assaulter 5.",
      "classicChange": "New for Chief Bandit; the 2008 book had Shield Mastery instead. The Aug 11 patch removed the 3 s cooldown.",
      "icon": "classic/skills/4111005.png"

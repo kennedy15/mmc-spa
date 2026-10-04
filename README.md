@@ -62,7 +62,7 @@ npm run build        # type-check + production build into dist/
 .github/workflows/  snapshot.yml (daily collector + redeploy), deploy.yml (Pages), add-character.yml, rename-character.yml, setup-copy.yml (a copy's first run)
 scripts/            snapshot.mjs (collector; Node 20+, the Actions use 24, no dependencies), add/rename-character.mjs, setup-copy.mjs, repo-guard.mjs
 data/               characters.json (you edit), index.json, snapshots/, looks/ (Action commits)
-public/             exp-table.json, bosses.json (crystal values), recipes.json, worlds.json, classic.json (Classic World builds and grinding spots), classic/ (skill, class and monster icons, minimaps, world maps)
+public/             exp-table.json, bosses.json (crystal values), recipes.json, worlds.json, classic.json (Classic World builds and grinding spots), classic/ (skill, class and monster icons, minimaps, world maps, per-level skill text, the Classic EXP table)
 src/app             layout, shared UI, chart theme
 src/features        tracker/, bossing/, classic/, ideas/, settings/
 src/lib             nexon/ (BigInt EXP math, snapshot parsing), reset/ (UTC boss periods), storage/ (IndexedDB, File System Access, export/import)
@@ -97,6 +97,15 @@ The Classic pages have their own look: a soft brown palette and display font aft
   - The route card shows the best-covering spots for every 10 levels.
   - The **At Lv N** list sorts by levels, EXP per HP or spawn points. A row opens to the in-game minimap with every spawn point, the monsters, tips and sources.
   - **Show on map** opens the in-game world map (Maple Island, Victoria Island, El Nath Mts., Dead Mine) with the spot's marker highlighted.
+- **Skill builder** (`/classic/skills`) is for trying out skill builds:
+  - Pick one of the ten branches. 1st, 2nd and 3rd job each get their own SP: 61, 121 and 91 at the Lv 100 cap (1 at the advancement, 3 a level, and 2nd-job SP stops at Lv 70).
+  - Every skill has −, +1 and Max. Max stops at the SP that's left. A skill stays locked until the skills it needs reach their level (`req` on each `skillInfo` entry, from the COT #2 skill data), and a needed skill can't drop below what a skill with points relies on.
+  - The side panel (under the skill on phones) shows the skill's game text at every level, with the level you're at in bold. Each job shows the level that pays for its SP, and the top bar the level the whole build needs.
+  - It's kept in sessionStorage (`mt.classic.skillBuilder`), each job separately, so closing the browser clears it. Reset clears the current job.
+- **Character lookup** (`/classic/characters`) shows a Classic World character's level and EXP by name. It is built but waiting: Nexon hasn't opened Classic World rankings yet, so the POST request in `src/features/classic/rankings.ts` is left blank (`RANKINGS_URL`, the request body, and `toCharacter()` for the response). Until then, **Show a sample** fills the page with a made-up character.
+  - Every lookup is kept in the browser (localStorage `mt.classic.lookups`). The next lookup shows the EXP gained since, a pace per day, a chart of total EXP, and the EXP and rough date for the next level, the job advancements and Lv 100.
+  - The EXP math uses `public/classic/exp-table.json`. Lv 1–49 are confirmed for Classic World (MeowDB and mapleclassic.wiki agree). Lv 50–99 are the original game's table, and the page says so.
+  - Nexon's GMS rankings block browser requests (no CORS, see `docs/verification.md`). If the Classic ones do too, the lookup has to run in a GitHub Action, like Add character.
 
 All of it is read from `public/classic.json`, researched from Nexon's test and Founder's Access notes plus MeowDB, Metaroad and tester guides, and fact-checked claim by claim on 2026-10-04. Each build has two tiers:
 
@@ -113,7 +122,7 @@ Most of the art comes from [maplestory.io](https://maplestory.io/)'s Classic Wor
 
 Every build and spot lists its sources. 3rd job, Orbis and El Nath were only in COT #2, so they appear as a preview.
 
-Recheck the file once Founder's Access is live, because skill numbers come from COT #2 client data. When 3rd job ships, raise `world.launchJobs` to 3: the skill timelines and labels follow it.
+Recheck the file once Founder's Access is live, because skill numbers and prerequisites come from COT #2 client data; the same goes for Lv 50 and up in `public/classic/exp-table.json`. When 3rd job ships, raise `world.launchJobs` to 3: the skill timelines and labels follow it.
 
 ## Data sources
 

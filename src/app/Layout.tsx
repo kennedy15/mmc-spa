@@ -13,7 +13,7 @@ interface NavSection {
   groups: { label?: string; items: NavItem[] }[];
 }
 
-/** Sidebar sections, top to bottom: today's GMS (tracker and bossing), Classic World guides, Minecraft, then Settings. */
+/** Sidebar sections, top to bottom: today's GMS (tracker and bossing), Classic World guides and lookup, Minecraft, then Settings. */
 const NAV: NavSection[] = [
   {
     label: 'Modern Maple',
@@ -45,7 +45,9 @@ const NAV: NavSection[] = [
       {
         items: [
           { to: '/classic/builds', label: 'Class builds' },
+          { to: '/classic/skills', label: 'Skill builder' },
           { to: '/classic/grinding', label: 'Grinding spots' },
+          { to: '/classic/characters', label: 'Character lookup' },
         ],
       },
     ],
