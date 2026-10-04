@@ -62,9 +62,9 @@ npm run build        # type-check + production build into dist/
 .github/workflows/  snapshot.yml (daily collector + redeploy), deploy.yml (Pages), add-character.yml, rename-character.yml, setup-copy.yml (a copy's first run)
 scripts/            snapshot.mjs (collector; Node 20+, the Actions use 24, no dependencies), add/rename-character.mjs, setup-copy.mjs, repo-guard.mjs
 data/               characters.json (you edit), index.json, snapshots/, looks/ (Action commits)
-public/             exp-table.json, bosses.json (crystal values), recipes.json, worlds.json
+public/             exp-table.json, bosses.json (crystal values), recipes.json, worlds.json, classic.json (Classic World builds and grinding spots), classic/skills/ (skill icons)
 src/app             layout, shared UI, chart theme
-src/features        tracker/, bossing/, ideas/, settings/
+src/features        tracker/, bossing/, classic/, ideas/, settings/
 src/lib             nexon/ (BigInt EXP math, snapshot parsing), reset/ (UTC boss periods), storage/ (IndexedDB, File System Access, export/import)
 docs/samples        raw rankings responses captured during verification
 ```
@@ -74,6 +74,22 @@ docs/samples        raw rankings responses captured during verification
 A preset is a named weekly boss list with a party size per boss. `public/bosses.json` ships six in progression order (Chaos Tenebris, HSeren / Easy Grandis, Normal Grandis, then Normal Baltrix, Hard Baltrix and The Juice for the main). **Presets** (under Bossing) edits them, makes new ones and sets their order on a board of every boss: Off or a difficulty, and the party size. The edited list is kept in the browser (and the data folder, and Export) as `bossing/presets.json`; *Reset to defaults* goes back to `bosses.json`.
 
 **Assignments** is a ladder with one lane per preset. Moving a character to a lane wipes its weekly bosses and replaces them with the preset's, after a preview and with Undo; monthly Black Mage and recorded clears are kept. Characters with a hand-made list wait in the tray until moved. A character's list can still be tuned by hand (party, difficulty, add, reorder); it then shows as edited, with Reset. Caps: 14 weekly-boss crystals per character per week and 180 per world per week (both editable in Settings); the Checklist locks unticked bosses once either is reached. Weekly and monthly bosses are tracked separately: the weekly meso, crystal counts, history chart and meso flow cover weekly bosses only, and Black Mage has its own monthly figures (Checklist header, Summary, History by month), so a monthly clear never inflates a week.
+
+## Classic Maple
+
+The sidebar has three sections. **Modern Maple** holds today's GMS tracker and bossing pages. **Classic Maple** covers MapleStory Classic World, Nexon's pre-Big Bang world: Founder's Access opens Oct 6, 2026, and Grand Launch is Oct 21. **Minecraft** holds the Build board.
+
+- **Class builds** ranks the ten launch branches using the tier lists from the two closed online tests (COT #1 in April, COT #2 in August). Each build opens an infographic page:
+  - ratings, the stat plan and variants
+  - milestones
+  - the skill order for each job, showing the level each step is affordable at (1 SP at each advancement, 3 per level)
+  - key skills, tips, gear and what Classic changed
+  - its sources
+- **Grinding spots** puts every researched map on a Lv 1–100 chart. Pick a level, class and branch to see where to train, with quests and leveling tips alongside.
+
+All of it is read from `public/classic.json`, researched on 2026-10-03 from Nexon's test and Founder's Access notes plus MeowDB, Metaroad and tester guides. Skill icons are in `public/classic/skills/`; they were taken once from [maplestory.io](https://maplestory.io/)'s Classic World data (region `MCW`, version `CBT2`), with the original GMS art used where that data didn't load. Each skill's `icon` in the JSON points at one of them, and skills without an icon show a lettered tile. Every build and spot lists its sources. 3rd job, Orbis and El Nath were only in COT #2, so they appear as a preview.
+
+Recheck the file once Founder's Access is live, because skill numbers come from COT #2 client data. When 3rd job ships, raise `world.launchJobs` to 3: the skill timelines and labels follow it.
 
 ## Data sources
 

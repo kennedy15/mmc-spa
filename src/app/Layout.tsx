@@ -3,24 +3,56 @@ import { useStore } from '../store';
 import { relTime } from './format';
 import { setTheme, THEMES, useTheme } from './theme';
 
-const NAV: { to: string; label: string; end?: boolean }[][] = [
-  [
-    { to: '/', label: 'Dashboard', end: true },
-    { to: '/characters', label: 'Characters' },
-    { to: '/legion', label: 'Legion' },
-    { to: '/fashion', label: 'Fashion' },
-  ],
-  [
-    { to: '/bossing', label: 'Checklist', end: true },
-    { to: '/bossing/assignments', label: 'Assignments' },
-    { to: '/bossing/presets', label: 'Presets' },
-    { to: '/bossing/history', label: 'History' },
-    { to: '/bossing/summary', label: 'Summary' },
-  ],
-  [{ to: '/ideas', label: 'Build board' }],
-  [{ to: '/settings', label: 'Settings' }],
+interface NavItem {
+  to: string;
+  label: string;
+  end?: boolean;
+}
+interface NavSection {
+  label?: string;
+  groups: { label?: string; items: NavItem[] }[];
+}
+
+/** Sidebar sections, top to bottom: today's GMS (tracker and bossing), Classic World guides, Minecraft, then Settings. */
+const NAV: NavSection[] = [
+  {
+    label: 'Modern Maple',
+    groups: [
+      {
+        label: 'Tracker',
+        items: [
+          { to: '/', label: 'Dashboard', end: true },
+          { to: '/characters', label: 'Characters' },
+          { to: '/legion', label: 'Legion' },
+          { to: '/fashion', label: 'Fashion' },
+        ],
+      },
+      {
+        label: 'Bossing',
+        items: [
+          { to: '/bossing', label: 'Checklist', end: true },
+          { to: '/bossing/assignments', label: 'Assignments' },
+          { to: '/bossing/presets', label: 'Presets' },
+          { to: '/bossing/history', label: 'History' },
+          { to: '/bossing/summary', label: 'Summary' },
+        ],
+      },
+    ],
+  },
+  {
+    label: 'Classic Maple',
+    groups: [
+      {
+        items: [
+          { to: '/classic/builds', label: 'Class builds' },
+          { to: '/classic/grinding', label: 'Grinding spots' },
+        ],
+      },
+    ],
+  },
+  { label: 'Minecraft', groups: [{ items: [{ to: '/ideas', label: 'Build board' }] }] },
+  { groups: [{ items: [{ to: '/settings', label: 'Settings' }] }] },
 ];
-const GROUPS = ['Tracker', 'Bossing', 'Minecraft', ''];
 
 export function Layout() {
   const index = useStore((s) => s.index);
@@ -44,20 +76,30 @@ export function Layout() {
           </div>
         </div>
         <nav className="px-3 pb-3 flex lg:flex-col gap-1 overflow-x-auto lg:overflow-visible">
-          {NAV.map((group, gi) => (
-            <div key={gi} className="flex lg:flex-col gap-0.5 lg:mb-3 shrink-0">
-              {GROUPS[gi] && <div className="hidden lg:block label px-3 pt-1 pb-1.5">{GROUPS[gi]}</div>}
-              {group.map((item) => (
-                <NavLink
-                  key={item.to}
-                  to={item.to}
-                  end={item.end}
-                  className={({ isActive }) => `rounded-lg px-3 py-1.5 text-sm whitespace-nowrap transition-colors ${isActive ? 'bg-accent/15 text-accent font-medium' : 'text-ink-2 hover:text-ink hover:bg-surface-2'}`}
-                >
-                  {item.label}
-                </NavLink>
+          {NAV.map((section, si) => (
+            <div key={si} className="flex lg:flex-col gap-1 lg:gap-2 lg:mb-4 shrink-0 border-border max-lg:not-first:border-l max-lg:not-first:pl-1">
+              {section.label && (
+                <div className="hidden lg:flex items-center gap-2 px-3 pt-1">
+                  <span className="label text-ink-2 font-semibold">{section.label}</span>
+                  <span className="h-px flex-1 bg-border" aria-hidden />
+                </div>
+              )}
+              {section.groups.map((group, gi) => (
+                <div key={gi} className="flex lg:flex-col gap-0.5 shrink-0">
+                  {group.label && <div className="hidden lg:block px-3 pb-0.5 text-[11px] text-ink-3">{group.label}</div>}
+                  {group.items.map((item) => (
+                    <NavLink
+                      key={item.to}
+                      to={item.to}
+                      end={item.end}
+                      className={({ isActive }) => `rounded-lg px-3 py-1.5 text-sm whitespace-nowrap transition-colors ${isActive ? 'bg-accent/15 text-accent font-medium' : 'text-ink-2 hover:text-ink hover:bg-surface-2'}`}
+                    >
+                      {item.label}
+                    </NavLink>
+                  ))}
+                  {si === NAV.length - 1 && gi === section.groups.length - 1 && <ThemeToggle />}
+                </div>
               ))}
-              {gi === NAV.length - 1 && <ThemeToggle />}
             </div>
           ))}
         </nav>

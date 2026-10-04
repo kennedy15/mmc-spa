@@ -12,6 +12,9 @@ import { Assignments } from './features/bossing/Assignments';
 import { Presets } from './features/bossing/Presets';
 import { History } from './features/bossing/History';
 import { Summary } from './features/bossing/Summary';
+import { ClassicBuilds } from './features/classic/Builds';
+import { BuildPage } from './features/classic/BuildPage';
+import { GrindingSpots } from './features/classic/Grinding';
 import { Board } from './features/ideas/Board';
 import { Settings } from './features/settings/Settings';
 
@@ -41,6 +44,10 @@ export default function App() {
               <Route path="bossing/presets" element={<Presets />} />
               <Route path="bossing/history" element={<History />} />
               <Route path="bossing/summary" element={<Summary />} />
+              <Route path="classic" element={<Navigate to="/classic/builds" replace />} />
+              <Route path="classic/builds" element={<ClassicBuilds />} />
+              <Route path="classic/builds/:id" element={<BuildPage />} />
+              <Route path="classic/grinding" element={<GrindingSpots />} />
               <Route path="ideas" element={<Board />} />
               <Route path="settings" element={<Settings />} />
               <Route path="*" element={<Navigate to="/" replace />} />
