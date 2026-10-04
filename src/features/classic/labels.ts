@@ -1,4 +1,4 @@
-import type { Archetype, ClassicBuild, ClassicDoc, RatingKey, SkillType, Tier } from './types';
+import type { Archetype, ClassicBuild, ClassicDoc, GrindSpot, Monster, RatingKey, SkillType, Tier } from './types';
 
 export const ARCHETYPES: Archetype[] = ['Warrior', 'Magician', 'Bowman', 'Thief', 'Pirate'];
 export const TIERS: Tier[] = ['S', 'A', 'B', 'C', 'D'];
@@ -37,4 +37,38 @@ export function launchKeySkills(build: ClassicBuild, world: ClassicDoc['world'],
   const open = (k: string) => tier(k) <= world.launchJobs;
   const sorted = [...build.keySkills].sort((a, b) => Number(open(b)) - Number(open(a)) || (open(a) ? tier(b) - tier(a) : 0));
   return onlyOpen && sorted.some(open) ? sorted.filter(open) : sorted;
+}
+
+/** A build's consensus tier for its 2nd job (the launch job) or its 3rd job (COT #2 only). */
+export const tierFor = (b: ClassicBuild, job: 2 | 3): Tier => (job === 2 ? b.tier : b.tier3);
+
+/** The lists that grade a build's 2nd or 3rd job (column-only grades left out), and how many give its consensus tier. */
+export function tierLists(b: ClassicBuild, job: 2 | 3) {
+  const lists = b.tierSources.filter((t) => t.jobs.includes(job) && t.tier !== '—');
+  return { lists, agree: lists.filter((t) => t.tier.startsWith(tierFor(b, job))).length };
+}
+
+/** Monsters ordered by how many spawn points they have on the map, with that count. */
+export function bySpawns(spot: GrindSpot): { monster: Monster; index: number; count: number }[] {
+  const counts = new Map<number, number>();
+  for (const [, , i] of spot.layout?.spawns ?? []) counts.set(i, (counts.get(i) ?? 0) + 1);
+  return spot.monsters.map((monster, index) => ({ monster, index, count: counts.get(index) ?? 0 })).sort((a, b) => b.count - a.count);
+}
+
+/**
+ * EXP per HP across the map's monsters, weighted by their spawn points: higher means more EXP for the
+ * same damage. It ignores overkill, so it compares maps you kill in the same number of hits best.
+ */
+export function expPerHp(spot: GrindSpot): number | null {
+  const ranked = bySpawns(spot);
+  const weighted = ranked.some((r) => r.count > 0);
+  let exp = 0;
+  let hp = 0;
+  for (const r of ranked) {
+    if (r.monster.hp == null) continue;
+    const w = weighted ? r.count : 1;
+    exp += w * (r.monster.exp ?? 0);
+    hp += w * r.monster.hp;
+  }
+  return hp > 0 ? exp / hp : null;
 }

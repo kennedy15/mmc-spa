@@ -3,61 +3,28 @@ import { dataUrl } from '../../lib/paths';
 import type { Archetype, SkillInfo, Source, Tier } from './types';
 import { siteOf } from './labels';
 
-/** Line glyph per class archetype, drawn on a 24px grid in currentColor. */
-const GLYPHS: Record<Archetype, ReactNode> = {
-  Warrior: (
-    <>
-      <path d="M7.5 15.5 18 5l2.5-.5L20 7 9.5 17.5" />
-      <path d="M5.5 13.5l6 6" />
-      <path d="M7.5 17.5l-3.5 3" />
-    </>
-  ),
-  Magician: (
-    <>
-      <circle cx="16" cy="8" r="3.5" />
-      <path d="M13.5 10.5 4 20" />
-      <path d="M20.5 2.5v2M21.5 3.5h-2" />
-    </>
-  ),
-  Bowman: (
-    <>
-      <path d="M8 3c6.5 3 6.5 15 0 18" />
-      <path d="M8 3v18" strokeOpacity={0.5} />
-      <path d="M3.5 12h16" />
-      <path d="M17 9.5l2.5 2.5-2.5 2.5" />
-      <path d="M3.5 12l-1-1.5M3.5 12l-1 1.5" />
-    </>
-  ),
-  Thief: (
-    <>
-      <path d="M12 2.5l2 7.5 7.5 2-7.5 2-2 7.5-2-7.5-7.5-2 7.5-2z" />
-      <circle cx="12" cy="12" r="1.25" />
-    </>
-  ),
-  Pirate: (
-    <>
-      <circle cx="12" cy="5" r="2" />
-      <path d="M12 7v13.5M8 10.5h8" />
-      <path d="M4.5 14a7.5 7.5 0 0 0 15 0" />
-    </>
-  ),
-};
-
-/** The archetype glyph in a rounded tile. */
-export function Emblem({ archetype, size = 40 }: { archetype: Archetype; size?: number }) {
+/**
+ * The in-game class icon (32px pixel art in public/classic/jobs/); multiples of 16 stay pixel-sharp on 2x screens.
+ * Pirate has an icon too, but no builds or spots until Classic World adds the class.
+ */
+export function Emblem({ archetype, size = 32 }: { archetype: Archetype; size?: number }) {
   return (
-    <span className="inline-flex shrink-0 items-center justify-center rounded-xl border border-border-2 bg-surface-2 text-accent" style={{ width: size, height: size }} aria-hidden>
-      <svg viewBox="0 0 24 24" width={size * 0.55} height={size * 0.55} fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round">
-        {GLYPHS[archetype]}
-      </svg>
-    </span>
+    <img
+      src={dataUrl(`classic/jobs/${archetype.toLowerCase()}.webp`, 'public')}
+      alt=""
+      aria-hidden
+      width={size}
+      height={size}
+      className="shrink-0 rounded-[22%] shadow-sm"
+      style={{ width: size, height: size, imageRendering: size % 16 === 0 ? 'pixelated' : 'auto' }}
+    />
   );
 }
 
 /** Tier letter, stepping down from S (solid accent) through A (accent outline) to plain and muted outlines. */
-export function TierBadge({ tier, size = 'sm' }: { tier: Tier; size?: 'sm' | 'lg' }) {
-  const tone = tier === 'S' ? 'bg-accent text-black border-accent' : tier === 'A' ? 'bg-accent/15 text-accent border-accent/60' : tier === 'B' ? 'bg-surface-3 text-ink border-border-2' : tier === 'C' ? 'bg-transparent text-ink-2 border-border-2' : 'bg-transparent text-ink-3 border-dashed border-border-2';
-  const box = size === 'lg' ? 'size-14 rounded-2xl text-3xl' : 'size-7 rounded-lg text-sm';
+export function TierBadge({ tier, size = 'sm' }: { tier: Tier; size?: 'xs' | 'sm' | 'lg' }) {
+  const tone = tier === 'S' ? 'bg-accent text-on-accent border-accent' : tier === 'A' ? 'bg-accent/15 text-accent border-accent/60' : tier === 'B' ? 'bg-surface-3 text-ink border-border-2' : tier === 'C' ? 'bg-transparent text-ink-2 border-border-2' : 'bg-transparent text-ink-3 border-dashed border-border-2';
+  const box = size === 'lg' ? 'size-14 rounded-2xl text-3xl' : size === 'xs' ? 'size-5 rounded-md text-[11px]' : 'size-7 rounded-lg text-sm';
   return (
     <span className={`inline-flex shrink-0 items-center justify-center border font-bold ${box} ${tone}`} title={`${tier} tier`} aria-label={`${tier} tier`}>
       {tier}

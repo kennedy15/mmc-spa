@@ -62,7 +62,7 @@ npm run build        # type-check + production build into dist/
 .github/workflows/  snapshot.yml (daily collector + redeploy), deploy.yml (Pages), add-character.yml, rename-character.yml, setup-copy.yml (a copy's first run)
 scripts/            snapshot.mjs (collector; Node 20+, the Actions use 24, no dependencies), add/rename-character.mjs, setup-copy.mjs, repo-guard.mjs
 data/               characters.json (you edit), index.json, snapshots/, looks/ (Action commits)
-public/             exp-table.json, bosses.json (crystal values), recipes.json, worlds.json, classic.json (Classic World builds and grinding spots), classic/skills/ (skill icons)
+public/             exp-table.json, bosses.json (crystal values), recipes.json, worlds.json, classic.json (Classic World builds and grinding spots), classic/ (skill, class and monster icons, minimaps, world maps)
 src/app             layout, shared UI, chart theme
 src/features        tracker/, bossing/, classic/, ideas/, settings/
 src/lib             nexon/ (BigInt EXP math, snapshot parsing), reset/ (UTC boss periods), storage/ (IndexedDB, File System Access, export/import)
@@ -79,15 +79,39 @@ A preset is a named weekly boss list with a party size per boss. `public/bosses.
 
 The sidebar has three sections. **Modern Maple** holds today's GMS tracker and bossing pages. **Classic Maple** covers MapleStory Classic World, Nexon's pre-Big Bang world: Founder's Access opens Oct 6, 2026, and Grand Launch is Oct 21. **Minecraft** holds the Build board.
 
-- **Class builds** ranks the ten launch branches using the tier lists from the two closed online tests (COT #1 in April, COT #2 in August). Each build opens an infographic page:
-  - ratings, the stat plan and variants
-  - milestones
-  - the skill order for each job, showing the level each step is affordable at (1 SP at each advancement, 3 per level)
-  - key skills, tips, gear and what Classic changed
-  - its sources
-- **Grinding spots** puts every researched map on a Lv 1–100 chart. Pick a level with the boxes (5 apart) or by dragging the orange line, then a class and branch, to see where to train, with quests and leveling tips alongside. **Show on map** opens the in-game world map (Maple Island, Victoria Island, El Nath Mts., Dead Mine) with the spot's marker highlighted.
+The Classic pages have their own look: a soft brown palette and display font after Nexon's Classic World promo art, set by the `classic-theme` class in `src/index.css`. The class icons (Warrior, Magician, Bowman, Thief, and Pirate greyed out, since Classic World has no Pirates yet) are in `public/classic/jobs/`, from [AutoNodestone](https://github.com/gene5487/AutoNodestone/tree/master/job_icon/class).
 
-All of it is read from `public/classic.json`, researched on 2026-10-03 from Nexon's test and Founder's Access notes plus MeowDB, Metaroad and tester guides. Skill icons are in `public/classic/skills/`; they were taken once from [maplestory.io](https://maplestory.io/)'s Classic World data (region `MCW`, version `CBT2`), with the original GMS art used where that data didn't load. Each skill's `icon` in the JSON points at one of them, and skills without an icon show a lettered tile. The world maps in `public/classic/worldmap/` and their markers (`worldMaps` in the JSON) come from the same Classic World data; each spot's `place` names its marker. Every build and spot lists its sources. 3rd job, Orbis and El Nath were only in COT #2, so they appear as a preview.
+- **Class builds** covers the ten launch branches:
+  - class tiles to filter by class
+  - a sortable comparison table: launch tier, 3rd-job tier, the six ratings, main stats and signature skills
+  - a tier list that switches between the launch job (2nd job) and the 3rd job, which only COT #2 had
+- **Each build** opens an infographic page:
+  - an at-a-glance card: stat priority, weapon, what it's good and weak at, and the 1st and 2nd job skill order as icon strips
+  - the full skill build, with a level picker that shows what you should have by any level (1 SP at each advancement, 3 per level)
+  - ratings, the stat plan, milestones, key skills, strengths, tips, gear and what Classic changed
+  - sources, with the tier each list gave
+  - a **Where to train** link that opens Grinding spots set to that class and branch (`?class=&branch=`)
+- **Grinding spots** has these parts:
+  - Pick a level with the boxes (5 apart), the number field, or by dragging the orange line on the level map (desktop).
+  - Pick a class and branch.
+  - The route card shows the best-covering spots for every 10 levels.
+  - The **At Lv N** list sorts by levels, EXP per HP or spawn points. A row opens to the in-game minimap with every spawn point, the monsters, tips and sources.
+  - **Show on map** opens the in-game world map (Maple Island, Victoria Island, El Nath Mts., Dead Mine) with the spot's marker highlighted.
+
+All of it is read from `public/classic.json`, researched from Nexon's test and Founder's Access notes plus MeowDB, Metaroad and tester guides, and fact-checked claim by claim on 2026-10-04. Each build has two tiers:
+
+- `tier`: the consensus of the 2nd-job lists.
+- `tier3`: the consensus of the COT #2 3rd-job lists.
+
+For both, MetaRoad and MeowDB lists count double, YouTube rankings 1.5 times, and the low-trust gold-seller blogs once. `tierSources[].jobs` records which job each list rates.
+
+Most of the art comes from [maplestory.io](https://maplestory.io/)'s Classic World data (region `MCW`, version `CBT2`), taken once:
+
+- Skill icons are in `public/classic/skills/`, with the original GMS art used where that data didn't load. Each skill's `icon` in the JSON points at one, and skills without an icon show a lettered tile.
+- Monster sprites are in `public/classic/mobs/` and minimaps in `public/classic/minimaps/`. Each spot's `layout` holds its spawn points.
+- World maps are in `public/classic/worldmap/`, with their markers under `worldMaps` in the JSON. Each spot's `place` names its marker.
+
+Every build and spot lists its sources. 3rd job, Orbis and El Nath were only in COT #2, so they appear as a preview.
 
 Recheck the file once Founder's Access is live, because skill numbers come from COT #2 client data. When 3rd job ships, raise `world.launchJobs` to 3: the skill timelines and labels follow it.
 

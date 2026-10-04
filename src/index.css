@@ -19,6 +19,8 @@
   --color-warn: #f9c74f;
   --color-bad: #ff5c8a;
   --color-info: #5b8def;
+  /* Text on an accent fill: black on Ember's orange and Aurora's purple; Classic's darker accent takes cream. */
+  --color-on-accent: #000000;
   --font-sans: "InterVariable", "Inter", ui-sans-serif, system-ui, -apple-system, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
 }
@@ -44,6 +46,49 @@ html[data-theme="aurora"] {
   --color-warn: #ebc573;
   --color-bad: #e6768e;
   --color-info: #6a93d5;
+}
+/* Classic theme: the Classic Maple pages (Class builds, Grinding spots), scoped to their content area by
+   src/app/Layout.tsx. Light parchment in a dark frame, after Nexon's Classic World promo and FAQ art, with
+   brown ink, a burnt-orange accent and Glory headings. Every text color is WCAG AA (>= 5.1:1) on bg,
+   surface, raised and track; control outlines (border-2) are >= 3.4:1. */
+.classic-theme {
+  color-scheme: light;
+  --color-bg: #e8d7b0;
+  --color-surface: #f4e8cc;
+  --color-surface-2: #fbf4e4;
+  --color-surface-3: #e9d8b2;
+  --color-border: #cdb27e;
+  --color-border-2: #8a6d43;
+  --color-ink: #33210f;
+  --color-ink-2: #5a3f24;
+  --color-ink-3: #6b4f33;
+  --color-accent: #933c0c;
+  --color-accent-2: #a8470f;
+  --color-accent-dim: #f0d2ae;
+  --color-accent-alt: #46641e;
+  --color-good: #1f5d34;
+  --color-warn: #7a4706;
+  --color-bad: #9c1d27;
+  --color-info: #1f4a87;
+  --color-on-accent: #fbf4e4;
+  --font-display: "Glory", var(--font-sans);
+  background: var(--color-bg) radial-gradient(120% 80% at 50% 0%, #f2e5c4 0%, transparent 60%);
+  color: var(--color-ink);
+}
+.classic-theme .card {
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.55), 0 1px 2px rgb(74 45 18 / 0.12), 0 6px 18px -10px rgb(74 45 18 / 0.25);
+}
+.classic-theme h1 {
+  font-family: var(--font-display);
+  font-weight: 800;
+  letter-spacing: 0.01em;
+}
+.classic-theme h2,
+.classic-theme .card > header h3 {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1.05em;
+  letter-spacing: 0.01em;
 }
 body {
   margin: 0;

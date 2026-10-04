@@ -103,7 +103,7 @@ function Label({ spot, wm, text, accent = false }: { spot: WorldMapSpot; wm: Wor
   const below = spot.y / wm.height < 0.14;
   return (
     <span
-      className={`pointer-events-none absolute z-10 whitespace-nowrap rounded-md px-2 py-1 text-xs shadow-lg ${accent ? 'bg-accent font-semibold text-black' : 'border border-border-2 bg-surface-2/95 text-ink'}`}
+      className={`pointer-events-none absolute z-10 whitespace-nowrap rounded-md px-2 py-1 text-xs shadow-lg ${accent ? 'bg-accent font-semibold text-on-accent' : 'border border-border-2 bg-surface-2/95 text-ink'}`}
       style={{ left: pct(spot.x, wm.width), top: pct(spot.y, wm.height), transform: `translate(${shift(spot.x, wm.width)}, ${below ? '14px' : 'calc(-100% - 14px)'})` }}
     >
       {text}

@@ -1,4 +1,4 @@
-import { NavLink, Outlet } from 'react-router-dom';
+import { NavLink, Outlet, useLocation } from 'react-router-dom';
 import { useStore } from '../store';
 import { relTime } from './format';
 import { setTheme, THEMES, useTheme } from './theme';
@@ -58,6 +58,7 @@ export function Layout() {
   const index = useStore((s) => s.index);
   const folder = useStore((s) => s.folder);
   const grantFolder = useStore((s) => s.grantFolder);
+  const classic = useLocation().pathname.startsWith('/classic');
   const updated = index?.updatedAt ?? null;
   const stale = updated ? Date.now() - Date.parse(updated) > 36 * 3_600_000 : true;
 
@@ -120,9 +121,12 @@ export function Layout() {
           </div>
         </div>
       </aside>
-      <main className="px-4 py-5 sm:px-6 lg:px-8 lg:py-7 max-w-[1400px] w-full">
-        <Outlet />
-      </main>
+      {/* The Classic Maple pages wear their own parchment theme (index.css .classic-theme). */}
+      <div className={classic ? 'classic-theme min-h-screen' : undefined}>
+        <main className="px-4 py-5 sm:px-6 lg:px-8 lg:py-7 max-w-[1400px] w-full">
+          <Outlet />
+        </main>
+      </div>
     </div>
   );
 }

@@ -1,11 +1,12 @@
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Card, Empty, PageHeader, Spinner, Stat } from '../../app/ui';
+import { Card, Empty, PageHeader, Segmented, Spinner, Stat } from '../../app/ui';
 import { fmtDate } from '../../app/format';
 import { useNow } from '../../app/useNow';
 import { useClassic } from './data';
 import { Emblem, Pips, SkillIcon, TierBadge } from './bits';
-import { ARCHETYPES, launchKeySkills, launchName, RATINGS, siteOf, TIERS } from './labels';
+import { ClassPicker, CompareTable } from './Compare';
+import { ARCHETYPES, launchKeySkills, launchName, RATINGS, siteOf, tierFor, TIERS } from './labels';
 import type { Archetype, ClassicBuild, ClassicDoc, SkillInfo } from './types';
 
 const tierRank = (b: ClassicBuild) => TIERS.indexOf(b.tier);
@@ -25,9 +26,11 @@ export function ClassicBuilds() {
 function BuildsIndex({ doc }: { doc: ClassicDoc }) {
   const now = useNow(60_000);
   const [filter, setFilter] = useState<Archetype | 'All'>('All');
+  // The tier list ranks the launch job (2nd job) or the 3rd job the second test previewed.
+  const [tierJob, setTierJob] = useState<2 | 3>(2);
   const archetypes = ARCHETYPES.filter((a) => doc.builds.some((b) => b.archetype === a));
   const shown = useMemo(() => doc.builds.filter((b) => filter === 'All' || b.archetype === filter), [doc.builds, filter]);
-  const byTier = TIERS.map((t) => ({ tier: t, builds: doc.builds.filter((b) => b.tier === t) })).filter((r) => r.builds.length);
+  const byTier = TIERS.map((t) => ({ tier: t, builds: doc.builds.filter((b) => tierFor(b, tierJob) === t) })).filter((r) => r.builds.length);
   const founders = daysUntil(doc.world.foundersAccess, now);
   const launch = daysUntil(doc.world.launch, now);
   const inDays = (d: number) => (d > 0 ? `in ${d} day${d === 1 ? '' : 's'}` : 'open now');
@@ -46,17 +49,54 @@ function BuildsIndex({ doc }: { doc: ClassicDoc }) {
         <Stat label="Builds" value={doc.builds.length} sub={`${archetypes.length} classes · no Pirates`} />
       </div>
 
-      <Card title="Tier list" className="mb-4" action={<span className="text-xs text-ink-3">Consensus of tier lists from the tests, open a build for each list</span>}>
+      <ClassPicker builds={doc.builds} value={filter} onChange={setFilter} />
+
+      <Card title="Compare at a glance" className="mb-4 hidden md:block" action={<span className="text-xs text-ink-3">ratings at launch (1st and 2nd job) · click a heading to sort</span>}>
+        <CompareTable builds={shown} world={doc.world} />
+      </Card>
+
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:hidden mb-4">
+        {[...shown]
+          .sort((a, b) => tierRank(a) - tierRank(b) || ARCHETYPES.indexOf(a.archetype) - ARCHETYPES.indexOf(b.archetype))
+          .map((b) => (
+            <BuildCard key={b.id} build={b} world={doc.world} />
+          ))}
+      </div>
+
+      <Card
+        title="Tier list"
+        className="mb-4"
+        action={
+          <Segmented
+            label="Which job to rank"
+            value={tierJob}
+            onChange={setTierJob}
+            options={[
+              { value: 2, label: 'Launch · 2nd job' },
+              { value: 3, label: '3rd job · 2nd test' },
+            ]}
+          />
+        }
+      >
+        <p className="mb-1 text-xs text-ink-3">
+          {tierJob === 2
+            ? 'Consensus of the 2nd-job tier lists: the jobs you play at launch. The small badge is the 3rd job each one leads to.'
+            : "3rd job was only in the second test and isn't in the launch, so this is for planning ahead. The small badge is the launch job's tier."}{' '}
+          Open a build to see each list.
+        </p>
         <div className="divide-y divide-border">
           {byTier.map(({ tier, builds }) => (
             <div key={tier} className="flex items-center gap-3 py-2.5 first:pt-1 last:pb-1">
               <TierBadge tier={tier} size="lg" />
               <div className="flex flex-wrap gap-2 min-w-0">
                 {builds.map((b) => (
-                  <Link key={b.id} to={`/classic/builds/${b.id}`} className="flex items-center gap-2 rounded-xl border border-border-2 bg-surface-2 py-1.5 pl-1.5 pr-3 text-sm hover:border-ink-3 transition-colors">
-                    <Emblem archetype={b.archetype} size={28} />
-                    <span className="font-medium">{launchName(b, doc.world)}</span>
-                    <span className="text-xs text-ink-3">→ {b.name}</span>
+                  <Link key={b.id} to={`/classic/builds/${b.id}`} className="flex items-center gap-2 rounded-xl border border-border-2 bg-surface-2 py-1.5 pl-1.5 pr-2 text-sm hover:border-ink-3 transition-colors">
+                    <Emblem archetype={b.archetype} size={32} />
+                    <span className="font-medium">{tierJob === 2 ? b.path[1] : b.name}</span>
+                    <span className="flex items-center gap-1 text-xs text-ink-3" title={tierJob === 2 ? `${b.name} (3rd job): ${b.tier3} tier` : `${b.path[1]} (launch): ${b.tier} tier`}>
+                      <span className="max-sm:hidden">{tierJob === 2 ? `→ ${b.name}` : `from ${b.path[1]}`}</span>
+                      <TierBadge tier={tierJob === 2 ? b.tier3 : b.tier} size="xs" />
+                    </span>
                   </Link>
                 ))}
               </div>
@@ -64,22 +104,6 @@ function BuildsIndex({ doc }: { doc: ClassicDoc }) {
           ))}
         </div>
       </Card>
-
-      <div className="flex flex-wrap items-center gap-2 mb-3" role="group" aria-label="Filter by class">
-        {(['All', ...archetypes] as const).map((a) => (
-          <button key={a} type="button" className={filter === a ? 'chip-on' : 'chip'} aria-pressed={filter === a} onClick={() => setFilter(a)}>
-            {a}
-          </button>
-        ))}
-      </div>
-
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
-        {[...shown]
-          .sort((a, b) => tierRank(a) - tierRank(b) || ARCHETYPES.indexOf(a.archetype) - ARCHETYPES.indexOf(b.archetype))
-          .map((b) => (
-            <BuildCard key={b.id} build={b} world={doc.world} />
-          ))}
-      </div>
 
       <div className="grid grid-cols-1 gap-4 mt-6 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)] items-start">
         <Card title="Ground rules">
@@ -130,12 +154,17 @@ function BuildCard({ build: b, world }: { build: ClassicBuild; world: ClassicDoc
   return (
     <Link to={`/classic/builds/${b.id}`} className="card p-4 flex flex-col gap-3 hover:border-ink-3 transition-colors">
       <div className="flex items-start gap-3">
-        <Emblem archetype={b.archetype} size={44} />
+        <Emblem archetype={b.archetype} size={48} />
         <div className="min-w-0 flex-1">
           <div className="font-semibold truncate">{launchName(b, world)}</div>
           <div className="text-xs text-ink-3 truncate">{b.path.join(' → ')}</div>
         </div>
-        <TierBadge tier={b.tier} />
+        <span className="flex flex-col items-center gap-1" title={`Launch: ${b.tier} tier · ${b.name} (3rd job, second test): ${b.tier3} tier`}>
+          <TierBadge tier={b.tier} />
+          <span className="flex items-center gap-1 text-[10px] text-ink-3">
+            3rd <TierBadge tier={b.tier3} size="xs" />
+          </span>
+        </span>
       </div>
       <p className="text-sm text-ink-2 line-clamp-3">{b.summary}</p>
       <div className="grid grid-cols-2 gap-x-4 gap-y-1.5 mt-auto">

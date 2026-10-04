@@ -56,8 +56,12 @@ export interface ClassicBuild {
   path: [string, string, string];
   /** Levels of the three advancements. */
   jobLevels: [number, number, number];
+  /** Consensus tier for the launch job (2nd job), from the tier lists that rate it. */
   tier: Tier;
-  tierSources: { source: string; tier: string; url: string }[];
+  /** Consensus tier for the 3rd job, which only COT #2 had. */
+  tier3: Tier;
+  /** Each list's grade ("—" when the source grades columns, not the class) and the jobs it rates. */
+  tierSources: { source: string; tier: string; url: string; jobs: JobTier[] }[];
   weapons: { type: string; preferred?: boolean; why: string }[];
   summary: string;
   ratings: Record<RatingKey, { score: number; why: string }>;
@@ -87,7 +91,11 @@ export interface Monster {
   name: string;
   level: number;
   hp: number | null;
+  /** null when the monster gives no EXP itself (e.g. one that transforms). */
   exp: number | null;
+  /** COT #2 monster ID and its sprite under public/. */
+  id?: number | null;
+  icon?: string;
 }
 
 /** Where a spot stands for the launch: open, only seen in the second test, or announced for later. */
@@ -114,6 +122,11 @@ export interface GrindSpot {
   mapId: number | null;
   /** The in-game world-map marker that covers this map: a `WorldMap.id` and an index into its `spots`. */
   place: { worldMap: string; spot: number } | null;
+  /** Spawn points on the map and its mob-rate flag, from the COT #2 map data. */
+  spawns: number;
+  mobRate: number;
+  /** The in-game minimap (pixels) with every spawn point as [x, y, index into `monsters`]. */
+  layout: { image: string; width: number; height: number; spawns: [number, number, number][] } | null;
 }
 
 /** A marker on an in-game world map; x and y are pixels from the image's top-left corner. */
