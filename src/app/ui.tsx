@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 
 export function Card({ children, className = '', title, action }: { children: ReactNode; className?: string; title?: ReactNode; action?: ReactNode }) {
   return (
@@ -110,6 +110,46 @@ export function Stepper({ value, min = 1, max = 6, onChange }: { value: number; 
         +
       </button>
     </span>
+  );
+}
+
+/**
+ * A whole-number box you can type into freely. A number inside min–max applies as you type; anything else waits
+ * for Enter or for you to leave the box, then snaps into range (typing 45 no longer becomes 10, then 100).
+ * Left empty, it calls `onClear`, or puts the old number back without one. Escape drops what you typed.
+ */
+export function NumberInput({ value, min, max, onChange, onClear, label, placeholder, className = '' }: { value: number | null; min: number; max: number; onChange: (v: number) => void; onClear?: () => void; label: string; placeholder?: string; className?: string }) {
+  // Typed but not applied yet; null shows `value`.
+  const [draft, setDraft] = useState<string | null>(null);
+  const commit = () => {
+    if (draft == null) return;
+    setDraft(null);
+    const n = Math.round(Number(draft));
+    if (draft.trim() === '' || !Number.isFinite(n)) onClear?.();
+    else onChange(Math.min(max, Math.max(min, n)));
+  };
+  return (
+    <input
+      type="number"
+      inputMode="numeric"
+      min={min}
+      max={max}
+      value={draft ?? value ?? ''}
+      placeholder={placeholder}
+      aria-label={label}
+      onChange={(e) => {
+        const s = e.target.value;
+        setDraft(s);
+        const n = Number(s);
+        if (s.trim() !== '' && Number.isInteger(n) && n >= min && n <= max) onChange(n);
+      }}
+      onBlur={commit}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter') commit();
+        else if (e.key === 'Escape') setDraft(null);
+      }}
+      className={className}
+    />
   );
 }
 

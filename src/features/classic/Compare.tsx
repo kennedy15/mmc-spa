@@ -25,22 +25,22 @@ export function ClassPicker({ builds, value, onChange }: { builds: ClassicBuild[
         const list = builds.filter((b) => b.archetype === a);
         const best = TIERS.find((t) => list.some((b) => b.tier === t));
         return (
-          <button key={a} type="button" aria-pressed={value === a} onClick={() => onChange(value === a ? 'All' : a)} className={`card flex items-center gap-3 p-3 text-left transition-colors cursor-pointer ${value === a ? 'border-accent ring-2 ring-accent/25' : 'hover:border-ink-3'}`}>
+          <button key={a} type="button" aria-pressed={value === a} onClick={() => onChange(value === a ? 'All' : a)} className={`@container card flex items-center gap-3 p-3 text-left transition-colors cursor-pointer ${value === a ? 'border-accent ring-2 ring-accent/25' : 'hover:border-ink-3'}`}>
             <Emblem archetype={a} size={48} />
             <span className="min-w-0 flex-1">
               <span className="block font-semibold text-ink">{a}</span>
-              <span className="flex items-center gap-1.5 text-xs text-ink-3">
+              <span className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-xs text-ink-3">
                 {list.length} branches
-                {/* Phones have no room beside the name, so the badge moves under it. */}
+                {/* A narrow tile (phones, or six in a row at 1366 and below) has no room beside the name, so the badge moves under it. */}
                 {best && (
-                  <span className="sm:hidden" title={`Best launch tier: ${best}`}>
+                  <span className="@min-[10.5rem]:hidden" title={`Best launch tier: ${best}`}>
                     <TierBadge tier={best} size="xs" />
                   </span>
                 )}
               </span>
             </span>
             {best && (
-              <span className="shrink-0 max-sm:hidden" title={`Best launch tier: ${best}`}>
+              <span className="hidden shrink-0 @min-[10.5rem]:block" title={`Best launch tier: ${best}`}>
                 <TierBadge tier={best} />
               </span>
             )}

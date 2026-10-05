@@ -1,6 +1,6 @@
 import { type KeyboardEvent, useEffect, useMemo, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { Card, Empty, Modal, PageHeader, Spinner, Toggle } from '../../app/ui';
+import { Card, Empty, Modal, NumberInput, PageHeader, Spinner, Toggle } from '../../app/ui';
 import { HoverTip } from '../../app/HoverTip';
 import { anchorOf, type Tip } from '../../app/tip';
 import { fmtInt } from '../../app/format';
@@ -160,7 +160,7 @@ function Grinding({ doc }: { doc: ClassicDoc }) {
           <button type="button" className="btn h-8 w-8 justify-center px-0 sm:hidden" onClick={() => setLevel(level - 1)} disabled={level <= 1} aria-label="One level down">
             −
           </button>
-          <input type="number" min={1} max={top} value={level} onChange={(e) => setLevel(Number(e.target.value))} className="input w-18 h-8 tabular" aria-label="Your exact level" />
+          <NumberInput value={level} min={1} max={top} onChange={setLevel} className="input w-18 h-8 tabular" label="Your exact level" />
           <button type="button" className="btn h-8 w-8 justify-center px-0 sm:hidden" onClick={() => setLevel(level + 1)} disabled={level >= top} aria-label="One level up">
             +
           </button>

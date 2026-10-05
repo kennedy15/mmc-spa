@@ -11,9 +11,14 @@ import type { Archetype, ClassicBuild, ClassicDoc, SkillInfo } from './types';
 
 const tierRank = (b: ClassicBuild) => TIERS.indexOf(b.tier);
 
-/** Whole days until `iso`, rounded up; 0 once it has passed. */
-function daysUntil(iso: string, now: Date): number {
-  return Math.max(0, Math.ceil((Date.parse(iso) - now.getTime()) / 86_400_000));
+/** Time left until `iso`: days ("in 2 days"), hours and minutes on the last day ("in 3 h 20 min"), then "open now". */
+function countdown(iso: string, now: Date): string {
+  const min = Math.ceil((Date.parse(iso) - now.getTime()) / 60_000);
+  if (min <= 0) return 'open now';
+  if (min < 60) return `in ${min} min`;
+  if (min < 24 * 60) return `in ${Math.floor(min / 60)} h${min % 60 ? ` ${min % 60} min` : ''}`;
+  const days = Math.round(min / (24 * 60));
+  return `in ${days} day${days === 1 ? '' : 's'}`;
 }
 
 export function ClassicBuilds() {
@@ -31,9 +36,6 @@ function BuildsIndex({ doc }: { doc: ClassicDoc }) {
   const archetypes = ARCHETYPES.filter((a) => doc.builds.some((b) => b.archetype === a));
   const shown = useMemo(() => doc.builds.filter((b) => filter === 'All' || b.archetype === filter), [doc.builds, filter]);
   const byTier = TIERS.map((t) => ({ tier: t, builds: doc.builds.filter((b) => tierFor(b, tierJob) === t) })).filter((r) => r.builds.length);
-  const founders = daysUntil(doc.world.foundersAccess, now);
-  const launch = daysUntil(doc.world.launch, now);
-  const inDays = (d: number) => (d > 0 ? `in ${d} day${d === 1 ? '' : 's'}` : 'open now');
 
   return (
     <>
@@ -43,8 +45,8 @@ function BuildsIndex({ doc }: { doc: ClassicDoc }) {
       />
 
       <div className="card p-4 mb-4 grid grid-cols-2 sm:grid-cols-4 gap-4">
-        <Stat label="Founder's Access" value={fmtDate(doc.world.foundersAccess, { month: 'short', day: 'numeric' })} sub={inDays(founders)} tone="accent" />
-        <Stat label="Grand Launch" value={fmtDate(doc.world.launch, { month: 'short', day: 'numeric' })} sub={inDays(launch)} />
+        <Stat label="Founder's Access" value={fmtDate(doc.world.foundersAccess, { month: 'short', day: 'numeric' })} sub={countdown(doc.world.foundersAccess, now)} tone="accent" />
+        <Stat label="Grand Launch" value={fmtDate(doc.world.launch, { month: 'short', day: 'numeric' })} sub={countdown(doc.world.launch, now)} />
         <Stat label="Level cap" value={doc.world.levelCap} sub={doc.world.launchJobs >= 3 ? '1st to 3rd job' : '1st and 2nd job only'} />
         <Stat label="Builds" value={doc.builds.length} sub={`${archetypes.length} classes · no Pirates`} />
       </div>

@@ -1,4 +1,5 @@
-import { NavLink, Outlet, useLocation } from 'react-router-dom';
+import { useEffect, useLayoutEffect, useRef } from 'react';
+import { NavLink, Outlet, useLocation, useNavigationType } from 'react-router-dom';
 import { useStore } from '../store';
 import { relTime } from './format';
 import { setTheme, THEMES, useTheme } from './theme';
@@ -57,12 +58,27 @@ const NAV: NavSection[] = [
 ];
 
 export function Layout() {
+  const ready = useStore((s) => s.ready);
   const index = useStore((s) => s.index);
   const folder = useStore((s) => s.folder);
   const grantFolder = useStore((s) => s.grantFolder);
-  const classic = useLocation().pathname.startsWith('/classic');
+  const { pathname } = useLocation();
+  const classic = pathname.startsWith('/classic');
   const updated = index?.updatedAt ?? null;
   const stale = updated ? Date.now() - Date.parse(updated) > 36 * 3_600_000 : true;
+  useScrollReset();
+
+  // When the window is too short for every link, the sidebar's nav scrolls; keep the current page's link in view.
+  const nav = useRef<HTMLElement>(null);
+  useEffect(() => {
+    const el = nav.current;
+    const link = el?.querySelector<HTMLElement>('a[aria-current="page"]');
+    if (!el || !link || el.scrollHeight <= el.clientHeight) return;
+    const box = el.getBoundingClientRect();
+    const at = link.getBoundingClientRect();
+    if (at.top < box.top) el.scrollTop -= box.top - at.top + 8;
+    else if (at.bottom > box.bottom) el.scrollTop += at.bottom - box.bottom + 8;
+  }, [pathname, ready]); // `ready` brings in the status footer, which makes the nav shorter
 
   return (
     <div className="min-h-screen lg:grid lg:grid-cols-[220px_1fr]">
@@ -78,9 +94,9 @@ export function Layout() {
             <div className="text-[11px] text-ink-3">+ Build Board</div>
           </div>
         </div>
-        <nav className="px-3 pb-3 flex lg:flex-col gap-1 overflow-x-auto lg:overflow-visible">
+        <nav ref={nav} className="px-3 pb-3 flex lg:flex-col gap-1 overflow-x-auto lg:overflow-x-visible lg:overflow-y-auto lg:min-h-0 lg:flex-1">
           {NAV.map((section, si) => (
-            <div key={si} className="flex lg:flex-col gap-1 lg:gap-2 lg:mb-4 shrink-0 border-border max-lg:not-first:border-l max-lg:not-first:pl-1">
+            <div key={si} className="flex lg:flex-col gap-1 lg:gap-1.5 lg:mb-3 shrink-0 border-border max-lg:not-first:border-l max-lg:not-first:pl-1">
               {section.label && (
                 <div className="hidden lg:flex items-center gap-2 px-3 pt-1">
                   <span className="label text-ink-2 font-semibold">{section.label}</span>
@@ -95,7 +111,7 @@ export function Layout() {
                       key={item.to}
                       to={item.to}
                       end={item.end}
-                      className={({ isActive }) => `rounded-lg px-3 py-1.5 text-sm whitespace-nowrap transition-colors ${isActive ? 'bg-accent/15 text-accent font-medium' : 'text-ink-2 hover:text-ink hover:bg-surface-2'}`}
+                      className={({ isActive }) => `rounded-lg px-3 py-1.5 lg:py-1 text-sm whitespace-nowrap transition-colors ${isActive ? 'bg-accent/15 text-accent font-medium' : 'text-ink-2 hover:text-ink hover:bg-surface-2'}`}
                     >
                       {item.label}
                     </NavLink>
@@ -106,7 +122,8 @@ export function Layout() {
             </div>
           ))}
         </nav>
-        <div className="mt-auto px-5 py-4 text-xs text-ink-3 space-y-1.5 hidden lg:block border-t border-border">
+        {/* Tracker status: shown once a tracker page has loaded the data (Classic pages don't load it). */}
+        <div className={`mt-auto px-5 py-4 text-xs text-ink-3 space-y-1.5 hidden border-t border-border ${ready ? 'lg:block' : ''}`}>
           <div className="flex items-center gap-2">
             <span className={`inline-block size-1.5 rounded-full ${stale ? 'bg-warn' : 'bg-good'}`} />
             Data {updated ? relTime(updated) : 'not yet collected'}
@@ -133,13 +150,37 @@ export function Layout() {
   );
 }
 
+/**
+ * Hash routes keep the old page's scroll position, so a new page opens at its top. Back and Forward return to
+ * where that page was left; a change to the query alone (filters, presets) stays put.
+ */
+function useScrollReset() {
+  const { pathname, key } = useLocation();
+  const action = useNavigationType();
+  const spots = useRef(new Map<string, number>());
+  // The page the window shows. It moves on at commit, before the scroll events that a shorter new page (or the
+  // reset below) fires, so those never overwrite the spot saved for the page being left.
+  const at = useRef({ key, pathname });
+  useEffect(() => {
+    const save = () => spots.current.set(at.current.key, window.scrollY);
+    window.addEventListener('scroll', save, { passive: true });
+    return () => window.removeEventListener('scroll', save);
+  }, []);
+  useLayoutEffect(() => {
+    const was = at.current;
+    at.current = { key, pathname };
+    if (was.pathname === pathname) return;
+    window.scrollTo(0, action === 'POP' ? (spots.current.get(key) ?? 0) : 0);
+  }, [key, pathname, action]);
+}
+
 /** Sits under Settings: flips between the Ember and Aurora color themes (kept per browser). */
 function ThemeToggle() {
   const theme = useTheme();
   const name = THEMES.find((t) => t.id === theme)!.name;
   const next = THEMES.find((t) => t.id !== theme)!;
   return (
-    <button type="button" onClick={() => setTheme(next.id)} className="flex items-center gap-2 rounded-lg px-3 py-1.5 text-sm text-ink-2 whitespace-nowrap text-left transition-colors hover:text-ink hover:bg-surface-2 cursor-pointer" aria-label={`Color theme: ${name}. Switch to ${next.name}`} title={`Switch to ${next.name}`}>
+    <button type="button" onClick={() => setTheme(next.id)} className="flex items-center gap-2 rounded-lg px-3 py-1.5 lg:py-1 text-sm text-ink-2 whitespace-nowrap text-left transition-colors hover:text-ink hover:bg-surface-2 cursor-pointer" aria-label={`Color theme: ${name}. Switch to ${next.name}`} title={`Switch to ${next.name}`}>
       <span className="flex" aria-hidden>
         <span className="size-2.5 rounded-full bg-accent" />
         <span className="-ml-1 size-2.5 rounded-full bg-accent-alt ring-1 ring-surface" />

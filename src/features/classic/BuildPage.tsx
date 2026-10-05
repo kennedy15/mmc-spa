@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { Card, Empty, Spinner, Toggle } from '../../app/ui';
+import { Card, Empty, NumberInput, Spinner, Toggle } from '../../app/ui';
 import { useClassic } from './data';
 import { Emblem, Pips, SectionLabel, SkillIcon, SourceList, TierBadge } from './bits';
 import { launchKeySkills, launchName, ordinal, RATINGS, skillsIn, skillTypeLabel, tierLists } from './labels';
@@ -30,10 +30,6 @@ export function BuildPage() {
 
 function Build({ doc, build: b, prev, next }: { doc: ClassicDoc; build: ClassicBuild; prev: ClassicBuild | null; next: ClassicBuild | null }) {
   const info = useMemo(() => new Map(b.skillInfo.map((s) => [s.skill, s])), [b.skillInfo]);
-  // Hash routes keep the scroll position; a build opened from far down the list starts at its top.
-  useEffect(() => {
-    window.scrollTo(0, 0);
-  }, [b.id]);
   const keyInfo = launchKeySkills(b, doc.world)
     .map((k) => info.get(k))
     .filter((s): s is SkillInfo => !!s);
@@ -298,6 +294,10 @@ function AtAGlance({ build: b, info, world }: { build: ClassicBuild; info: Map<s
   const weapon = b.weapons.find((w) => w.preferred) ?? b.weapons[0];
   const good = RATINGS.filter((r) => b.ratings[r.key].score >= 4).map((r) => GOOD[r.key]);
   const weak = RATINGS.filter((r) => b.ratings[r.key].score <= 2).map((r) => WEAK[r.key]);
+  // With nothing rated 2 or lower (Fighter, Page), the lowest ratings show as "Weakest at" in a neutral tone,
+  // so the row doesn't read as "no weaknesses" beside a Weaknesses list.
+  const floor = Math.min(...RATINGS.map((r) => b.ratings[r.key].score));
+  const weakest = weak.length || floor >= 4 ? [] : RATINGS.filter((r) => b.ratings[r.key].score === floor).map((r) => WEAK[r.key]);
   const launchJobs = b.skills.filter((j) => !isPreview(j, world));
   return (
     <section className="card p-4 sm:p-5" aria-label="At a glance">
@@ -339,8 +339,18 @@ function AtAGlance({ build: b, info, world }: { build: ClassicBuild; info: Map<s
           )}
           <dt className="label pt-0.5">Good at</dt>
           <dd className="flex flex-wrap gap-1">{good.length ? good.map((g) => <Chip key={g} tone="good">{g}</Chip>) : <span className="text-ink-3">—</span>}</dd>
-          <dt className="label pt-0.5">Weak at</dt>
-          <dd className="flex flex-wrap gap-1">{weak.length ? weak.map((w) => <Chip key={w} tone="bad">{w}</Chip>) : <span className="text-ink-3">—</span>}</dd>
+          <dt className="label pt-0.5">{weakest.length ? 'Weakest at' : 'Weak at'}</dt>
+          {weakest.length ? (
+            <dd className="flex flex-wrap gap-1" title={`Its lowest ratings, ${floor} of 5: about average. Nothing is rated 2 or lower.`}>
+              {weakest.map((w) => (
+                <Chip key={w} tone="muted">
+                  {w}
+                </Chip>
+              ))}
+            </dd>
+          ) : (
+            <dd className="flex flex-wrap gap-1">{weak.length ? weak.map((w) => <Chip key={w} tone="bad">{w}</Chip>) : <span className="text-ink-3">—</span>}</dd>
+          )}
         </dl>
         <div className="space-y-4 min-w-0">
           {launchJobs.map((job) => (
@@ -352,8 +362,9 @@ function AtAGlance({ build: b, info, world }: { build: ClassicBuild; info: Map<s
   );
 }
 
-function Chip({ tone, children }: { tone: 'good' | 'bad'; children: string }) {
-  return <span className={`rounded-md border px-1.5 py-0.5 text-xs font-medium ${tone === 'good' ? 'border-good/40 bg-good/10 text-good' : 'border-bad/40 bg-bad/10 text-bad'}`}>{children}</span>;
+function Chip({ tone, children }: { tone: 'good' | 'bad' | 'muted'; children: string }) {
+  const cls = tone === 'good' ? 'border-good/40 bg-good/10 text-good' : tone === 'bad' ? 'border-bad/40 bg-bad/10 text-bad' : 'border-border-2 text-ink-2';
+  return <span className={`rounded-md border px-1.5 py-0.5 text-xs font-medium ${cls}`}>{children}</span>;
 }
 
 /** One job's skill order as icons in sequence; each badge is the level that step takes the skill to. */
@@ -591,15 +602,15 @@ function SkillBuild({ build: b, info, world }: { build: ClassicBuild; info: Map<
             <button type="button" className="btn btn-sm px-2" aria-label="One level lower" onClick={() => setAt(clamp((at ?? world.levelCap) - 1))}>
               −
             </button>
-            <input
-              type="number"
+            <NumberInput
+              value={at}
               min={b.jobLevels[0]}
               max={world.levelCap}
-              value={at ?? ''}
+              onChange={setAt}
+              onClear={() => setAt(null)}
               placeholder="final"
-              onChange={(e) => setAt(e.target.value === '' ? null : clamp(Number(e.target.value)))}
               className="input h-7 w-16 px-1 py-0 text-center tabular [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
-              aria-label="Character level"
+              label="Character level"
             />
             <button type="button" className="btn btn-sm px-2" aria-label="One level higher" onClick={() => setAt(clamp((at ?? b.jobLevels[0] - 1) + 1))}>
               +
