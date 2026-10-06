@@ -457,7 +457,7 @@ function SkillDetail({
           })}
         </ol>
       )}
-      {doc && lines.length > 0 && <p className="border-t border-border px-4 py-2 text-[11px] text-ink-3">The game's own text for each level, from the second closed test (COT #2, August 2026); launch numbers may still change. Small numbers after a value are its change from the level before.</p>}
+      {doc && lines.length > 0 && <p className="border-t border-border px-4 py-2 text-[11px] text-ink-3">The game's own text for each level, {preview ? 'from the second closed test (COT #2, August 2026)' : "from the launch client (Founder's Access, October 6, 2026)"}. Small numbers after a value are its change from the level before.</p>}
     </div>
   );
 }

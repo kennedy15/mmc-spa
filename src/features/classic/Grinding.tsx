@@ -275,7 +275,7 @@ function Grinding({ doc }: { doc: ClassicDoc }) {
       </Card>
 
       <h2 className="text-lg font-semibold mt-8 mb-1">Every spot</h2>
-      <p className="text-sm text-ink-3 mb-4">Monster numbers are from the second test's game data; the launch build may differ.</p>
+      <p className="text-sm text-ink-3 mb-4">Monster numbers and spawns are from the launch client's data (Founder's Access, October 6); areas not out yet keep the second test's numbers.</p>
       {GROUPS.map((g) => {
         const list = spots.filter((s) => s.available === g.key);
         if (!list.length) return null;
@@ -567,7 +567,7 @@ function SpotList({ spots, level, sort, onSort, open, onOpen, fits, onMap, class
         <span>Spot · main monster</span>
         {head('levels', 'Levels')}
         {head('exp', 'EXP/HP', EXP_HP_HINT)}
-        {head('spawns', 'Spawns', 'Spawn points on the map (COT #2 data)')}
+        {head('spawns', 'Spawns', 'Spawn points on the map (launch data; COT #2 data for areas not out yet)')}
         <span>Best for</span>
         <span />
         <span />

@@ -1,15 +1,15 @@
 {
  "source": {
-  "title": "MapleStory Classic EXP table, levels 1-100",
-  "url": "https://meowdb.com/msclassic/guides/exp-table-level-1-to-100"
+  "title": "OSMS Data Explorer: Experience table, read from the launch client",
+  "url": "https://osmsdataexplorer.com/"
  },
  "checked": {
-  "title": "Experience",
-  "url": "https://mapleclassic.wiki/wiki/Experience"
+  "title": "MapleStory Classic EXP table, levels 1-100 (MeowDB; agrees through Lv 89)",
+  "url": "https://meowdb.com/msclassic/guides/exp-table-level-1-to-100"
  },
- "fetched": "2026-10-04",
- "confirmedTo": 49,
- "note": "EXP to go from each level to the next. Lv 1-49 are confirmed for Classic World by both sources. Lv 50-99 are the original game's table (MeowDB; mapleclassic.wiki lists them as not yet confirmed), so recheck them once Founder's Access is live. Lv 100 is the launch cap.",
+ "fetched": "2026-10-06",
+ "confirmedTo": 99,
+ "note": "EXP to go from each level to the next, read from the launch client (Founder's Access, Oct 6, 2026) by OSMS. Lv 1-89 match the COT #2 table and MeowDB. From Lv 90 each level needs 2.1 times the one before (COT #2 used 1.0548), so Lv 90 to 91 takes 11.9M instead of 6.0M and Lv 99 to 100 about 9.5 billion. Lv 100 is the launch cap.",
  "expToNext": {
   "1": 15,
   "2": 34,
@@ -100,15 +100,15 @@
   "87": 5109452,
   "88": 5389449,
   "89": 5684790,
-  "90": 5996316,
-  "91": 6324914,
-  "92": 6671519,
-  "93": 7037118,
-  "94": 7422752,
-  "95": 7829518,
-  "96": 8258575,
-  "97": 8711144,
-  "98": 9188514,
-  "99": 9692044
+  "90": 11938059,
+  "91": 25069923,
+  "92": 52646838,
+  "93": 110558359,
+  "94": 232172553,
+  "95": 487562361,
+  "96": 1023880958,
+  "97": 2150150011,
+  "98": 4515315023,
+  "99": 9482161548
  }
 }

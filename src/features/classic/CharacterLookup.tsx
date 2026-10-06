@@ -213,7 +213,13 @@ function CharacterExp({
   const toCap = expUntil(table, last.level, last.exp, cap);
   const capTotal = totalExp(table, cap, 0);
   const total = totalExp(table, last.level, last.exp);
-  const eta = (exp: number | null) => (pace && pace.perDay > 0 && exp != null ? fmtDate(new Date(Date.parse(last.at) + (exp / pace.perDay) * DAY).toISOString(), { month: 'short', day: 'numeric' }) : null);
+  // The year shows unless it's this one: from Lv 90 the table climbs 2.1x a level, so Lv 100 can be generations away.
+  const eta = (exp: number | null) => {
+    if (!pace || pace.perDay <= 0 || exp == null) return null;
+    const at = new Date(Date.parse(last.at) + (exp / pace.perDay) * DAY);
+    if (Number.isNaN(at.getTime())) return null; // past the last date JS can hold
+    return fmtDate(at.toISOString(), at.getFullYear() === new Date().getFullYear() ? { month: 'short', day: 'numeric' } : { month: 'short', day: 'numeric', year: 'numeric' });
+  };
 
   // Milestones ahead: the next level, the next round ten, job advancements and the cap.
   const advancements = [...new Set(doc.builds.flatMap((b) => b.jobLevels))].sort((a, b) => a - b);
@@ -224,7 +230,7 @@ function CharacterExp({
   advancements.forEach((lv, i) => lv > last.level && marks.set(lv, `${ordinal(i + 1)} job${i + 1 > doc.world.launchJobs ? ' (test only)' : ''}`));
   if (cap > last.level) marks.set(cap, 'level cap');
   const milestones = [...marks].sort((a, b) => a[0] - b[0]);
-  const unconfirmed = last.level >= table.confirmedTo || milestones.some(([lv]) => lv > table.confirmedTo + 1);
+  const unconfirmed = last.level > table.confirmedTo || milestones.some(([lv]) => lv > table.confirmedTo + 1);
 
   return (
     <div className="space-y-4">

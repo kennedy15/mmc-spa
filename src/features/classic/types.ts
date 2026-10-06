@@ -1,7 +1,8 @@
 /**
  * MapleStory Classic World guide data (public/classic.json): builds and grinding
  * spots researched from Nexon's Closed Online Tests (COT #1 April 2026, COT #2
- * August 2026) and what testers posted afterwards. Hand-kept, like bosses.json.
+ * August 2026) and what testers posted afterwards, then checked against the launch
+ * client's data (OSMS Data Explorer, Oct 6 2026). Hand-kept, like bosses.json.
  */
 export type Archetype = 'Warrior' | 'Magician' | 'Bowman' | 'Thief' | 'Pirate';
 export type Tier = 'S' | 'A' | 'B' | 'C' | 'D';
@@ -37,12 +38,12 @@ export interface JobSkills {
 
 export interface SkillInfo {
   skill: string;
-  /** The game's own skill ID (COT #2 data), keying public/classic/skill-levels.json. Skills with identical art share an icon file, so `icon` may name another ID. */
+  /** The game's own skill ID, keying public/classic/skill-levels.json. Skills with identical art share an icon file, so `icon` may name another ID. */
   id: number;
   tier: JobTier;
   max: number;
   type: SkillType;
-  /** Skills of the same job this one needs first, and at what level (the COT #2 skill data's requiredSkillLevels). */
+  /** Skills of the same job this one needs first, and at what level (the skill data's requiredSkillLevels: launch client for 1st and 2nd job, COT #2 for 3rd). */
   req?: { skill: string; level: number }[];
   /** Where the skill's in-game text names a different requirement than its data (the game goes by the data). */
   reqNote?: string;
@@ -99,7 +100,7 @@ export interface Monster {
   hp: number | null;
   /** null when the monster gives no EXP itself (e.g. one that transforms). */
   exp: number | null;
-  /** COT #2 monster ID and its sprite under public/. */
+  /** Classic World monster ID and its sprite (COT #2 art) under public/. */
   id?: number | null;
   icon?: string;
 }
@@ -128,7 +129,7 @@ export interface GrindSpot {
   mapId: number | null;
   /** The in-game world-map marker that covers this map: a `WorldMap.id` and an index into its `spots`. */
   place: { worldMap: string; spot: number } | null;
-  /** Spawn points on the map and its mob-rate flag, from the COT #2 map data. */
+  /** Spawn points on the map and its mob-rate flag: launch map data, or COT #2 for areas not out yet. */
   spawns: number;
   mobRate: number;
   /** The in-game minimap (pixels) with every spawn point as [x, y, index into `monsters`]. */
@@ -170,11 +171,15 @@ export interface PartyQuest {
 
 /**
  * public/classic/skill-levels.json, loaded when a skill sheet first opens: each build skill's in-game
- * description for every level (h1…hMax in the COT #2 client's String data), keyed by skill ID.
+ * description for every level (h1…hMax in the client's String data), keyed by skill ID. 1st and 2nd job
+ * come from the launch client; 3rd job, which only COT #2 had, from that test's client.
  */
 export interface SkillLevelsDoc {
   asOf: string;
+  /** Where the launch jobs' text comes from. */
   source: Source;
+  /** Where the 3rd-job (test only) text comes from. */
+  testSource?: Source;
   skills: Record<string, string[]>;
   /** By skill ID and level: where the game's own value disagrees with that level's text (the game applies the value). */
   notes?: Record<string, Record<string, string>>;

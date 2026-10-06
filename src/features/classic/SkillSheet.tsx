@@ -189,11 +189,13 @@ function SkillSheet({ build: b, world, skill, onClose }: { build: ClassicBuild; 
             </section>
 
             <p className="text-[11px] text-ink-3">
-              The game's own text for each level, from the second closed test's data (COT #2, August 2026)
-              {test ? '; 3rd job was only in that test and is being reworked, so expect changes' : '; launch numbers may still change'}. Changed numbers are
-              highlighted, with the difference from the level before.{' '}
-              <a href={doc.source.url} target="_blank" rel="noreferrer" className="whitespace-nowrap hover:text-accent">
-                ↗ {siteOf(doc.source.url)}
+              The game's own text for each level,{' '}
+              {test
+                ? "from the second closed test's data (COT #2, August 2026); 3rd job was only in that test and is being reworked, so expect changes"
+                : "from the launch client (Founder's Access, October 6, 2026)"}
+              . Changed numbers are highlighted, with the difference from the level before.{' '}
+              <a href={(test && doc.testSource ? doc.testSource : doc.source).url} target="_blank" rel="noreferrer" className="whitespace-nowrap hover:text-accent">
+                ↗ {siteOf((test && doc.testSource ? doc.testSource : doc.source).url)}
               </a>
             </p>
           </>

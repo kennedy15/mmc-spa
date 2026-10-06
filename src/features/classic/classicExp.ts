@@ -2,7 +2,8 @@ import type { ClassicExpDoc } from './types';
 
 /**
  * EXP math on Classic World's table (public/classic/exp-table.json). The numbers stay far below 2^53
- * (Lv 1 to 100 is about 180 million EXP), so plain numbers do, unlike the modern tracker's BigInts.
+ * (Lv 1 to 100 is about 18 billion EXP, most of it past Lv 90), so plain numbers do, unlike the modern
+ * tracker's BigInts.
  */
 
 /** EXP from `level` to the next; null at the cap or past the table. */
