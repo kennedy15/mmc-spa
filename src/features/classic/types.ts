@@ -220,3 +220,189 @@ export interface ClassicDoc {
   partyQuests: PartyQuest[];
   tips: { text: string; source?: Source }[];
 }
+
+/** A marker on an island's world map (art and positions: maplestory.io MCW CBT2), cut to the maps the launch has. */
+export interface AtlasMarker {
+  x: number;
+  y: number;
+  /** The game's marker type (0 town, 2 dungeon). */
+  type: number;
+  /** The launch maps it stands for; empty when its area isn't out yet. */
+  maps: number[];
+  /** The map a click opens: the town square for a town, else the first map. */
+  main?: number;
+  /** Set on a marker whose area isn't out yet (Forgotten Hollow), with that area's name. */
+  unreleased?: boolean;
+  label?: string;
+}
+
+export interface AtlasIsland {
+  id: string;
+  name: string;
+  /** World-map art under public/ and its size; marker x and y are pixels in it. */
+  image: string;
+  width: number;
+  height: number;
+  markers: AtlasMarker[];
+}
+
+/**
+ * How a portal works in game: shown on the map (visible), only a spot you press up at (invisible), walked into (walk),
+ * run by a script (script), open only during a quest (quest), or a party-quest stage's way on (stage).
+ */
+export type PortalKind = 'visible' | 'invisible' | 'walk' | 'script' | 'quest' | 'stage';
+
+export interface AtlasPortal {
+  /** Pixels in the map's render. */
+  x: number;
+  y: number;
+  kind: PortalKind;
+  /** Where it leads, when the data says. */
+  to?: number;
+  /** The destination comes from the portal's script (e.g. the towns' Free Market portals), not the map data. */
+  script?: boolean;
+  /** The quest that opens it. */
+  quest?: string;
+  /** What it is, when the data alone doesn't say (a housing door, a way that's closed for now). */
+  note?: string;
+}
+
+export interface AtlasMap {
+  id: number;
+  name: string;
+  /** The street the game files it under: "Hidden Street" marks a hidden map. */
+  street: string;
+  island: string;
+  /** The game's map mark (the area icon), e.g. "Henesys". */
+  area: string | null;
+  town?: boolean;
+  hidden?: boolean;
+  /** Index of the island's world-map marker that lists this map; missing when no marker does. */
+  marker?: number;
+  /** For a map no marker lists: the nearest map one does (through portals, else where the game returns you). */
+  near?: number;
+  /** The full render's size in pixels: every x and y on the map is in this space. */
+  size: [number, number];
+  /** Spawn points: [x, y, monster ID]. */
+  spawns?: [number, number, number][];
+  /** Spawn timers of a minute or more, by monster ID: [shortest, longest] seconds a timed point waits to spawn again. */
+  timers?: Record<string, [number, number]>;
+  /** Most monsters alive at once with one player there. */
+  cap?: number;
+  /** The map's spawn-rate multiplier, when it isn't 1. */
+  rate?: number;
+  portals?: AtlasPortal[];
+  /** NPCs: [x, y, NPC ID]. */
+  npcs?: [number, number, number][];
+  /** Where dying or a return scroll sends you. */
+  back?: number;
+  /** How to get in when no portal leads here, and what the map is for. */
+  note?: { how: string; source?: Source };
+}
+
+export interface MobAttack {
+  index: number;
+  /** Damage as a percent of its attack stat. */
+  ratio?: number;
+  /** Milliseconds between uses. */
+  delay?: number;
+  mp?: number;
+  magic?: boolean;
+  element?: string;
+  jump?: boolean;
+}
+
+/** A monster skill: the client's skill ID and level, and its numbers. */
+export interface MobSkill {
+  id: number;
+  level: number;
+  name: string;
+  /** Seconds it lasts. */
+  time?: number;
+  /** Seconds between uses. */
+  interval?: number;
+  /** Percent chance to land. */
+  prop?: number;
+  x?: number;
+}
+
+export type ElementResponse = 'Weak' | 'Strong' | 'Immune';
+
+export interface AtlasDrop {
+  /** Item ID. */
+  id: number;
+  /** Percent of the recorded kills it dropped from, and the 95% range around that; missing when it was seen with no count yet. */
+  rate?: number;
+  lo?: number;
+  hi?: number;
+  /** How many come at once (arrows), when more than one. */
+  q?: [number, number];
+  /** Quest-only drops: they only fall while you have the quest. */
+  quest?: boolean;
+}
+
+/** A monster's launch stats (OSMS), plus its drops when a source has them. */
+export interface AtlasMob {
+  id: number;
+  name: string;
+  level: number;
+  hp: number;
+  mp?: number;
+  exp: number;
+  /** Weapon and magic attack, weapon and magic defense. */
+  pad?: number;
+  mad?: number;
+  pdd?: number;
+  mdd?: number;
+  acc?: number;
+  /** Avoidability (0 when the data leaves it out). */
+  eva: number;
+  speed?: number;
+  /** Damage from one hit needed to knock it back. */
+  knockback?: number;
+  hpRec?: number;
+  mpRec?: number;
+  elements?: Record<string, ElementResponse>;
+  /** What the game sets it apart for, e.g. "Job Advancement" or "KPQ". */
+  special?: string;
+  attacks?: MobAttack[];
+  /** Monsters it splits into when it dies. */
+  revives?: { id: number; name: string; count: number }[];
+  buffs?: MobSkill[];
+  debuffs?: MobSkill[];
+  undead?: boolean;
+  boss?: boolean;
+  /** Attacks on sight. */
+  aggro?: boolean;
+  icon: string;
+  /** The sprite's width and height in map pixels, standing on its spawn point. */
+  box?: [number, number];
+  /** Animated sprite (WebP). */
+  anim?: string;
+  /** Items it drops (dropSource), the kills behind the rates, and its meso and nothing-at-all shares of those kills. */
+  drops?: AtlasDrop[];
+  dropKills?: number;
+  meso?: { rate: number; q: [number, number] };
+  noDrop?: number;
+}
+
+export interface AtlasItem {
+  name: string;
+  /** Icon under public/. */
+  icon?: string;
+  /** Equip, Use, Setup or Etc. */
+  type: string;
+}
+
+/** public/classic/atlas.json: the world-map explorer's maps, monsters and drops (launch client, Founder's Access). */
+export interface AtlasDoc {
+  asOf: string;
+  source: Source;
+  artSource: Source;
+  islands: AtlasIsland[];
+  maps: AtlasMap[];
+  mobs: AtlasMob[];
+  npcs: Record<string, string>;
+  items?: Record<string, AtlasItem>;
+  dropSource?: Source & { note?: string };
+}

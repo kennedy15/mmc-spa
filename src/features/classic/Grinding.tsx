@@ -1,5 +1,5 @@
 import { type KeyboardEvent, useEffect, useMemo, useRef, useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { Card, Empty, Modal, NumberInput, PageHeader, Spinner, Toggle } from '../../app/ui';
 import { HoverTip } from '../../app/HoverTip';
 import { anchorOf, type Tip } from '../../app/tip';
@@ -644,10 +644,20 @@ function SpotRow({ spot: s, id, level, on, open, onToggle, onMap, classOf }: { s
       <div className={`px-4 pb-4 ${on != null ? 'md:pl-[4.1rem]' : 'md:pl-[3.75rem]'}`}>
         <div className="flex flex-wrap items-center gap-2 text-xs text-ink-3">
           {s.region} · {s.style === 'both' ? 'solo or party' : s.style}
-          {s.place && (
-            <button type="button" className="btn btn-sm ml-auto" onClick={() => onMap(s)}>
-              <PinIcon /> Show on the world map
-            </button>
+          {(s.place || (s.available === 'launch' && s.mapId)) && (
+            <span className="ml-auto flex flex-wrap gap-2">
+              {s.place && (
+                <button type="button" className="btn btn-sm" onClick={() => onMap(s)}>
+                  <PinIcon /> Show on the world map
+                </button>
+              )}
+              {/* Launch maps have a page in the world-map explorer: the full map, spawns, drops and hidden maps. */}
+              {s.available === 'launch' && s.mapId && (
+                <Link to={`/classic/map/${s.mapId}`} state={{ atlas: 1 }} className="btn btn-sm">
+                  Open the full map →
+                </Link>
+              )}
+            </span>
           )}
         </div>
         <SpotBody spot={s} level={level} classOf={classOf} />

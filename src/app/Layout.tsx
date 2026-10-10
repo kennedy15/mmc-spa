@@ -48,6 +48,7 @@ const NAV: NavSection[] = [
           { to: '/classic/builds', label: 'Class builds' },
           { to: '/classic/skills', label: 'Skill builder' },
           { to: '/classic/grinding', label: 'Grinding spots' },
+          { to: '/classic/map', label: 'World map' },
           { to: '/classic/characters', label: 'Character lookup' },
         ],
       },

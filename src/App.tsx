@@ -17,6 +17,8 @@ import { BuildPage } from './features/classic/BuildPage';
 import { GrindingSpots } from './features/classic/Grinding';
 import { SkillBuilderPage } from './features/classic/SkillBuilder';
 import { CharacterLookupPage } from './features/classic/CharacterLookup';
+import { WorldMapPage } from './features/classic/WorldMapPage';
+import { MapPage } from './features/classic/MapPage';
 import { Board } from './features/ideas/Board';
 import { Settings } from './features/settings/Settings';
 
@@ -32,6 +34,8 @@ export default function App() {
           <Route path="classic/grinding" element={<GrindingSpots />} />
           <Route path="classic/skills" element={<SkillBuilderPage />} />
           <Route path="classic/characters" element={<CharacterLookupPage />} />
+          <Route path="classic/map" element={<WorldMapPage />} />
+          <Route path="classic/map/:id" element={<MapPage />} />
           <Route element={<TrackerData />}>
             <Route index element={<Dashboard />} />
             <Route path="characters" element={<CharacterList />} />

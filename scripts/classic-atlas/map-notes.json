@@ -1,0 +1,216 @@
+{
+ "10002040": {
+  "how": "A jump quest. Shane in Ellinia takes you in for a fee; Sabitrama's herb quests in Sleepywood (Lv 25 and Lv 50) send you here and make entry free.",
+  "source": {
+   "title": "launch client quest text",
+   "url": "https://osmsdataexplorer.com/"
+  }
+ },
+ "10002042": {
+  "how": "A jump quest. Shane in Ellinia takes you in for a fee; Sabitrama's herb quests in Sleepywood (Lv 25 and Lv 50) send you here and make entry free.",
+  "source": {
+   "title": "launch client quest text",
+   "url": "https://osmsdataexplorer.com/"
+  }
+ },
+ "10005040": {
+  "how": "A jump quest. The Mysterious Statue in Sleepywood sends you in; John's flower quests from Lith Harbor (Lv 65) need its flowers.",
+  "source": {
+   "title": "launch client quest text",
+   "url": "https://osmsdataexplorer.com/"
+  }
+ },
+ "10005042": {
+  "how": "A jump quest. The Mysterious Statue in Sleepywood sends you in; John's flower quests from Lith Harbor (Lv 65) need its flowers.",
+  "source": {
+   "title": "launch client quest text",
+   "url": "https://osmsdataexplorer.com/"
+  }
+ },
+ "10005044": {
+  "how": "A jump quest. The Mysterious Statue in Sleepywood sends you in; John's flower quests from Lith Harbor (Lv 65) need its flowers.",
+  "source": {
+   "title": "launch client quest text",
+   "url": "https://osmsdataexplorer.com/"
+  }
+ },
+ "80000000": {
+  "how": "The First Time Together party quest: a party of four, all Lv 21 or higher, starts it by talking to Lakelis in Kerning City. King Slime waits in the last stage.",
+  "source": {
+   "title": "launch client quest text",
+   "url": "https://osmsdataexplorer.com/"
+  },
+  "near": 10003000
+ },
+ "80000100": {
+  "how": "A stage of the First Time Together party quest (Lakelis, Kerning City).",
+  "source": {
+   "title": "launch client quest text",
+   "url": "https://osmsdataexplorer.com/"
+  },
+  "near": 10003000
+ },
+ "80000200": {
+  "how": "A stage of the First Time Together party quest (Lakelis, Kerning City).",
+  "source": {
+   "title": "launch client quest text",
+   "url": "https://osmsdataexplorer.com/"
+  },
+  "near": 10003000
+ },
+ "80000300": {
+  "how": "A stage of the First Time Together party quest (Lakelis, Kerning City).",
+  "source": {
+   "title": "launch client quest text",
+   "url": "https://osmsdataexplorer.com/"
+  },
+  "near": 10003000
+ },
+ "80000400": {
+  "how": "A stage of the First Time Together party quest (Lakelis, Kerning City).",
+  "source": {
+   "title": "launch client quest text",
+   "url": "https://osmsdataexplorer.com/"
+  },
+  "near": 10003000
+ },
+ "80000500": {
+  "how": "A stage of the First Time Together party quest (Lakelis, Kerning City).",
+  "source": {
+   "title": "launch client quest text",
+   "url": "https://osmsdataexplorer.com/"
+  },
+  "near": 10003000
+ },
+ "80000600": {
+  "how": "A stage of the First Time Together party quest (Lakelis, Kerning City).",
+  "source": {
+   "title": "launch client quest text",
+   "url": "https://osmsdataexplorer.com/"
+  },
+  "near": 10003000
+ },
+ "80001000": {
+  "how": "The Bowman 2nd-job test (Lv 30): the Bowman Job Instructor at The Road to the Dungeon sends you in to collect 30 Dark Marbles.",
+  "source": {
+   "title": "launch client quest text",
+   "url": "https://osmsdataexplorer.com/"
+  }
+ },
+ "80001100": {
+  "how": "The Magician 2nd-job test (Lv 30): the Magician Job Instructor at The Forest North of Ellinia sends you in to collect 30 Dark Marbles.",
+  "source": {
+   "title": "launch client quest text",
+   "url": "https://osmsdataexplorer.com/"
+  }
+ },
+ "80001200": {
+  "how": "The Thief 2nd-job test (Lv 30): the Thief Job Instructor at Construction Site North of Kerning City sends you in to collect 30 Dark Marbles.",
+  "source": {
+   "title": "launch client quest text",
+   "url": "https://osmsdataexplorer.com/"
+  }
+ },
+ "80001300": {
+  "how": "The Warrior 2nd-job test (Lv 30): the Warrior Job Instructor at West Rocky Mountain IV sends you in to collect 30 Dark Marbles.",
+  "source": {
+   "title": "launch client quest text",
+   "url": "https://osmsdataexplorer.com/"
+  }
+ },
+ "10003100": {
+  "how": "Buy a Ticket to Construction Site B1 from Jake at the Subway Ticketing Booth and hand it to The Ticket Gate. Shumi's lost-money quests (Lv 35) send you down.",
+  "source": {
+   "title": "launch client quest text",
+   "url": "https://osmsdataexplorer.com/"
+  },
+  "near": 10003060
+ },
+ "10003103": {
+  "how": "Buy a Ticket to Construction Site B2 from Jake at the Subway Ticketing Booth and hand it to The Ticket Gate. Shumi's lost-money quests (Lv 35) send you down.",
+  "source": {
+   "title": "launch client quest text",
+   "url": "https://osmsdataexplorer.com/"
+  },
+  "near": 10003060
+ },
+ "10003106": {
+  "how": "Buy a Ticket to Construction Site B3 from Jake at the Subway Ticketing Booth and hand it to The Ticket Gate. Shumi's lost-money quests (Lv 35) send you down.",
+  "source": {
+   "title": "launch client quest text",
+   "url": "https://osmsdataexplorer.com/"
+  },
+  "near": 10003060
+ },
+ "10001008": {
+  "how": "A player home: the gold door in Henesys leads to your own copy of it, and Bianca handles housing. Housing may not be open yet.",
+  "source": {
+   "title": "maplestory.quest housing guide",
+   "url": "https://maplestory.quest/guides/housing"
+  }
+ },
+ "10003008": {
+  "how": "A player home: the gold door in Kerning City leads to your own copy of it, and Scarlett handles housing. Housing may not be open yet.",
+  "source": {
+   "title": "maplestory.quest housing guide",
+   "url": "https://maplestory.quest/guides/housing"
+  }
+ },
+ "10002090": {
+  "how": "Ellinia's station for the ship to Orbis, through the doorway at the top right of Ellinia. Orbis isn't out at launch.",
+  "source": {
+   "title": "launch client quest text",
+   "url": "https://osmsdataexplorer.com/"
+  }
+ },
+ "10002091": {
+  "how": "Where you wait for the ship to Orbis. Orbis isn't out at launch.",
+  "source": {
+   "title": "launch client quest text",
+   "url": "https://osmsdataexplorer.com/"
+  },
+  "near": 10002000
+ },
+ "10007000": {
+  "how": "Pason at Lith Harbor sails you here, and Pison takes you back.",
+  "source": {
+   "title": "meowdb: Pason",
+   "url": "https://meowdb.com/msclassic/npcs/112"
+  }
+ },
+ "80002000": {
+  "how": "Through the Free Market portals in Henesys Market and Perion; leaving takes you back where you came from.",
+  "source": {
+   "title": "mapleclassic.wiki: Hidden Street",
+   "url": "https://mapleclassic.wiki/wiki/Hidden_Street"
+  }
+ },
+ "10002005": {
+  "how": "A hidden room above the Magic Library: walk into the portal on its left side. Lyn the Librarian's ledger quests (Lv 28) start here.",
+  "source": {
+   "title": "henesys.gg: The Circulation Desk",
+   "url": "https://henesys.gg/maps/10002005"
+  }
+ },
+ "10003110": {
+  "how": "Through a hidden passage on the first floor of Niora Hospital, on Jane Doe's quest An Old Grudge (Lv 47, Kerning City citizenship grade 8).",
+  "source": {
+   "title": "launch client quest text",
+   "url": "https://osmsdataexplorer.com/"
+  }
+ },
+ "10003111": {
+  "how": "Shade's lair, at the end of An Old Grudge (Lv 47, Kerning City citizenship grade 8).",
+  "source": {
+   "title": "launch client quest text",
+   "url": "https://osmsdataexplorer.com/"
+  }
+ },
+ "10003098": {
+  "how": "Slade the code-breaker lives here: Dark Lord sends you on An Unbreakable Code (Lv 57, Kerning City citizenship grade 10).",
+  "source": {
+   "title": "launch client quest text",
+   "url": "https://osmsdataexplorer.com/"
+  }
+ }
+}

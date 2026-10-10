@@ -1,14 +1,8 @@
 import { dataUrl } from '../../lib/paths';
 import { fmtInt } from '../../app/format';
-import { bySpawns, missGap } from './labels';
+import { bySpawns, DOTS, missGap, OTHER } from './labels';
 import type { GrindSpot, Monster } from './types';
 
-/**
- * Spawn-dot colors for a spot's three most common monsters, validated as a categorical set on the
- * dark minimap frame (dataviz validator: lightness band, CVD and contrast all pass); the rest are grey.
- */
-const DOTS = ['#d95926', '#3987e5', '#199e70'];
-const OTHER = '#8a7d70';
 
 /** A monster's in-game sprite (COT #2 data), scaled down to fit `box` px but never up. */
 export function MobSprite({ monster, box = 40 }: { monster: Monster; box?: number }) {

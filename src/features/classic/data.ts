@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { dataUrl } from '../../lib/paths';
-import type { ClassicDoc, ClassicExpDoc, SkillLevelsDoc } from './types';
+import type { AtlasDoc, ClassicDoc, ClassicExpDoc, SkillLevelsDoc } from './types';
 
 /** A hook for a JSON file under public/, fetched once and shared by every caller; a failed load is retried on the next call. */
 function jsonFile<T>(file: string): () => { doc: T | null; error: string | null } {
@@ -42,3 +42,6 @@ export const useSkillLevels = jsonFile<SkillLevelsDoc>('classic/skill-levels.jso
 
 /** Classic World's EXP table, for the character lookup. */
 export const useClassicExp = jsonFile<ClassicExpDoc>('classic/exp-table.json');
+
+/** The world-map explorer's maps, monsters and drops; fetched when a map page first opens. */
+export const useAtlas = jsonFile<AtlasDoc>('classic/atlas.json');

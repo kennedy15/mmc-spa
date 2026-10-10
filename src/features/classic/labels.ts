@@ -58,6 +58,13 @@ export function tierLists(b: ClassicBuild, job: 2 | 3) {
   return { lists, agree: lists.filter((t) => t.tier.startsWith(tierFor(b, job))).length };
 }
 
+/**
+ * Spawn-dot colors for a spot's three most common monsters, validated as a categorical set on the
+ * dark minimap frame (dataviz validator: lightness band, CVD and contrast all pass); the rest are grey.
+ */
+export const DOTS = ['#d95926', '#3987e5', '#199e70'];
+export const OTHER = '#8a7d70';
+
 /** Monsters ordered by how many spawn points they have on the map, with that count. */
 export function bySpawns(spot: GrindSpot): { monster: Monster; index: number; count: number }[] {
   const counts = new Map<number, number>();

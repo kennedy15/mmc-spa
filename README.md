@@ -60,9 +60,9 @@ npm run build        # type-check + production build into dist/
 
 ```
 .github/workflows/  snapshot.yml (daily collector + redeploy), deploy.yml (Pages), add-character.yml, rename-character.yml, setup-copy.yml (a copy's first run)
-scripts/            snapshot.mjs (collector; Node 20+, the Actions use 24, no dependencies), add/rename-character.mjs, setup-copy.mjs, repo-guard.mjs
+scripts/            snapshot.mjs (collector; Node 20+, the Actions use 24, no dependencies), add/rename-character.mjs, setup-copy.mjs, repo-guard.mjs, classic-atlas/ (builds the Classic world map's data; Python 3 + Pillow, run by hand)
 data/               characters.json (you edit), index.json, snapshots/, looks/ (Action commits)
-public/             exp-table.json, bosses.json (crystal values), recipes.json, worlds.json, classic.json (Classic World builds and grinding spots), classic/ (skill, class and monster icons, minimaps, world maps, per-level skill text, the Classic EXP table)
+public/             exp-table.json, bosses.json (crystal values), recipes.json, worlds.json, classic.json (Classic World builds and grinding spots), classic/ (skill, class and monster icons, minimaps, world maps, per-level skill text, the Classic EXP table, and the world-map explorer's atlas.json, map renders and item icons)
 src/app             layout, shared UI, chart theme
 src/features        tracker/, bossing/, classic/, ideas/, settings/
 src/lib             nexon/ (BigInt EXP math, snapshot parsing), reset/ (UTC boss periods), storage/ (IndexedDB, File System Access, export/import)
@@ -97,6 +97,13 @@ The Classic pages have their own look: a soft brown palette and display font aft
   - The route card shows the best-covering spots for every 10 levels.
   - The **At Lv N** list sorts by levels, EXP per HP or spawn points. A row opens to the in-game minimap with every spawn point, the monsters, tips and sources.
   - **Show on map** opens the in-game world map (Maple Island, Victoria Island, El Nath Mts., Dead Mine) with the spot's marker highlighted.
+- **World map** (`/classic/map`) is an atlas of every launch map on Maple Island and Victoria Island: 279 maps, counting the Kerning City party quest, the 2nd-job test maps and the Free Market.
+  - The in-game world map has every marker live. Hover one for a preview of its map, its monsters and the hidden maps off it; click it to open the map. Search finds maps and monsters, and picking a monster lights every marker it spawns under.
+  - Beside it is the island's list of hidden maps (Hidden Street maps and maps no marker lists), grouped by the map you find each from.
+  - A map page (`/classic/map/:id`) shows the whole map render with its spawn points, portals and NPCs, plus its monsters, a preview of their drops, the hidden maps found there and the ways in and out. Click a monster in the render (or its dot) for its profile: HP, EXP, attack and defense, the accuracy to always hit it, elements, skills, spawn timers, drops with rates, and every map it spawns on. Click a portal to go through it. **Back**, or a right-click anywhere on the page, goes back one map at a time and then to the world map.
+  - The data is `public/classic/atlas.json`, built by `scripts/classic-atlas/build.py` from the launch-client datamine on [OSMS Data Explorer](https://osmsdataexplorer.com/) (maps, renders, spawns, portals, NPCs, monsters and items) and [mapleclassic.wiki](https://mapleclassic.wiki/)'s drop logs (CC BY-NC-SA 4.0; 26 monsters so far, 16 with kill counts). Map renders are in `public/classic/maps/` (hover thumbnails in `t/`), item icons in `public/classic/items/`, animated monster sprites in `public/classic/mobs/a/`.
+  - How you get into maps no portal reaches is hand-kept in `scripts/classic-atlas/map-notes.json`, from the launch client's quest and NPC text; doors the data can't explain are in `portal-notes.json`. Run `python3 scripts/classic-atlas/build.py all` again when OSMS redeploys or the wiki logs more drops.
+  - The world-map art and markers are still the second test's (maplestory.io `CBT2`): nobody has datamined the launch world map yet.
 - **Skill builder** (`/classic/skills`) is for trying out skill builds:
   - Pick one of the ten branches. 1st, 2nd and 3rd job each get their own SP: 61, 121 and 91 at the Lv 100 cap (1 at the advancement, 3 a level, and 2nd-job SP stops at Lv 70).
   - Every skill has −, +1 and Max. Max stops at the SP that's left. A skill stays locked until the skills it needs reach their level (`req` on each `skillInfo` entry, from the COT #2 skill data), and a needed skill can't drop below what a skill with points relies on.
